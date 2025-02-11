@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('categorias', function (Blueprint $table){
+        Schema::create('categorias', function (Blueprint $table) {
             $table->increments('cat_id');
-            $table->string('nombre', length:100);
+            $table->string('nombre', 100);
         });
     }
 
