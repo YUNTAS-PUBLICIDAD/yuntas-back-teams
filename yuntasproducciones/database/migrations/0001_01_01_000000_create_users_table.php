@@ -19,8 +19,6 @@ return new class extends Migration
                 $table->string('celular', 9);
                 $table->string('password');
                 $table->timestamp('fecha')->useCurrent();
-                $table->unsignedInteger('cat_id');
-                $table->foreign('cat_id')->references('cat_id')->on('categorias')->onDelete('cascade');
             });
         }
 
