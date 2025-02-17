@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PostProducto\PostProducto;
-use App\Http\Requests\PostProductoDetalle\PostProductoDetalle;
-use App\Models\Producto;
 use Illuminate\Http\Request;
-use App\Models\ProductoDetalle;
+use App\Models\Blog;
+use App\Http\Requests\PostBlog\PostBlog;
+use App\Http\Controllers\Api\V1\BasicController;
 
-class ProductoDetalleController extends Controller
+class BlogController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -30,20 +29,20 @@ class ProductoDetalleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PostProductoDetalle $request)
+    public function store(PostBlog $request)
     {
         try {
-            ProductoDetalle::create($request->all());
-            return response()->json(['message' => 'Producto detalle creado con éxito']);
+            Blog::create($request->all());
+            return response()->json(['message' => 'Blog creado con éxito']);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al crear el producto detalle: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al crear el blog: ' . $e->getMessage()], 500);
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(ProductoDetalle $productodetalle)
+    public function show(Blog $blog)
     {
         //
     }
@@ -51,7 +50,7 @@ class ProductoDetalleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ProductoDetalle $productodetalle)
+    public function edit(Blog $blog)
     {
         //
     }
@@ -59,7 +58,7 @@ class ProductoDetalleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProductoDetalle $productodetalle)
+    public function update(Request $request, Blog $blog)
     {
         //
     }
@@ -67,7 +66,7 @@ class ProductoDetalleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductoDetalle $producto)
+    public function destroy(Blog $blog)
     {
         //
     }
