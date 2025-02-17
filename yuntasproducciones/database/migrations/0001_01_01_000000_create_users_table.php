@@ -16,8 +16,11 @@ return new class extends Migration
                 $table->increments('user_id');
                 $table->string('name', 100);
                 $table->string('email', 100)->unique();
+                $table->timestamp('email_verified_at')->nullable();
                 $table->string('celular', 9);
                 $table->string('password');
+                $table->rememberToken();
+                $table->timestamps();
                 $table->timestamp('fecha')->useCurrent();
             });
         }
