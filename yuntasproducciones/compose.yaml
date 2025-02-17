@@ -1,0 +1,46 @@
+services:
+  back:
+    container_name: yuntas-back
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/vendor
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    command: sh -c "sleep 10 && composer install && php artisan migrate:fresh --seed && php artisan serve --host=0.0.0.0 --port=8000"
+  db:
+    image: mysql:8.0.41
+    container_name: yuntas-db 
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+    # DB en puerto 3308 para que no haya conflicto con el MySQL local, cámbialo si es necesario ejm. 3308:3306
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
+    name: yuntas_db_data
