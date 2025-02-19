@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Seccion;
 use Illuminate\Http\Request;
-use App\Models\BlogDetalle;
-use App\Http\Requests\PostBlogDetalle\PostBlogDetalle;
-use App\Http\Controllers\Api\V1\BasicController;
 
-
-class BlogDetalleController extends BasicController
+class SeccionController extends BasicController
 {
     /**
      * Display a listing of the resource.
@@ -30,20 +27,20 @@ class BlogDetalleController extends BasicController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(BlogDetalle $request)
+    public function store(Seccion $request)
     {
         try {
-            BlogDetalle::create($request->all());
-            return response()->json(['message' => 'Blog detalle creado con éxito']);
+            Seccion::create($request->all());
+            return response()->json(['message' => 'Sección creada con éxito']);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al crear el blog detalle: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al crear la sección: ' . $e->getMessage()], 500);
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(BlogDetalle $blogdetalle)
+    public function show(Seccion $seccion)
     {
         //
     }
@@ -51,7 +48,7 @@ class BlogDetalleController extends BasicController
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(BlogDetalle $blogdetalle)
+    public function edit(Seccion $seccion)
     {
         //
     }
@@ -59,7 +56,7 @@ class BlogDetalleController extends BasicController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, BlogDetalle $blogdetalle)
+    public function update(Request $request, Seccion $seccion)
     {
         //
     }
@@ -67,7 +64,7 @@ class BlogDetalleController extends BasicController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(BlogDetalle $blogdetalle)
+    public function destroy(Seccion $seccion)
     {
         //
     }

@@ -8,7 +8,7 @@ use App\Models\Blog;
 use App\Http\Requests\PostBlog\PostBlog;
 use App\Http\Controllers\Api\V1\BasicController;
 
-class BlogController extends Controller
+class BlogController extends BasicController
 {
     /**
      * Display a listing of the resource.
