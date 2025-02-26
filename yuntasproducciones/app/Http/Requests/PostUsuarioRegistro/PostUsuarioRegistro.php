@@ -22,9 +22,9 @@ class PostUsuarioRegistro extends FormRequest
     public function rules(): array
     {
         return [
-            'id_sec' => 'exist:seccion,id_sec',
+            'id_sec' => 'required|exists:seccion,id_sec',
             'nombre' => 'required|string|max:100',
-            'correo' => 'required|string|max:100',
+            'correo' => 'required|string|max:100|email',
             'celular' => 'required|string|max:9',
             'fecha' => 'required|date',
         ];

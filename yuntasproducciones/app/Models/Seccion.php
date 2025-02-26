@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Seccion extends Model
 {
@@ -17,4 +18,12 @@ class Seccion extends Model
         'nombre',
         'id_com',
     ];
+    
+    /**
+     * Obtiene todos los usuarios registrados en esta sección
+     */
+    public function usuariosRegistro(): HasMany
+    {
+        return $this->hasMany(UsuarioRegistro::class, 'id_sec', 'id_sec');
+    }
 }

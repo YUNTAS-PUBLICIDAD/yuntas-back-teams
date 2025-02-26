@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('celular', 9);
             $table->date('fecha');
             $table->timestamps();
+            
+            $table->foreign('id_sec')->references('id_sec')->on('seccion')->onDelete('cascade');
         });
     }
 

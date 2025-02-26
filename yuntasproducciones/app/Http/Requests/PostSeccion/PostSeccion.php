@@ -22,7 +22,7 @@ class PostSeccion extends FormRequest
     public function rules(): array
     {
         return [
-            'id_com' => 'exist:comentarios,id_com',
+            'id_com' => 'required|exists:comentarios,id_com',
             'nombre' => 'required|string|max:100',
         ];
     }
