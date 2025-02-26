@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PostProducto\PostProducto;
-use App\Http\Requests\PostProductoDetalle\PostProductoDetalle;
-use App\Models\Producto;
+use App\Models\Comentario;
 use Illuminate\Http\Request;
-use App\Models\ProductoDetalle;
+use App\Http\Requests\PostComentario\PostComentario;
+use App\Http\Controllers\Api\V1\BasicController;
 
-class ProductoDetalleController extends BasicController
+class ComentarioController extends BasicController
 {
     /**
      * Display a listing of the resource.
@@ -30,20 +29,20 @@ class ProductoDetalleController extends BasicController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PostProductoDetalle $request)
+    public function store(Comentario $request)
     {
         try {
-            ProductoDetalle::create($request->all());
-            return response()->json(['message' => 'Producto detalle creado con éxito']);
+            Comentario::create($request->all());
+            return response()->json(['message' => 'Comentario creado con éxito']);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al crear el producto detalle: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al crear el comentario: ' . $e->getMessage()], 500);
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(ProductoDetalle $productodetalle)
+    public function show(Comentario $comentario)
     {
         //
     }
@@ -51,7 +50,7 @@ class ProductoDetalleController extends BasicController
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ProductoDetalle $productodetalle)
+    public function edit(Comentario $comentario)
     {
         //
     }
@@ -59,7 +58,7 @@ class ProductoDetalleController extends BasicController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProductoDetalle $productodetalle)
+    public function update(Request $request, Comentario $comentario)
     {
         //
     }
@@ -67,7 +66,7 @@ class ProductoDetalleController extends BasicController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductoDetalle $producto)
+    public function destroy(Comentario $comentario)
     {
         //
     }
