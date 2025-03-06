@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Api\V1\Blog;
 use App\Models\BloqueContenido;
 use App\Http\Requests\StoreBloqueContenidoRequest;
 use App\Http\Requests\UpdateBloqueContenidoRequest;
+use App\Http\Controllers\Api\V1\BasicController;
 
-class BloqueContenidoController extends Controller
+class BloqueContenidoController extends BasicController
 {
     /**
      * Display a listing of the resource.

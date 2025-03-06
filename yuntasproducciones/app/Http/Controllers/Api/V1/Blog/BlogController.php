@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1\Blog;
 use App\Models\Blog;
 use App\Http\Requests\StoreBlogRequest;
 use App\Http\Requests\UpdateBlogRequest;
-use App\Http\Controllers\Api\V1\BasicController;
 
 class BlogController extends BasicController
 {

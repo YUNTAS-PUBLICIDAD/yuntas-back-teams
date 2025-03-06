@@ -6,20 +6,16 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
-
-
+use App\Http\Controllers\Api\V1\Blog\BlogController;
 
 Route::prefix('v1')->group(function () {
 
-    
     Route::controller(AuthController::class)->prefix('auth')->group(function () {
         Route::post('/login', 'login');
         Route::post('/logout', 'logout')->middleware(['auth:sanctum', 'role:ADMIN|USER']);
     });
 
-
     Route::controller(UserController::class)->prefix('users')->group(function(){
-        
         Route::middleware(['auth:sanctum', 'role:ADMIN'])->group(function () {
             Route::post('/', 'store');
             Route::get('/', 'index');
@@ -28,9 +24,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-
     Route::controller(ProductoController::class)->prefix('productos')->group(function(){
-
         Route::get('/', 'index');
         Route::get('/{id}', 'show');
 
@@ -40,5 +34,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'destroy');
         });
     });
+
+    Route::controller(BlogController::class)->prefix('blogs')->group(function(){
+        Route::get('/', 'indexBlogs');
+        Route::get('/{blog}', 'showBlog');
+
+        Route::middleware(['auth:sanctum', 'role:ADMIN|USER'])->group(function () {
+            Route::post('/', 'storeBlog');
+            Route::put('/{blog}', 'updateBlog');
+            Route::delete('/{blog}', 'destroyBlog');
+        });
+    });
+
+
 
 });
