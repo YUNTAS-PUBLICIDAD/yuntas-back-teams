@@ -36,13 +36,13 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::controller(BlogController::class)->prefix('blogs')->group(function(){
-        Route::get('/', 'indexBlogs');
-        Route::get('/{blog}', 'showBlog');
+        Route::get('/', 'index');
+        Route::get('/{blog}', 'show');
 
         Route::middleware(['auth:sanctum', 'role:ADMIN|USER'])->group(function () {
-            Route::post('/', 'storeBlog');
-            Route::put('/{blog}', 'updateBlog');
-            Route::delete('/{blog}', 'destroyBlog');
+            Route::post('/', 'store');
+            Route::put('/{blog}', 'update');
+            Route::delete('/{blog}', 'destroy');
         });
     });
 
