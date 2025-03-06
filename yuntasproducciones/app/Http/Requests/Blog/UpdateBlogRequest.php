@@ -11,7 +11,7 @@ class UpdateBlogRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,29 @@ class UpdateBlogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'titulo' => 'sometimes|string|max:255',
+            'descripcion' => 'sometimes|string',
+            'imagen_principal' => 'sometimes|string',
+            'estatus' => 'nullable|string|in:borrador,publicado,archivado',
+            'bloques_contenido' => 'nullable|array',
+            'bloques_contenido.*.id_bloque' => 'nullable|integer|exists:bloque_contenidos,id',
+            'bloques_contenido.*.parrafo' => 'nullable|string',
+            'bloques_contenido.*.imagen' => 'nullable|string',
+            'bloques_contenido.*.descripcion_imagen' => 'nullable|string',
+            'bloques_contenido.*.orden' => 'nullable|integer|min:1',
+        ];
+    }
+    
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'estatus.in' => 'El estatus debe ser: borrador, publicado o archivado',
+            'bloques_contenido.*.id_bloque.exists' => 'El bloque de contenido especificado no existe',
         ];
     }
 }

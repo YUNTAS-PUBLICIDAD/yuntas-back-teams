@@ -11,6 +11,7 @@ class BloqueContenido extends Model
     use HasFactory;
 
     protected $table = 'bloque_contenidos';
+    protected $primaryKey = 'id_bloque'; // Especificar la clave primaria correcta
 
     protected $fillable = [
         'id_blog',

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
+use App\Http\Controllers\Api\V1\Blog\BloqueContenidoController;
 
 Route::prefix('v1')->group(function () {
 
@@ -46,6 +47,15 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // Route::controller(BloqueContenidoController::class)->prefix('bloques')->group(function(){
+    //     Route::get('/', 'index');
+    //     Route::get('/{bloque}', 'show');
 
+    //     Route::middleware(['auth:sanctum', 'role:ADMIN|USER'])->group(function () {
+    //         Route::post('/', 'store');
+    //         Route::put('/{bloque}', 'update');
+    //         Route::delete('/{bloque}', 'destroy');
+    //     });
+    // });
 
 });

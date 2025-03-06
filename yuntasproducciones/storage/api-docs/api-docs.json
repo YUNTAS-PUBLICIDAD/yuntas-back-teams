@@ -1,14 +1,22 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Laravel Swagger API",
-        "description": "Laravel Swagger API Documentation",
-        "version": "1.0"
+        "title": "API de Yuntas Producciones",
+        "description": "Documentación de la API de Yuntas Producciones",
+        "contact": {
+            "name": "Soporte Yuntas",
+            "email": "info@yuntasproducciones.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
     },
     "servers": [
         {
-            "url": "http://localhost:8000",
-            "description": "API Server"
+            "url": "/",
+            "description": "Servidor de desarrollo"
         },
         {
             "url": "/api"
@@ -108,6 +116,848 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/blogs": {
+            "get": {
+                "tags": [
+                    "Blogs"
+                ],
+                "summary": "Listar todos los blogs",
+                "description": "Obtiene un listado de todos los blogs con sus bloques de contenido",
+                "operationId": "getBlogsList",
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blogs obtenidos con éxito"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "titulo": {
+                                                        "type": "string",
+                                                        "example": "Título del blog"
+                                                    },
+                                                    "descripcion": {
+                                                        "type": "string",
+                                                        "example": "Descripción del blog"
+                                                    },
+                                                    "imagen_principal": {
+                                                        "type": "string",
+                                                        "example": "url/imagen.jpg"
+                                                    },
+                                                    "estatus": {
+                                                        "type": "string",
+                                                        "example": "publicado"
+                                                    },
+                                                    "fecha_creacion": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "fecha_actualizacion": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "bloquesContenido": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "id_blog": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "parrafo": {
+                                                                    "type": "string",
+                                                                    "example": "Contenido del párrafo",
+                                                                    "nullable": true
+                                                                },
+                                                                "imagen": {
+                                                                    "type": "string",
+                                                                    "example": "url/imagen.jpg",
+                                                                    "nullable": true
+                                                                },
+                                                                "descripcion_imagen": {
+                                                                    "type": "string",
+                                                                    "example": "Descripción de la imagen",
+                                                                    "nullable": true
+                                                                },
+                                                                "orden": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "fecha_creacion": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                },
+                                                                "fecha_actualizacion": {
+                                                                    "type": "string",
+                                                                    "format": "date-time"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error interno del servidor"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Blogs"
+                ],
+                "summary": "Crear un nuevo blog",
+                "description": "Crea un nuevo blog con sus respectivos bloques de contenido",
+                "operationId": "storeBlog",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "titulo",
+                                    "descripcion",
+                                    "imagen_principal"
+                                ],
+                                "properties": {
+                                    "titulo": {
+                                        "type": "string",
+                                        "example": "Título del blog"
+                                    },
+                                    "descripcion": {
+                                        "type": "string",
+                                        "example": "Descripción del blog"
+                                    },
+                                    "imagen_principal": {
+                                        "type": "string",
+                                        "example": "url/imagen.jpg"
+                                    },
+                                    "estatus": {
+                                        "type": "string",
+                                        "enum": [
+                                            "borrador",
+                                            "publicado"
+                                        ],
+                                        "example": "borrador"
+                                    },
+                                    "bloques_contenido": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "parrafo": {
+                                                    "type": "string",
+                                                    "example": "Texto del párrafo"
+                                                },
+                                                "imagen": {
+                                                    "type": "string",
+                                                    "example": "url/imagen.jpg",
+                                                    "nullable": true
+                                                },
+                                                "descripcion_imagen": {
+                                                    "type": "string",
+                                                    "example": "Descripción de la imagen",
+                                                    "nullable": true
+                                                },
+                                                "orden": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Blog creado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blog creado exitosamente"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "titulo": {
+                                                    "type": "string",
+                                                    "example": "Título del blog"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string",
+                                                    "example": "Descripción del blog"
+                                                },
+                                                "imagen_principal": {
+                                                    "type": "string",
+                                                    "example": "url/imagen.jpg"
+                                                },
+                                                "estatus": {
+                                                    "type": "string",
+                                                    "example": "borrador"
+                                                },
+                                                "fecha_creacion": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "fecha_actualizacion": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "bloquesContenido": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "id_blog": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "parrafo": {
+                                                                "type": "string",
+                                                                "example": "Contenido del párrafo",
+                                                                "nullable": true
+                                                            },
+                                                            "imagen": {
+                                                                "type": "string",
+                                                                "example": "url/imagen.jpg",
+                                                                "nullable": true
+                                                            },
+                                                            "descripcion_imagen": {
+                                                                "type": "string",
+                                                                "example": "Descripción de la imagen",
+                                                                "nullable": true
+                                                            },
+                                                            "orden": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "fecha_creacion": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "fecha_actualizacion": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Datos de entrada inválidos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Los datos proporcionados no son válidos"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al crear el blog"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/blogs/{blog}": {
+            "get": {
+                "tags": [
+                    "Blogs"
+                ],
+                "summary": "Obtener un blog específico",
+                "description": "Obtiene los detalles de un blog específico por su ID",
+                "operationId": "showBlog",
+                "parameters": [
+                    {
+                        "name": "blog",
+                        "in": "path",
+                        "description": "ID del blog",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blog obtenido con éxito"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "Blog": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "titulo": {
+                                                            "type": "string",
+                                                            "example": "Título del blog"
+                                                        },
+                                                        "descripcion": {
+                                                            "type": "string",
+                                                            "example": "Descripción del blog"
+                                                        },
+                                                        "imagen_principal": {
+                                                            "type": "string",
+                                                            "example": "url/imagen.jpg"
+                                                        },
+                                                        "estatus": {
+                                                            "type": "string",
+                                                            "example": "publicado"
+                                                        },
+                                                        "fecha_creacion": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "fecha_actualizacion": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "bloquesContenido": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "id_blog": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "parrafo": {
+                                                                        "type": "string",
+                                                                        "example": "Contenido del párrafo",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "imagen": {
+                                                                        "type": "string",
+                                                                        "example": "url/imagen.jpg",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "descripcion_imagen": {
+                                                                        "type": "string",
+                                                                        "example": "Descripción de la imagen",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "orden": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "fecha_creacion": {
+                                                                        "type": "string",
+                                                                        "format": "date-time"
+                                                                    },
+                                                                    "fecha_actualizacion": {
+                                                                        "type": "string",
+                                                                        "format": "date-time"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Blog no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blog no encontrado"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Blogs"
+                ],
+                "summary": "Actualizar un blog existente",
+                "description": "Actualiza un blog específico y sus bloques de contenido",
+                "operationId": "updateBlog",
+                "parameters": [
+                    {
+                        "name": "blog",
+                        "in": "path",
+                        "description": "ID del blog a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "titulo": {
+                                        "type": "string",
+                                        "example": "Título actualizado"
+                                    },
+                                    "descripcion": {
+                                        "type": "string",
+                                        "example": "Descripción actualizada"
+                                    },
+                                    "imagen_principal": {
+                                        "type": "string",
+                                        "example": "url/nueva-imagen.jpg"
+                                    },
+                                    "estatus": {
+                                        "type": "string",
+                                        "enum": [
+                                            "borrador",
+                                            "publicado"
+                                        ],
+                                        "example": "publicado"
+                                    },
+                                    "bloques_contenido": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id_bloque": {
+                                                    "type": "integer",
+                                                    "example": 1,
+                                                    "nullable": true
+                                                },
+                                                "parrafo": {
+                                                    "type": "string",
+                                                    "example": "Texto actualizado"
+                                                },
+                                                "imagen": {
+                                                    "type": "string",
+                                                    "example": "url/imagen.jpg",
+                                                    "nullable": true
+                                                },
+                                                "descripcion_imagen": {
+                                                    "type": "string",
+                                                    "example": "Nueva descripción",
+                                                    "nullable": true
+                                                },
+                                                "orden": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Blog actualizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blog actualizado exitosamente"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "titulo": {
+                                                    "type": "string",
+                                                    "example": "Título actualizado"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string",
+                                                    "example": "Descripción actualizada"
+                                                },
+                                                "imagen_principal": {
+                                                    "type": "string",
+                                                    "example": "url/nueva-imagen.jpg"
+                                                },
+                                                "estatus": {
+                                                    "type": "string",
+                                                    "example": "publicado"
+                                                },
+                                                "fecha_creacion": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "fecha_actualizacion": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "bloquesContenido": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "id_blog": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "parrafo": {
+                                                                "type": "string",
+                                                                "example": "Texto actualizado",
+                                                                "nullable": true
+                                                            },
+                                                            "imagen": {
+                                                                "type": "string",
+                                                                "example": "url/imagen.jpg",
+                                                                "nullable": true
+                                                            },
+                                                            "descripcion_imagen": {
+                                                                "type": "string",
+                                                                "example": "Nueva descripción",
+                                                                "nullable": true
+                                                            },
+                                                            "orden": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "fecha_creacion": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "fecha_actualizacion": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Blog no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blog no encontrado"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Datos de entrada inválidos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Los datos proporcionados no son válidos"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al actualizar el blog"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Blogs"
+                ],
+                "summary": "Eliminar un blog",
+                "description": "Elimina un blog específico y todos sus bloques de contenido asociados",
+                "operationId": "destroyBlog",
+                "parameters": [
+                    {
+                        "name": "blog",
+                        "in": "path",
+                        "description": "ID del blog a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Blog eliminado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blog eliminado exitosamente"
+                                        },
+                                        "data": {
+                                            "type": "null",
+                                            "example": null
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Blog no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Blog no encontrado"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al eliminar el blog"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/v1/clientes": {
@@ -1614,6 +2464,11 @@
     },
     "components": {
         "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            },
             "sanctum": {
                 "type": "http",
                 "description": "Bearer authentication with Sanctum",
@@ -1623,6 +2478,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Blogs",
+            "description": "API para la gestión de blogs"
+        },
         {
             "name": "Clientes",
             "description": "API Endpoints para gestión de clientes"
