@@ -11,61 +11,69 @@ class EspecificacionSeeder extends Seeder
     public function run(): void
     {
         $especificaciones = [
-            // Producto 1
-            ['id_producto' => 1, 'clave' => 'power', 'valor' => '220V', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 1, 'clave' => 'capacity', 'valor' => 'Varía según el modelo', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 1, 'clave' => 'material', 'valor' => 'Acero inoxidable', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            // Producto 1: Letreros Neón LED - Especificaciones
+            ['id_producto' => 1, 'clave' => 'especificacion', 'valor' => 'Materiales duraderos', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 1, 'clave' => 'especificacion', 'valor' => '100% personalizables', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 1, 'clave' => 'especificacion', 'valor' => 'Eficiencia energética', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 1, 'clave' => 'especificacion', 'valor' => 'Adaptable a espacios', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 1: Letreros Neón LED - Beneficios
+            ['id_producto' => 1, 'clave' => 'beneficio', 'valor' => 'Iluminación con colores vibrantes', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 1, 'clave' => 'beneficio', 'valor' => 'Facil instalación', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 1, 'clave' => 'beneficio', 'valor' => 'Brinda personalidad', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 1, 'clave' => 'beneficio', 'valor' => 'Atractivo visual', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 1: Letreros Neón LED - Imágenes extras
+            ['id_producto' => 1, 'clave' => 'imagen_beneficios', 'valor' => '/Productos/letrero-neon-beneficios.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 1, 'clave' => 'imagen_banner', 'valor' => '/Productos/letrero-neon-banner.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
 
-            // Producto 2
-            ['id_producto' => 2, 'clave' => 'power', 'valor' => '110V/220V', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 2, 'clave' => 'capacity', 'valor' => 'Hasta 500 unidades/hora', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 2, 'clave' => 'material', 'valor' => 'Aluminio', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 3
-            ['id_producto' => 3, 'clave' => 'power', 'valor' => '220-240V/50Hz', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 3, 'clave' => 'capacity', 'valor' => '1-100g (Según el modelo)', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 3, 'clave' => 'width', 'valor' => '3-20cm (Según el modelo)', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 3, 'clave' => 'flow', 'valor' => '10-20 bolsas/min', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 4
-            ['id_producto' => 4, 'clave' => 'power', 'valor' => '220V', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 4, 'clave' => 'capacity', 'valor' => 'Hasta 30 bolsas/min', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 4, 'clave' => 'material', 'valor' => 'Plástico resistente', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 5
-            ['id_producto' => 5, 'clave' => 'power', 'valor' => '220V', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 5, 'clave' => 'amperage', 'valor' => '50-200A', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 5, 'clave' => 'material', 'valor' => 'Acero', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 6
-            ['id_producto' => 6, 'clave' => 'power', 'valor' => '24V', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 6, 'clave' => 'capacity', 'valor' => '50 GPD', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 6, 'clave' => 'stages', 'valor' => '5 etapas de filtración', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 7
-            ['id_producto' => 7, 'clave' => 'power', 'valor' => '12V', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 7, 'clave' => 'resolution', 'valor' => '1024x768', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 7, 'clave' => 'diameter', 'valor' => '50 cm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 8
-            ['id_producto' => 8, 'clave' => 'material', 'valor' => 'Fibra de bambú', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 8, 'clave' => 'dimensions', 'valor' => '60x60 cm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 8, 'clave' => 'thickness', 'valor' => '5 mm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 9
-            ['id_producto' => 9, 'clave' => 'material', 'valor' => 'WPC (Wood Plastic Composite)', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 9, 'clave' => 'dimensions', 'valor' => '180x30 cm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 9, 'clave' => 'thickness', 'valor' => '2 cm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 10
-            ['id_producto' => 10, 'clave' => 'material', 'valor' => 'WPC (Wood Plastic Composite)', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 10, 'clave' => 'dimensions', 'valor' => '200x40 cm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 10, 'clave' => 'thickness', 'valor' => '2.5 cm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-
-            // Producto 11
-            ['id_producto' => 11, 'clave' => 'power', 'valor' => '220V', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 11, 'clave' => 'capacity', 'valor' => '300-500 vasos/hora', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['id_producto' => 11, 'clave' => 'diameter', 'valor' => '90-95 mm', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            // Producto 2: Sillas y Mesas LED - Especificaciones
+            ['id_producto' => 2, 'clave' => 'especificacion', 'valor' => 'Materiales de alta calidad', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 2, 'clave' => 'especificacion', 'valor' => '100% personalizables', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 2, 'clave' => 'especificacion', 'valor' => 'Bajo consumo de energía', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 2, 'clave' => 'especificacion', 'valor' => 'Adaptable a interiores y exteriores', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 2: Sillas y Mesas LED - Beneficios
+            ['id_producto' => 2, 'clave' => 'beneficio', 'valor' => 'Crea un ambiente único', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 2, 'clave' => 'beneficio', 'valor' => 'Fácil instalación', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 2, 'clave' => 'beneficio', 'valor' => 'Toque exclusivo a tu evento', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 2, 'clave' => 'beneficio', 'valor' => 'Adaptable a tu estilo', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 2: Sillas y Mesas LED - Imágenes extras
+            ['id_producto' => 2, 'clave' => 'imagen_beneficios', 'valor' => '/Productos/sillas-mesas-beneficios.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 2, 'clave' => 'imagen_banner', 'valor' => '/Productos/sillas-mesas-banner.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 3: Pisos LED - Especificaciones
+            ['id_producto' => 3, 'clave' => 'especificacion', 'valor' => 'Alta resolución y brillo', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 3, 'clave' => 'especificacion', 'valor' => 'Resistencia al peso', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 3, 'clave' => 'especificacion', 'valor' => 'Superficie antideslizante', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 3, 'clave' => 'especificacion', 'valor' => 'Soporta proyecciones HD', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 3: Pisos LED - Beneficios
+            ['id_producto' => 3, 'clave' => 'beneficio', 'valor' => 'Ambientes inmersivos', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 3, 'clave' => 'beneficio', 'valor' => 'Mayor interacción', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 3, 'clave' => 'beneficio', 'valor' => 'Flexibilidad de diseños', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 3, 'clave' => 'beneficio', 'valor' => 'Aumento de visibilidad', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 3: Pisos LED - Imágenes extras
+            ['id_producto' => 3, 'clave' => 'imagen_beneficios', 'valor' => '/Productos/pisos-led-beneficios.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 3, 'clave' => 'imagen_banner', 'valor' => '/Productos/pisos-led-banner.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 4: Barras Pixel LED - Especificaciones
+            ['id_producto' => 4, 'clave' => 'especificacion', 'valor' => 'Ideales para exposiciones', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 4, 'clave' => 'especificacion', 'valor' => 'Imágenes de alto relieve', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 4, 'clave' => 'especificacion', 'valor' => 'Tecnología eficiente y moderna', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 4, 'clave' => 'especificacion', 'valor' => 'Colores vibrantes', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 4: Barras Pixel LED - Beneficios
+            ['id_producto' => 4, 'clave' => 'beneficio', 'valor' => 'Imágenes de alto impacto', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 4, 'clave' => 'beneficio', 'valor' => 'Fácil instalación y mantenimiento', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 4, 'clave' => 'beneficio', 'valor' => 'Personalización rápida', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 4, 'clave' => 'beneficio', 'valor' => 'Alto atractivo visual', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            
+            // Producto 4: Barras Pixel LED - Imágenes extras
+            ['id_producto' => 4, 'clave' => 'imagen_beneficios', 'valor' => '/Productos/barras-pixel-beneficios.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['id_producto' => 4, 'clave' => 'imagen_banner', 'valor' => '/Productos/barras-pixel-banner.webp', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
         ];
 
         DB::table('especificacions')->insert($especificaciones);

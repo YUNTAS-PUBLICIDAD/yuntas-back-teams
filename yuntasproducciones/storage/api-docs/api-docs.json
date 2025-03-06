@@ -1,22 +1,14 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "API de Yuntas Producciones",
-        "description": "Documentación de la API de Yuntas Producciones",
-        "contact": {
-            "name": "Soporte Yuntas",
-            "email": "info@yuntasproducciones.com"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
-        "version": "1.0.0"
+        "title": "Laravel Swagger API",
+        "description": "Laravel Swagger API Documentation",
+        "version": "1.0"
     },
     "servers": [
         {
-            "url": "/",
-            "description": "Servidor de desarrollo"
+            "url": "http://localhost:8000",
+            "description": "API Server"
         },
         {
             "url": "/api"
@@ -2464,11 +2456,6 @@
     },
     "components": {
         "securitySchemes": {
-            "bearerAuth": {
-                "type": "http",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
-            },
             "sanctum": {
                 "type": "http",
                 "description": "Bearer authentication with Sanctum",
