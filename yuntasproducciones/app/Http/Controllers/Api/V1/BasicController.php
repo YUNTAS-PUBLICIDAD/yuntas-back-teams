@@ -12,9 +12,8 @@ class BasicController extends Controller
     /**
      * Respuesta de éxito con datos
      */
-    protected function successResponse(mixed $data, string $message = 'Operación exitosa', HttpStatusCode
-                                             $status = HttpStatusCode::OK): JsonResponse
-
+    protected function successResponse(mixed $data, string $message = 'Operación exitosa', HttpStatusCode 
+    $status = HttpStatusCode::OK): JsonResponse
     {
         return response()->json([
             'success' => true,
@@ -38,9 +37,8 @@ class BasicController extends Controller
     /**
      * Respuesta de error
      */
-    protected function errorResponse(string $message, HttpStatusCode $status =
+    protected function errorResponse(string $message, HttpStatusCode $status = 
     HttpStatusCode::BAD_REQUEST, mixed $errors = null): JsonResponse
-
     {
         return response()->json([
             'success' => false,
@@ -84,9 +82,8 @@ class BasicController extends Controller
     /**
      * Respuesta de error 422 (Contenido no procesable)
      */
-    protected function unprocessableContentResponse(string $message = 'Solicitud no procesable',
-                                                    mixed $errors = null): JsonResponse
-
+    protected function unprocessableContentResponse(string $message = 'Solicitud no procesable', 
+    mixed $errors = null): JsonResponse
     {
         return $this->errorResponse($message, HttpStatusCode::METHOD_UNPROCESSABLE_CONTENT, $errors);
     }

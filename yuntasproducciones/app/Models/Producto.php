@@ -2,18 +2,48 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Producto extends Model
 {
-    use HasFactory;
-
-    protected $table = 'producto';
-    protected $primaryKey = 'id_produc';
-    public $timestamps = false;
     protected $fillable = [
+        'nombre',
         'titulo',
-        'imagen',
+        'subtitulo',
+        'lema',
+        'descripcion',
+        'imagen_principal',
+        'stock',
+        'precio',
+        'seccion',
+        'mensaje_correo'
     ];
+
+    public $timestamps = true;
+
+    public function especificaciones()
+    {
+        return $this->hasMany(Especificacion::class, 'id_producto');
+    }
+
+    public function dimensiones()
+    {
+        return $this->hasMany(Dimension::class, 'id_producto');
+    }
+
+    public function imagenes()
+    {
+        return $this->hasMany(ImagenProducto::class, 'id_producto');
+    }
+
+    public function productosRelacionados()
+    {
+        return $this->belongsToMany(Producto::class, 'producto_relacionados', 'id_producto', 'id_relacionado');
+    }
+
+    public function interesados(): HasMany
+    {
+        return $this->hasMany(Interesado::class, 'producto_id', 'id');
+    }
 }
