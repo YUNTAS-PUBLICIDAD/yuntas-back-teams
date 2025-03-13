@@ -3,6 +3,7 @@
 ```shell
 # Documentar API con Swagger
 php artisan l5-swagger:generate
+http://localhost:8000/api/documentation#
 ```
 
 ```shell

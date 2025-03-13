@@ -32,7 +32,7 @@ class UserController extends BasicController
      *             @OA\Property(property="name", type="string", example="John Doe", description="Nombre del usuario"),
      *             @OA\Property(property="email", type="string", format="email", example="johndoe@example.com", description="Correo electrónico"),
      *             @OA\Property(property="password", type="string", format="password", example="password123", description="Contraseña"),
-     *             @OA\Property(property="celular", type="string", example="1234567890", description="Número de celular"),
+     *             @OA\Property(property="celular", type="string", example="980172891", description="Número de celular"),
      *             @OA\Property(property="fecha", type="string", format="date", example="1990-01-01", description="Fecha de nacimiento"),
      *         )
      *     ),

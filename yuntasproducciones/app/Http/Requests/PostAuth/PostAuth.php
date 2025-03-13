@@ -63,7 +63,7 @@ class PostAuth extends FormRequest
                 'success' => false,
                 'message' => 'Error de validación',
                 'errors' => $validator->errors()
-            ], HttpStatusCode::UNPROCESSABLE_ENTITY)
+            ])
         );
     }
 }
