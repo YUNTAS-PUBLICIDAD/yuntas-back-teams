@@ -26,6 +26,10 @@ class DatabaseSeeder extends Seeder
             DimensionSeeder::class,
             ImagenProductoSeeder::class,
             ProductoRelacionadoSeeder::class,
+
+            //Reclamos
+            DatosPersonalSeeder::class,
+            ReclamoSeeder::class,
         ]);
     }
 }
