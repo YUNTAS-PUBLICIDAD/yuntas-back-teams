@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\PostCategory;
+namespace App\Http\Requests\PostReclamo;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class PostCategorias extends FormRequest
+class UpdateReclamo extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +22,7 @@ class PostCategorias extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => 'required|string|max:100'
+            //
         ];
     }
 }
