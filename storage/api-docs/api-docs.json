@@ -1998,6 +1998,424 @@
                 }
             }
         },
+        "/api/v1/reclamos": {
+            "get": {
+                "tags": [
+                    "Reclamos"
+                ],
+                "summary": "Muestra un listado de todos los reclamos",
+                "description": "Retorna un array con todos los reclamos y sus relaciones",
+                "operationId": "indexReclamos",
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "datos": {
+                                                        "type": "string",
+                                                        "example": "Información del cliente"
+                                                    },
+                                                    "tipo_doc": {
+                                                        "type": "string",
+                                                        "example": "DNI"
+                                                    },
+                                                    "numero_doc": {
+                                                        "type": "string",
+                                                        "example": "12345678"
+                                                    },
+                                                    "correo": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "example": "cliente@example.com"
+                                                    },
+                                                    "telefono": {
+                                                        "type": "string",
+                                                        "example": "987654321"
+                                                    },
+                                                    "fecha_compra": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2025-03-21"
+                                                    },
+                                                    "producto": {
+                                                        "type": "string",
+                                                        "example": "Producto XYZ"
+                                                    },
+                                                    "detalle_reclamo": {
+                                                        "type": "string",
+                                                        "example": "Descripción del reclamo"
+                                                    },
+                                                    "monto_reclamo": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 99.99
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reclamos obtenidos exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Reclamos"
+                ],
+                "summary": "Crea un nuevo reclamo",
+                "description": "Almacena un nuevo reclamo y retorna los datos creados",
+                "operationId": "storeReclamo",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tipo_doc",
+                                    "numero_doc",
+                                    "correo",
+                                    "telefono",
+                                    "reclamos"
+                                ],
+                                "properties": {
+                                    "datos": {
+                                        "type": "string",
+                                        "example": "pepito alcachofa"
+                                    },
+                                    "tipo_doc": {
+                                        "type": "string",
+                                        "example": "DNI"
+                                    },
+                                    "numero_doc": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "correo": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "usuario@example.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "987654321"
+                                    },
+                                    "reclamos": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "fecha_compra": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-03-21"
+                                                },
+                                                "producto": {
+                                                    "type": "string",
+                                                    "example": "Producto XYZ"
+                                                },
+                                                "detalle_reclamo": {
+                                                    "type": "string",
+                                                    "example": "Descripción del reclamo"
+                                                },
+                                                "monto_reclamo": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 99.99
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reclamo creado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reclamo creado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
+        },
+        "/api/v1/reclamos/{id}": {
+            "get": {
+                "tags": [
+                    "Reclamos"
+                ],
+                "summary": "Muestra un reclamo específico",
+                "description": "Retorna los datos de un reclamo según su ID",
+                "operationId": "showReclamo",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del reclamo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reclamo encontrado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "datos": {
+                                                    "type": "string"
+                                                },
+                                                "tipo_doc": {
+                                                    "type": "string",
+                                                    "example": "DNI"
+                                                },
+                                                "numero_doc": {
+                                                    "type": "string",
+                                                    "example": "12345678"
+                                                },
+                                                "correo": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "usuario@example.com"
+                                                },
+                                                "telefono": {
+                                                    "type": "string",
+                                                    "example": "987654321"
+                                                },
+                                                "fecha_compra": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-03-21"
+                                                },
+                                                "detalle_reclamo": {
+                                                    "type": "string",
+                                                    "example": "Descripción del reclamo"
+                                                },
+                                                "monto_reclamo": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 99.99
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reclamo encontrado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reclamo no encontrado"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Reclamos"
+                ],
+                "summary": "Actualiza un reclamo específico",
+                "description": "Actualiza los datos de un reclamo existente según su ID",
+                "operationId": "updateReclamo",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del reclamo a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "datos": {
+                                        "type": "string"
+                                    },
+                                    "tipo_doc": {
+                                        "type": "string",
+                                        "example": "DNI"
+                                    },
+                                    "numero_doc": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "correo": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "usuario@example.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "987654321"
+                                    },
+                                    "reclamos": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "fecha_compra": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-03-21"
+                                                },
+                                                "producto": {
+                                                    "type": "string"
+                                                },
+                                                "detalle_reclamo": {
+                                                    "type": "string"
+                                                },
+                                                "monto_reclamo": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reclamo actualizado exitosamente"
+                    },
+                    "404": {
+                        "description": "Reclamo no encontrado"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Reclamos"
+                ],
+                "summary": "Elimina un reclamo específico",
+                "description": "Elimina un reclamo existente según su ID",
+                "operationId": "destroyReclamo",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del reclamo a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reclamo eliminado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reclamo eliminado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reclamo no encontrado"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "get": {
                 "tags": [
@@ -2125,7 +2543,7 @@
                                     "celular": {
                                         "description": "Número de celular",
                                         "type": "string",
-                                        "example": "1234567890"
+                                        "example": "980172891"
                                     },
                                     "fecha": {
                                         "description": "Fecha de nacimiento",
@@ -2476,6 +2894,10 @@
         {
             "name": "Productos",
             "description": "API Endpoints de productos"
+        },
+        {
+            "name": "Reclamos",
+            "description": "API Endpoints de reclamos"
         },
         {
             "name": "Usuarios",

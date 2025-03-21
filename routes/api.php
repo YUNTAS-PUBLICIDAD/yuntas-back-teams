@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Reclamos\ReclamosController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
+use App\Models\Reclamo;
 
 Route::prefix('v1')->group(function () {
 
@@ -67,4 +69,14 @@ Route::prefix('v1')->group(function () {
     //     });
     // });
 
+    Route::controller(ReclamosController::class)->prefix('reclamos')->group(function(){
+        Route::post('/', 'store');
+
+        Route::middleware(['auth:sanctum', 'role:ADMIN|USER'])->group(function () {
+            Route::get('/', 'index');
+            Route::get('/{id}', 'show');
+            Route::put('/{id}', 'update');
+            Route::delete('/{id}', 'destroy');
+        });
+    });
 });
