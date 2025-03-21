@@ -19,9 +19,9 @@ class DatosPersonalFactory extends Factory
         return [
             'datos' => $this->faker->name(),
             'tipo_doc' => $this->faker->randomElement(['DNI', 'Pasaporte', 'Carnet de Extranjeria']),
-            'numero_doc' => $this->faker->numerify('########'),,
+            'numero_doc' => $this->faker->numerify('########'),
             'correo' => $this->faker->email(),
-            'telefono' => $this->faker->phoneNumber()
+            'telefono' => $this->faker->regexify('(9[0-9]{8})'),
         ];
     }
 }
