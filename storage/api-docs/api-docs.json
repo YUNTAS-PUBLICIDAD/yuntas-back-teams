@@ -11,6 +11,10 @@
             "description": "API Server"
         },
         {
+            "url": "https://apiyuntas.yuntasproducciones.com/",
+            "description": "API Server - Production"
+        },
+        {
             "url": "/api"
         }
     ],
