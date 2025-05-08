@@ -1,0 +1,210 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use GuzzleHttp\Psr7\UploadedFile;
+use Illuminate\Http\Request;
+use App\Models\Producto;
+use App\Http\Requests\V2StoreProductoRequest;
+use Illuminate\Support\Facades\Storage;
+
+class V2ProductoController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    /**
+     * Obtener listado de productos
+     * 
+     * @OA\Get(
+     *     path="/api/v2/productos",
+     *     summary="Muestra un listado de todos los productos",
+     *     description="Retorna un array con todos los productos y sus relaciones",
+     *     operationId="indexProductos2",
+     *     tags={"Productos"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Operación exitosa",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="nombre", type="string", example="Laptop"),
+     *                     @OA\Property(property="titulo", type="string", example="Producto premium"),
+     *                     @OA\Property(property="subtitulo", type="string", example="Innovación y calidad"),
+     *                     @OA\Property(property="stock", type="integer"),
+     *                     @OA\Property(property="precio", type="number"),
+     *                     @OA\Property(property="seccion", type="string"),
+     *                     @OA\Property(property="lema", type="string"),
+     *                     @OA\Property(property="descripcion", type="string"),
+     *                     @OA\Property(property="especificaciones", type="string"),
+     *                     @OA\Property(property="mensaje_correo", type="string"),
+     *                     @OA\Property(property="created_at", type="string"),
+     *                     @OA\Property(property="updated_at", type="string"),
+     *                     @OA\Property(property="imagenes", type="object")
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Productos obtenidos exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor"
+     *     )
+     * ),
+     * security={}
+     */
+    public function index()
+    {
+        //
+        return Producto::with('imagenes')->paginate(10);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    /**
+ * Crear un nuevo producto
+ * 
+ * @OA\Post(
+ *     path="/api/v2/productos",
+ *     summary="Crear un nuevo producto (no funciona en Swagger)",
+ *     description="Almacena un nuevo producto, guarda la imagen en el servidor y retorna los datos creados. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
+ *     operationId="storeProducto2",
+ *     tags={"Productos"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 required={
+ *                     "nombre", "titulo", "subtitulo", "stock", "precio", 
+ *                     "seccion", "lema", "descripcion", "especificaciones",
+ *                     "imagenes", "textos_alt", "mensaje_correo"
+ *                 },
+ *                 @OA\Property(property="nombre", type="string", example="Selladora"),
+ *                 @OA\Property(property="titulo", type="string", example="Titulo increíble"),
+ *                 @OA\Property(property="subtitulo", type="string", example="Subtitulo increíble"),
+ *                 @OA\Property(property="stock", type="integer", example=20),
+ *                 @OA\Property(property="precio", type="number", format="float", example=100.50),
+ *                 @OA\Property(property="seccion", type="string", example="Decoración"),
+ *                 @OA\Property(property="lema", type="string", example="Lema increíble"),
+ *                 @OA\Property(property="descripcion", type="string", example="Descripción increíble"),
+ *                 @OA\Property(property="especificaciones", type="string", example="Especificaciones increíbles"),
+ *                 
+ *                 @OA\Property(
+ *                     property="imagenes",
+ *                     type="array",
+ *                     @OA\Items(type="string", format="binary"),
+ *                     description="Array de imágenes a subir"
+ *                 ),
+ *                 
+ *                 @OA\Property(
+ *                     property="textos_alt",
+ *                     type="array",
+ *                     @OA\Items(type="string", example="Texto ALT para la imagen"),
+ *                     description="Array de textos alternativos para las imágenes"
+ *                 ),
+ *                 
+ *                 @OA\Property(property="mensaje_correo", type="string", example="Mensaje increíble")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Producto creado exitosamente",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Producto creado exitosamente")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Error de validación"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error del servidor"
+ *     )
+ * )
+ */
+    private function guardarImagen($x){
+        Storage::putFileAs("imagenes", $x, $x->hashName());
+        return "/storage/imagenes/" . $x->hashName();
+    }
+
+    public function store(V2StoreProductoRequest $request)
+    {
+        //
+        $datosValidados = $request->validated();
+
+        $imagenes = $datosValidados["imagenes"];
+        $textos = $datosValidados["textos_alt"];
+
+        $imagenesProcesadas = [];
+        foreach ($imagenes as $i => $img) {
+            $url = $this->guardarImagen($img);
+            $imagenesProcesadas[] = [
+                "url_imagen" => $url,
+                "texto_alt_SEO" => $textos[$i]
+            ];
+        }
+        
+        $producto = Producto::create([
+            "nombre" => $datosValidados["nombre"],
+            "titulo" => $datosValidados["titulo"],
+            "subtitulo" => $datosValidados["subtitulo"],
+            "stock" => $datosValidados["stock"],
+            "precio" => $datosValidados["precio"],
+            "seccion" => $datosValidados["seccion"],
+            "lema" => $datosValidados["lema"],
+            "descripcion" => $datosValidados["descripcion"],
+            "especificaciones" => $datosValidados["especificaciones"],
+            "mensaje_correo" => $datosValidados["mensaje_correo"],
+        ]);
+
+        $producto->imagenes()->createMany($imagenesProcesadas);
+        return response()->json(["message"=>"Producto insertado exitosamente"], 201);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
+}

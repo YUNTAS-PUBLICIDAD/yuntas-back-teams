@@ -2874,6 +2874,210 @@
                     }
                 }
             }
+        },
+        "/api/v2/productos": {
+            "get": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Muestra un listado de todos los productos",
+                "description": "Retorna un array con todos los productos y sus relaciones",
+                "operationId": "indexProductos2",
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "nombre": {
+                                                        "type": "string",
+                                                        "example": "Laptop"
+                                                    },
+                                                    "titulo": {
+                                                        "type": "string",
+                                                        "example": "Producto premium"
+                                                    },
+                                                    "subtitulo": {
+                                                        "type": "string",
+                                                        "example": "Innovación y calidad"
+                                                    },
+                                                    "stock": {
+                                                        "type": "integer"
+                                                    },
+                                                    "precio": {
+                                                        "type": "number"
+                                                    },
+                                                    "seccion": {
+                                                        "type": "string"
+                                                    },
+                                                    "lema": {
+                                                        "type": "string"
+                                                    },
+                                                    "descripcion": {
+                                                        "type": "string"
+                                                    },
+                                                    "especificaciones": {
+                                                        "type": "string"
+                                                    },
+                                                    "mensaje_correo": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "imagenes": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Productos obtenidos exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Crear un nuevo producto (no funciona en Swagger)",
+                "description": "Almacena un nuevo producto, guarda la imagen en el servidor y retorna los datos creados. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
+                "operationId": "storeProducto2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "titulo",
+                                    "subtitulo",
+                                    "stock",
+                                    "precio",
+                                    "seccion",
+                                    "lema",
+                                    "descripcion",
+                                    "especificaciones",
+                                    "imagenes",
+                                    "textos_alt",
+                                    "mensaje_correo"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Selladora"
+                                    },
+                                    "titulo": {
+                                        "type": "string",
+                                        "example": "Titulo increíble"
+                                    },
+                                    "subtitulo": {
+                                        "type": "string",
+                                        "example": "Subtitulo increíble"
+                                    },
+                                    "stock": {
+                                        "type": "integer",
+                                        "example": 20
+                                    },
+                                    "precio": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100.5
+                                    },
+                                    "seccion": {
+                                        "type": "string",
+                                        "example": "Decoración"
+                                    },
+                                    "lema": {
+                                        "type": "string",
+                                        "example": "Lema increíble"
+                                    },
+                                    "descripcion": {
+                                        "type": "string",
+                                        "example": "Descripción increíble"
+                                    },
+                                    "especificaciones": {
+                                        "type": "string",
+                                        "example": "Especificaciones increíbles"
+                                    },
+                                    "imagenes": {
+                                        "description": "Array de imágenes a subir",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "textos_alt": {
+                                        "description": "Array de textos alternativos para las imágenes",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "Texto ALT para la imagen"
+                                        }
+                                    },
+                                    "mensaje_correo": {
+                                        "type": "string",
+                                        "example": "Mensaje increíble"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Producto creado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Producto creado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2910,11 +3114,6 @@
         {
             "name": "Autenticación",
             "description": "Autenticación"
-        }
-    ],
-    "security": [
-        {
-            "sanctum": []
         }
     ]
 }

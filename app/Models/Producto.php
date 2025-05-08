@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\ProductoImagenes;
 
 class Producto extends Model
 {
@@ -11,21 +12,17 @@ class Producto extends Model
         'nombre',
         'titulo',
         'subtitulo',
-        'lema',
-        'descripcion',
-        'imagen_principal',
         'stock',
         'precio',
         'seccion',
+        'lema',
+        'descripcion',
+        'especificaciones',
+        'imagenes',
         'mensaje_correo'
     ];
 
     public $timestamps = true;
-
-    public function especificaciones()
-    {
-        return $this->hasMany(Especificacion::class, 'id_producto');
-    }
 
     public function dimensiones()
     {
@@ -34,7 +31,7 @@ class Producto extends Model
 
     public function imagenes()
     {
-        return $this->hasMany(ImagenProducto::class, 'id_producto');
+        return $this->hasMany(ProductoImagenes::class, 'producto_id');
     }
 
     public function productosRelacionados()

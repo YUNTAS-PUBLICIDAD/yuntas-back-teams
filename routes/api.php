@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
+use App\Http\Controllers\V2ProductoController;
 use App\Models\Reclamo;
 
 Route::prefix('v1')->group(function () {
@@ -78,5 +79,12 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', 'update');
             Route::delete('/{id}', 'destroy');
         });
+    });
+});
+
+Route::prefix("v2")->group(function(){
+    Route::controller(V2ProductoController::class)->prefix("/productos")->group(function(){
+        Route::get("/", "index");
+        Route::post("/", "store");
     });
 });
