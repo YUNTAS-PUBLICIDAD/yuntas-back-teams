@@ -27,7 +27,7 @@ class PostAuth extends FormRequest
     public function rules()
     {
         return [
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string',
             'device_name' => 'sometimes|string',
             'single_session' => 'sometimes|boolean'
@@ -44,6 +44,7 @@ class PostAuth extends FormRequest
         return [
             'email.required' => 'El correo electrónico es obligatorio',
             'email.email' => 'El formato del correo electrónico no es válido',
+            'email.unique' => 'El correo electrónico ya está registrado',
             'password.required' => 'La contraseña es obligatoria'
         ];
     }

@@ -23,14 +23,14 @@ class UpdateBlogRequest extends FormRequest
     {
         return [
             'titulo' => 'sometimes|string|max:255',
-            'descripcion' => 'sometimes|string',
-            'imagen_principal' => 'sometimes|string',
+            'descripcion' => 'sometimes|string|max:65535',
+            'imagen_principal' => 'sometimes|string|url',
             'estatus' => 'nullable|string|in:borrador,publicado,archivado',
             'bloques_contenido' => 'nullable|array',
             'bloques_contenido.*.id_bloque' => 'nullable|integer|exists:bloque_contenidos,id',
-            'bloques_contenido.*.parrafo' => 'nullable|string',
-            'bloques_contenido.*.imagen' => 'nullable|string',
-            'bloques_contenido.*.descripcion_imagen' => 'nullable|string',
+            'bloques_contenido.*.parrafo' => 'nullable|string|max:5000',
+            'bloques_contenido.*.imagen' => 'nullable|string|url',
+            'bloques_contenido.*.descripcion_imagen' => 'nullable|string|max:255',
             'bloques_contenido.*.orden' => 'nullable|integer|min:1',
         ];
     }

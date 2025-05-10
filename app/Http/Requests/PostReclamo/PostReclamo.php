@@ -26,7 +26,7 @@ class PostReclamo extends FormRequest
             'tipo_doc' => 'required|string|in:DNI,Pasaporte,Carnet de Extranjeria',
             'numero_doc' => 'required|string|max:20',
             'correo' => 'required|email|max:255',
-            'telefono' => 'required|string|max:15',
+            'telefono' => 'required|string|max:20',
 
             'reclamos' => 'nullable|array',
             'reclamos.*.fecha_compra' => 'required|date',

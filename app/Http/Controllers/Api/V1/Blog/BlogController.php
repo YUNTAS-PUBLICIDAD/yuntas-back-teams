@@ -11,6 +11,16 @@ use App\Http\Contains\HttpStatusCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Http\Controllers\Api\CardController;
+use App\Http\Controllers\Api\BlogHeadController;
+use App\Http\Controllers\Api\BlogFooterController;
+use App\Http\Controllers\Api\TarjetaController;
+use App\Http\Controllers\Api\CommendTarjetaController;
+use App\Models\BlogBody;
 
 /**
  * @OA\Tag(
@@ -20,488 +30,383 @@ use Carbon\Carbon;
  */
 class BlogController extends BasicController
 {
-    /**
-     * Mostrar listado de blogs
-     * 
-     * @OA\Get(
-     *     path="/api/v1/blogs",
-     *     summary="Listar todos los blogs",
-     *     description="Obtiene un listado de todos los blogs con sus bloques de contenido",
-     *     operationId="getBlogsList",
-     *     tags={"Blogs"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Operación exitosa",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Blogs obtenidos con éxito"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="titulo", type="string", example="Título del blog"),
-     *                     @OA\Property(property="descripcion", type="string", example="Descripción del blog"),
-     *                     @OA\Property(property="imagen_principal", type="string", example="url/imagen.jpg"),
-     *                     @OA\Property(property="estatus", type="string", example="publicado"),
-     *                     @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                     @OA\Property(property="fecha_actualizacion", type="string", format="date-time"),
-     *                     @OA\Property(
-     *                         property="bloquesContenido",
-     *                         type="array",
-     *                         @OA\Items(
-     *                             type="object",
-     *                             @OA\Property(property="id", type="integer", example=1),
-     *                             @OA\Property(property="id_blog", type="integer", example=1),
-     *                             @OA\Property(property="parrafo", type="string", example="Contenido del párrafo", nullable=true),
-     *                             @OA\Property(property="imagen", type="string", example="url/imagen.jpg", nullable=true),
-     *                             @OA\Property(property="descripcion_imagen", type="string", example="Descripción de la imagen", nullable=true),
-     *                             @OA\Property(property="orden", type="integer", example=1),
-     *                             @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                             @OA\Property(property="fecha_actualizacion", type="string", format="date-time")
-     *                         )
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error interno del servidor"),
-     *             @OA\Property(property="errors", type="object", nullable=true)
-     *         )
-     *     )
-     * )
-     */
-    public function index(): JsonResponse
-    {
-        $blogs = Blog::with('bloquesContenido')->get();
-        
-        return $this->successResponse($blogs, 'Blogs obtenidos con éxito');
-    }
+/**
+ * @OA\Get(
+ *     path="/api/blogs",
+ *     summary="Obtener todos los blogs",
+ *     description="Obtiene todos los blogs disponibles con su card asociada",
+ *     operationId="getBlogs",
+ *     tags={"Blogs"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Operación exitosa",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Operación exitosa"),
+ *             @OA\Property(property="data", type="array", 
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id_blog", type="integer", example=1),
+ *                     @OA\Property(property="id_blog_head", type="integer", example=1),
+ *                     @OA\Property(property="id_blog_body", type="integer", example=1),
+ *                     @OA\Property(property="id_blog_footer", type="integer", example=1),
+ *                     @OA\Property(property="fecha", type="string", example="2025-05-09")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error interno del servidor",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Error en el servidor")
+ *         )
+ *     )
+ * )
+ */
+public function index()
+{
+    $blogs = Blog::with('card')->get();
+    return response()->json($blogs, 200);
+}
+/**
+ * @OA\Post(
+ *     path="/api/blogs",
+ *     summary="Crear un nuevo blog",
+ *     description="Crea un nuevo blog con sus atributos",
+ *     operationId="createBlog",
+ *     tags={"Blogs"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"id_blog_head", "id_blog_body", "id_blog_footer", "fecha"},
+ *             @OA\Property(property="id_blog_head", type="integer", example=1),
+ *             @OA\Property(property="id_blog_body", type="integer", example=1),
+ *             @OA\Property(property="id_blog_footer", type="integer", example=1),
+ *             @OA\Property(property="fecha", type="string", format="date", example="2025-05-09")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Blog creado exitosamente",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Blog creada correctamente"),
+ *             @OA\Property(property="id", type="integer", example=1)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Datos de entrada inválidos",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error interno del servidor",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Error en el servidor")
+ *         )
+ *     )
+ * )
+ */
+public function create(Request $request)
+{
+    try {
+        $validator = Validator::make($request->all(), [
+            'id_blog_head' => 'required|integer|exists:blog_heads,id_blog_head',
+            'id_blog_body' => 'required|integer|exists:blog_bodies,id_blog_body',
+            'id_blog_footer' => 'required|integer|exists:blog_footers,id_blog_footer',
+            'fecha' => 'required|date'
+        ]);
 
-    /**
-     * Crear nuevo blog
-     * 
-     * @OA\Post(
-     *     path="/api/v1/blogs",
-     *     summary="Crear un nuevo blog",
-     *     description="Crea un nuevo blog con sus respectivos bloques de contenido",
-     *     operationId="storeBlog",
-     *     tags={"Blogs"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"titulo", "descripcion", "imagen_principal"},
-     *             @OA\Property(property="titulo", type="string", example="Título del blog"),
-     *             @OA\Property(property="descripcion", type="string", example="Descripción del blog"),
-     *             @OA\Property(property="imagen_principal", type="string", example="url/imagen.jpg"),
-     *             @OA\Property(property="estatus", type="string", example="borrador", enum={"borrador", "publicado"}),
-     *             @OA\Property(
-     *                 property="bloques_contenido",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="parrafo", type="string", example="Texto del párrafo"),
-     *                     @OA\Property(property="imagen", type="string", example="url/imagen.jpg", nullable=true),
-     *                     @OA\Property(property="descripcion_imagen", type="string", example="Descripción de la imagen", nullable=true),
-     *                     @OA\Property(property="orden", type="integer", example=1)
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Blog creado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Blog creado exitosamente"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="titulo", type="string", example="Título del blog"),
-     *                 @OA\Property(property="descripcion", type="string", example="Descripción del blog"),
-     *                 @OA\Property(property="imagen_principal", type="string", example="url/imagen.jpg"),
-     *                 @OA\Property(property="estatus", type="string", example="borrador"),
-     *                 @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                 @OA\Property(property="fecha_actualizacion", type="string", format="date-time"),
-     *                 @OA\Property(
-     *                     property="bloquesContenido",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="id_blog", type="integer", example=1),
-     *                         @OA\Property(property="parrafo", type="string", example="Contenido del párrafo", nullable=true),
-     *                         @OA\Property(property="imagen", type="string", example="url/imagen.jpg", nullable=true),
-     *                         @OA\Property(property="descripcion_imagen", type="string", example="Descripción de la imagen", nullable=true),
-     *                         @OA\Property(property="orden", type="integer", example=1),
-     *                         @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                         @OA\Property(property="fecha_actualizacion", type="string", format="date-time")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Datos de entrada inválidos",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Los datos proporcionados no son válidos"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error al crear el blog"),
-     *             @OA\Property(property="errors", type="object", nullable=true)
-     *         )
-     *     )
-     * )
-     */
-    public function store(StoreBlogRequest $request): JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-            
-            $blog = new Blog();
-            $blog->titulo = $request->titulo;
-            $blog->descripcion = $request->descripcion;
-            $blog->imagen_principal = $request->imagen_principal;
-            $blog->estatus = $request->estatus ?? 'borrador';
-            $blog->fecha_creacion = Carbon::now();
-            $blog->fecha_actualizacion = Carbon::now();
-            $blog->save();
-
-            // Guardar bloques de contenido si existen
-            if ($request->has('bloques_contenido')) {
-                foreach ($request->bloques_contenido as $key => $bloque) {
-                    BloqueContenido::create([
-                        'id_blog' => $blog->id_blog, // Usar id_blog en lugar de id
-                        'parrafo' => $bloque['parrafo'] ?? null,
-                        'imagen' => $bloque['imagen'] ?? null,
-                        'descripcion_imagen' => $bloque['descripcion_imagen'] ?? null,
-                        'orden' => $bloque['orden'] ?? ($key + 1),
-                        'fecha_creacion' => Carbon::now(),
-                        'fecha_actualizacion' => Carbon::now(),
-                    ]);
-                }
-            }
-            
-            DB::commit();
-            
-            return $this->successResponse(
-                Blog::with('bloquesContenido')->find($blog->id_blog), // Usar id_blog en lugar de id
-                'Blog creado exitosamente',
-                HttpStatusCode::CREATED
-            );
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return $this->internalServerErrorResponse('Error al crear el blog: ' . $e->getMessage());
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
         }
+
+        DB::beginTransaction();
+
+        $blog = Blog::create($request->all());
+
+        DB::commit();
+
+        return response()->json([
+            "status" => 200,
+            "message" => "Blog creada correctamente",
+            "id" => $blog->id_blog
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
-    /**
-     * Obtener blog específico
-     * 
-     * @OA\Get(
-     *     path="/api/v1/blogs/{blog}",
-     *     summary="Obtener un blog específico",
-     *     description="Obtiene los detalles de un blog específico por su ID",
-     *     operationId="showBlog",
-     *     tags={"Blogs"},
-     *     @OA\Parameter(
-     *         name="blog",
-     *         in="path",
-     *         required=true,
-     *         description="ID del blog",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Operación exitosa",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Blog obtenido con éxito"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(
-     *                     property="Blog",
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="titulo", type="string", example="Título del blog"),
-     *                     @OA\Property(property="descripcion", type="string", example="Descripción del blog"),
-     *                     @OA\Property(property="imagen_principal", type="string", example="url/imagen.jpg"),
-     *                     @OA\Property(property="estatus", type="string", example="publicado"),
-     *                     @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                     @OA\Property(property="fecha_actualizacion", type="string", format="date-time"),
-     *                     @OA\Property(
-     *                         property="bloquesContenido",
-     *                         type="array",
-     *                         @OA\Items(
-     *                             type="object",
-     *                             @OA\Property(property="id", type="integer", example=1),
-     *                             @OA\Property(property="id_blog", type="integer", example=1),
-     *                             @OA\Property(property="parrafo", type="string", example="Contenido del párrafo", nullable=true),
-     *                             @OA\Property(property="imagen", type="string", example="url/imagen.jpg", nullable=true),
-     *                             @OA\Property(property="descripcion_imagen", type="string", example="Descripción de la imagen", nullable=true),
-     *                             @OA\Property(property="orden", type="integer", example=1),
-     *                             @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                             @OA\Property(property="fecha_actualizacion", type="string", format="date-time")
-     *                         )
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Blog no encontrado",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Blog no encontrado"),
-     *             @OA\Property(property="errors", type="object", nullable=true)
-     *         )
-     *     )
-     * )
-     */
-    public function show(Blog $blog): JsonResponse
-    {
-        $blog->load('bloquesContenido');
-        
-        return $this->successResponse(['Blog' => $blog], 'Blog obtenido con éxito');
-    }
+/**
+ * @OA\Get(
+ *     path="/api/blogs/{id}",
+ *     summary="Obtener un blog específico",
+ *     description="Obtiene los detalles de un blog específico usando su ID",
+ *     operationId="showBlog",
+ *     tags={"Blogs"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del blog",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Operación exitosa",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Blog encontrado"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="id_blog", type="integer", example=1),
+ *                 @OA\Property(property="id_blog_head", type="integer", example=1),
+ *                 @OA\Property(property="id_blog_body", type="integer", example=1),
+ *                 @OA\Property(property="id_blog_footer", type="integer", example=1),
+ *                 @OA\Property(property="fecha", type="string", example="2025-05-09")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Blog no encontrado",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Blog no encontrada")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error interno del servidor",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Error en el servidor")
+ *         )
+ *     )
+ * )
+ */
+public function show(int $id)
+{
+    try {
+        $blog = Blog::with('card')->find($id);
 
-    /**
-     * Actualizar blog existente
-     * 
-     * @OA\Put(
-     *     path="/api/v1/blogs/{blog}",
-     *     summary="Actualizar un blog existente",
-     *     description="Actualiza un blog específico y sus bloques de contenido",
-     *     operationId="updateBlog",
-     *     tags={"Blogs"},
-     *     @OA\Parameter(
-     *         name="blog",
-     *         in="path",
-     *         required=true,
-     *         description="ID del blog a actualizar",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         @OA\JsonContent(
-     *             @OA\Property(property="titulo", type="string", example="Título actualizado"),
-     *             @OA\Property(property="descripcion", type="string", example="Descripción actualizada"),
-     *             @OA\Property(property="imagen_principal", type="string", example="url/nueva-imagen.jpg"),
-     *             @OA\Property(property="estatus", type="string", example="publicado", enum={"borrador", "publicado"}),
-     *             @OA\Property(
-     *                 property="bloques_contenido",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="id_bloque", type="integer", example=1, nullable=true),
-     *                     @OA\Property(property="parrafo", type="string", example="Texto actualizado"),
-     *                     @OA\Property(property="imagen", type="string", example="url/imagen.jpg", nullable=true),
-     *                     @OA\Property(property="descripcion_imagen", type="string", example="Nueva descripción", nullable=true),
-     *                     @OA\Property(property="orden", type="integer", example=1)
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Blog actualizado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Blog actualizado exitosamente"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="titulo", type="string", example="Título actualizado"),
-     *                 @OA\Property(property="descripcion", type="string", example="Descripción actualizada"),
-     *                 @OA\Property(property="imagen_principal", type="string", example="url/nueva-imagen.jpg"),
-     *                 @OA\Property(property="estatus", type="string", example="publicado"),
-     *                 @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                 @OA\Property(property="fecha_actualizacion", type="string", format="date-time"),
-     *                 @OA\Property(
-     *                     property="bloquesContenido",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="id_blog", type="integer", example=1),
-     *                         @OA\Property(property="parrafo", type="string", example="Texto actualizado", nullable=true),
-     *                         @OA\Property(property="imagen", type="string", example="url/imagen.jpg", nullable=true),
-     *                         @OA\Property(property="descripcion_imagen", type="string", example="Nueva descripción", nullable=true),
-     *                         @OA\Property(property="orden", type="integer", example=1),
-     *                         @OA\Property(property="fecha_creacion", type="string", format="date-time"),
-     *                         @OA\Property(property="fecha_actualizacion", type="string", format="date-time")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Blog no encontrado",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Blog no encontrado"),
-     *             @OA\Property(property="errors", type="object", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Datos de entrada inválidos",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Los datos proporcionados no son válidos"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error al actualizar el blog"),
-     *             @OA\Property(property="errors", type="object", nullable=true)
-     *         )
-     *     )
-     * )
-     */
-    public function update(UpdateBlogRequest $request, Blog $blog): JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-            
-            $blog->titulo = $request->titulo ?? $blog->titulo;
-            $blog->descripcion = $request->descripcion ?? $blog->descripcion;
-            $blog->imagen_principal = $request->imagen_principal ?? $blog->imagen_principal;
-            $blog->estatus = $request->estatus ?? $blog->estatus;
-            $blog->fecha_actualizacion = Carbon::now();
-            $blog->save();
-
-            // Actualizar bloques de contenido si existen
-            if ($request->has('bloques_contenido')) {
-                // Opcionalmente, se podría eliminar los bloques existentes
-                // BloqueContenido::where('id_blog', $blog->id_blog)->delete();
-                
-                foreach ($request->bloques_contenido as $key => $bloqueData) {
-                    if (isset($bloqueData['id_bloque'])) {
-                        $bloque = BloqueContenido::find($bloqueData['id_bloque']);
-                        if ($bloque && $bloque->id_blog == $blog->id_blog) { // Usar id_blog en lugar de id
-                            $bloque->parrafo = $bloqueData['parrafo'] ?? $bloque->parrafo;
-                            $bloque->imagen = $bloqueData['imagen'] ?? $bloque->imagen;
-                            $bloque->descripcion_imagen = $bloqueData['descripcion_imagen'] ?? $bloque->descripcion_imagen;
-                            $bloque->orden = $bloqueData['orden'] ?? $bloque->orden;
-                            $bloque->fecha_actualizacion = Carbon::now();
-                            $bloque->save();
-                        }
-                    } else {
-                        // Crear nuevo bloque
-                        BloqueContenido::create([
-                            'id_blog' => $blog->id_blog, // Usar id_blog en lugar de id
-                            'parrafo' => $bloqueData['parrafo'] ?? null,
-                            'imagen' => $bloqueData['imagen'] ?? null,
-                            'descripcion_imagen' => $bloqueData['descripcion_imagen'] ?? null,
-                            'orden' => $bloqueData['orden'] ?? ($key + 1),
-                            'fecha_creacion' => Carbon::now(),
-                            'fecha_actualizacion' => Carbon::now(),
-                        ]);
-                    }
-                }
-            }
-            
-            DB::commit();
-            
-            return $this->successResponse(
-                Blog::with('bloquesContenido')->find($blog->id_blog), // Usar id_blog en lugar de id
-                'Blog actualizado exitosamente'
-            );
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return $this->internalServerErrorResponse('Error al actualizar el blog: ' . $e->getMessage());
+        if (!$blog) {
+            return response()->json([
+                "status" => 404,
+                "message" => "Blog no encontrada"
+            ], 404);
         }
-    }
 
-    /**
-     * Eliminar blog
-     * 
-     * @OA\Delete(
-     *     path="/api/v1/blogs/{blog}",
-     *     summary="Eliminar un blog",
-     *     description="Elimina un blog específico y todos sus bloques de contenido asociados",
-     *     operationId="destroyBlog",
-     *     tags={"Blogs"},
-     *     @OA\Parameter(
-     *         name="blog",
-     *         in="path",
-     *         required=true,
-     *         description="ID del blog a eliminar",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Blog eliminado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Blog eliminado exitosamente"),
-     *             @OA\Property(property="data", type="null", example=null)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Blog no encontrado",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Blog no encontrado"),
-     *             @OA\Property(property="errors", type="object", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error al eliminar el blog"),
-     *             @OA\Property(property="errors", type="object", nullable=true)
-     *         )
-     *     )
-     * )
-     */
-    public function destroy(Blog $blog): JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-            
-            // Eliminar bloques de contenido relacionados
-            BloqueContenido::where('id_blog', $blog->id_blog)->delete(); // Usar id_blog en lugar de id
-            
-            // Eliminar el blog
-            $blog->delete();
-            
-            DB::commit();
-            
-            return $this->noContentResponse('Blog eliminado exitosamente');
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return $this->internalServerErrorResponse('Error al eliminar el blog: ' . $e->getMessage());
-        }
+        return response()->json([
+            "status" => 200,
+            'data' => $blog
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
+/**
+ * @OA\Put(
+ *     path="/api/blogs/{id}",
+ *     summary="Actualizar un blog existente",
+ *     description="Actualiza los detalles de un blog específico",
+ *     operationId="updateBlog",
+ *     tags={"Blogs"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del blog a actualizar",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"id_blog_head", "id_blog_body", "id_blog_footer", "fecha"},
+ *             @OA\Property(property="id_blog_head", type="integer", example=1),
+ *             @OA\Property(property="id_blog_body", type="integer", example=1),
+ *             @OA\Property(property="id_blog_footer", type="integer", example=1),
+ *             @OA\Property(property="fecha", type="string", format="date", example="2025-05-09")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Blog actualizado exitosamente",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Blog actualizado"),
+ *             @OA\Property(property="id", type="integer", example=1)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Blog no encontrado",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Blog no encontrado")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Datos de entrada inválidos",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error interno del servidor",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Error en el servidor")
+ *         )
+ *     )
+ * )
+ */
+public function update(Request $request, $id)
+{
+    try {
+        $validator = Validator::make($request->all(), [
+            'id_blog_head' => 'required|integer|exists:blog_heads,id_blog_head',
+            'id_blog_body' => 'required|integer|exists:blog_bodies,id_blog_body',
+            'id_blog_footer' => 'required|integer|exists:blog_footers,id_blog_footer',
+            'fecha' => 'required|date'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors'=> $validator->errors()], 400);
+        }
+
+        $blog = Blog::find($id);
+
+        if (!$blog){
+            return response()->json([
+                'status'=> 404,
+                'message'=> 'Blog no encontrado'
+            ], 404);
+        }
+
+        DB::beginTransaction();
+
+        $blog->update($request->all());
+
+        DB::commit();
+
+        return response()->json([
+            'status'=> 200,
+            'message'=> 'Blog actualizado',
+            'id'=> $blog->id_blog,
+        ],200);
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json(['error'=> $e->getMessage()], 500);
+    }
+}
+
+/**
+ * @OA\Delete(
+ *     path="/api/blogs/{id}",
+ *     summary="Eliminar un blog",
+ *     description="Elimina un blog específico usando su ID",
+ *     operationId="destroyBlog",
+ *     tags={"Blogs"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del blog a eliminar",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Blog eliminado correctamente",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Blog eliminado correctamente")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Blog no encontrado",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Blog no encontrado")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error interno del servidor",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Error en el servidor")
+ *         )
+ *     )
+ * )
+ */
+public function destroy(int $id)
+{
+    try {
+        $blog = Blog::with(['card', 'head'])->find($id);
+
+        if (!$blog) {
+            return response()->json([
+                "status" => 404,
+                "message" => "Blog no encontrado"
+            ], 404);
+        }
+
+        $id_header_blog = $blog->id_blog_head;
+        $id_body_blog = $blog->id_blog_body;
+        $id_footer_blog = $blog->id_blog_footer;
+
+        $relativePath = "images/templates/plantilla{$blog->card->id_plantilla}/" . Str::slug($blog->head->titulo) . $blog->id_blog;
+
+        // Eliminar directorio de imágenes si existe
+        if (Storage::disk('public')->exists($relativePath)) {
+            Storage::disk('public')->deleteDirectory($relativePath);
+        }
+
+        // Eliminar card
+        $card_object = new CardController();
+        $card_object->destroy($blog->card->id_card);
+
+        // Eliminar blog
+        $blog->delete();
+
+        // Eliminar blog_head
+        $blog_head = new BlogHeadController();
+        $blog_head->destroy($id_header_blog);
+
+        // Eliminar blog_footer
+        $blog_footer = new BlogFooterController();
+        $blog_footer->destroy($id_footer_blog);
+
+        // Eliminar tarjeta
+        $tarjeta = new TarjetaController();
+        $tarjeta->destroyAll($id_body_blog);
+
+        // Eliminar commend_tarjeta
+        $blog_body_model = BlogBody::find($id_body_blog);
+        $commend_tarjeta = new CommendTarjetaController();
+        $commend_tarjeta->destroy($blog_body_model->id_commend_tarjeta);
+
+        // Eliminar blog_body
+        $blog_body_model->delete();
+
+        return response()->json([
+            "status" => 200,
+            "message" => "Blog eliminado correctamente"
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
 }

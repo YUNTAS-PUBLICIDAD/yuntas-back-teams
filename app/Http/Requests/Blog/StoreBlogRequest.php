@@ -23,13 +23,13 @@ class StoreBlogRequest extends FormRequest
     {
         return [
             'titulo' => 'required|string|max:255',
-            'descripcion' => 'required|string',
-            'imagen_principal' => 'required|string',
+            'descripcion' => 'required|string|max:65535',
+            'imagen_principal' => 'required|string|url',
             'estatus' => 'nullable|string|in:borrador,publicado,archivado',
             'bloques_contenido' => 'nullable|array',
-            'bloques_contenido.*.parrafo' => 'nullable|string',
-            'bloques_contenido.*.imagen' => 'nullable|string',
-            'bloques_contenido.*.descripcion_imagen' => 'nullable|string',
+            'bloques_contenido.*.parrafo' => 'nullable|string|max:5000',
+            'bloques_contenido.*.imagen' => 'nullable|string|url',
+            'bloques_contenido.*.descripcion_imagen' => 'nullable|string|max:255',
             'bloques_contenido.*.orden' => 'nullable|integer|min:1',
         ];
     }

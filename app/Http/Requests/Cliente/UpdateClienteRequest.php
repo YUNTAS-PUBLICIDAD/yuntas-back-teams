@@ -14,8 +14,8 @@ class UpdateClienteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:clientes,email,' . $this->route('id'),
+            'name' => 'sometimes|string|max:100',
+            'email' => 'sometimes|email|unique:clientes,email,' . $this->route('id') . '|max:100',
             'telefono' => 'sometimes|string|max:20',
         ];
     }

@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -14,13 +13,10 @@ return new class extends Migration
     {
         Schema::create('blogs', function (Blueprint $table) {
             $table->id('id_blog');
-            $table->string('titulo', 255);
-            $table->text('descripcion')->nullable();
-            $table->string('imagen_principal', 255)->nullable();
-            $table->enum('estatus', ['borrador', 'publicado', 'archivado'])->default('borrador');
-            $table->timestamp('fecha_creacion')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('fecha_actualizacion')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
-            $table->timestamps();
+            $table->foreignId('id_blog_head')->unique()->references('id_blog_head')->on('blog_heads')->onDelete('cascade');
+            $table->foreignId('id_blog_body')->unique()->references('id_blog_body')->on('blog_bodies')->onDelete('cascade');
+            $table->foreignId('id_blog_footer')->unique()->references('id_blog_footer')->on('blog_footers')->onDelete('cascade');
+            $table->timestamp('fecha')->useCurrent();
         });
     }
 
