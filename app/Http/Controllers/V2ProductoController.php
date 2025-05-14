@@ -7,6 +7,7 @@ use GuzzleHttp\Psr7\UploadedFile;
 use Illuminate\Http\Request;
 use App\Models\Producto;
 use App\Http\Requests\V2StoreProductoRequest;
+use App\Http\Requests\V2UpdateProductoRequest;
 use Illuminate\Support\Facades\Storage;
 
 class V2ProductoController extends Controller
@@ -195,17 +196,91 @@ class V2ProductoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(V2UpdateProductoRequest $request, string $id)
     {
         //
+        $producto = Producto::find($id)->with("imagenes");
+        if ($producto == null) {
+            return response()->json(["message"=>"Producto no encontrado"], status: 404);
+        }
+
+        $datosValidados = $request->validated();
+        
+        $imagenes = $datosValidados["imagenes"];
+        $textos = $datosValidados["textos_alt"];
+
+        $imagenesProcesadas = [];
+        foreach ($imagenes as $i => $img) {
+            $url = $this->guardarImagen($img);
+            $imagenesProcesadas[] = [
+                "url_imagen" => $url,
+                "texto_alt_SEO" => $textos[$i]
+            ];
+        }
+
+        $producto = Producto::update([
+            "nombre" => $datosValidados["nombre"],
+            "titulo" => $datosValidados["titulo"],
+            "subtitulo" => $datosValidados["subtitulo"],
+            "stock" => $datosValidados["stock"],
+            "precio" => $datosValidados["precio"],
+            "seccion" => $datosValidados["seccion"],
+            "lema" => $datosValidados["lema"],
+            "descripcion" => $datosValidados["descripcion"],
+            "especificaciones" => $datosValidados["especificaciones"],
+            "mensaje_correo" => $datosValidados["mensaje_correo"],
+        ]);
+
+        $producto->imagenes()->createMany($imagenesProcesadas);
+        return response()->json(["message"=>"Producto insertado exitosamente"], 201);
     }
 
     /**
      * Remove the specified resource from storage.
      */
+    /**
+     * Eliminar un producto específico
+     * 
+     * @OA\Delete(
+     *     path="/api/v2/productos/{id}",
+     *     summary="Elimina un producto específico",
+     *     description="Elimina un producto existente según su ID",
+     *     operationId="destroyProducto2",
+     *     tags={"Productos"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del producto a eliminar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Producto eliminado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="null"),
+     *             @OA\Property(property="message", type="string", example="Producto eliminado exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Producto no encontrado"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor"
+     *     )
+     * )
+     */
     public function destroy(string $id)
     {
         //
-        Producto::delete($id);
+        $producto = Producto::find($id);
+        if ($producto == null) {
+            return response()->json(["message"=>"Producto no encontrado"], status: 404);
+        }
+        $producto->delete();
+        return response()->json(["message"=>"Producto eliminado exitosamente"], 200);
     }
 }

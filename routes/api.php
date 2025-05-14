@@ -130,5 +130,6 @@ Route::prefix("v2")->group(function(){
     Route::controller(V2ProductoController::class)->prefix("/productos")->group(function(){
         Route::get("/", "index");
         Route::post("/", "store");
+        Route::delete("/{id}", "destroy")->whereNumber("id");
     });
 });
