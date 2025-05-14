@@ -224,7 +224,6 @@ return [
             ],
             'security' => [
                 [
-                    'sanctum' => [],
                 ],
             ],
         ],
