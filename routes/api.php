@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\BlogFooterController;
 use App\Http\Controllers\Api\BlogBodyController;
 use App\Http\Controllers\Api\CommendTarjetaController;
 use App\Http\Controllers\Api\TarjetaController;
+use App\Http\Controllers\PermissionController;
 
 // blogs públicos para ver los clientes
 Route::get('/cards', [CardController::class, "index"]);
@@ -53,6 +54,13 @@ Route::delete('/blog_body/{id}', [BlogBodyController::class, "destroy"]);
 Route::delete('/blog_footer/{id}', [BlogFooterController::class, "destroy"]);
 Route::delete('/commend_tarjeta/{id}', [CommendTarjetaController::class, "destroy"]);
 Route::delete('/tarjetas_delete/{id}', [TarjetaController::class, "destroyAll"]);
+
+// Rutas para los permisos
+Route::get('/permissions', [PermissionController::class, 'index']);
+Route::get('/permissions/{id}', [PermissionController::class, 'show']);
+Route::post('/permissions', [PermissionController::class, 'store']);
+Route::put('/permissions/{id}', [PermissionController::class, 'update']);
+Route::delete('/permissions/{id}', [PermissionController::class, 'destroy']);
 
 Route::prefix('v1')->group(function () {
 
