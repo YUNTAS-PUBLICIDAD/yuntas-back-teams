@@ -206,5 +206,6 @@ class V2ProductoController extends Controller
     public function destroy(string $id)
     {
         //
+        Producto::delete($id);
     }
 }
