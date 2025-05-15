@@ -74,7 +74,7 @@ class UserController extends BasicController
             $userData['password'] = Hash::make($request['password']);
 
             $user = User::create($userData);
-            $user->assignRole('USER');
+            $user->assignRole('user');
             
             DB::commit();
 
@@ -128,16 +128,28 @@ class UserController extends BasicController
     public function index()
     {
         try {
-            $userList = User::all();
+            $users = User::with('roles')->get();
 
-            $message = $userList->isEmpty() ? "No hay usuarios disponibles." : "Usuarios listados correctamente.";
-            return $this->successResponse($userList, $message);
+            $data = $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'celular' => $user->celular,
+                    'roles' => $user->getRoleNames(), 
+                ];
+            });
 
-        } catch(\Exception $e) {
+            $message = $users->isEmpty()
+                ? "No hay usuarios disponibles."
+                : "Usuarios listados correctamente.";
+
+            return $this->successResponse($data, $message);
+
+        } catch (\Exception $e) {
             return $this->internalServerErrorResponse("Ocurrió un problema al listar los usuarios: " . $e->getMessage());
         }
     }
-
     /**
      * @OA\Delete(
      *     path="/api/v1/users/{id}",
@@ -277,4 +289,19 @@ class UserController extends BasicController
             return $this->internalServerErrorResponse("Ocurrió un problema al actualizar al usuario: " . $e->getMessage());
         }
     }
+
+    public function assignRoleToUser(Request $request, $userId)
+    {
+    $request->validate([
+        'role' => 'required|string|exists:roles,name',
+    ]);
+
+    $user = User::findOrFail($userId);
+
+    // Puedes limpiar roles anteriores si quieres solo un rol
+    $user->syncRoles([$request->role]);
+
+    return response()->json(['message' => 'Rol asignado correctamente', 'user' => $user]);
+    }
+
 }

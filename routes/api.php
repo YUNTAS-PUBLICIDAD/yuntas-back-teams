@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\BlogBodyController;
 use App\Http\Controllers\Api\CommendTarjetaController;
 use App\Http\Controllers\Api\TarjetaController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\RolePermissionController;
 
 // blogs públicos para ver los clientes
 Route::get('/cards', [CardController::class, "index"]);
@@ -55,11 +57,21 @@ Route::delete('/commend_tarjeta/{id}', [CommendTarjetaController::class, "destro
 Route::delete('/tarjetas_delete/{id}', [TarjetaController::class, "destroyAll"]);
 
 // Rutas para los permisos
-Route::get('/permissions', [PermissionController::class, 'index']);
-Route::get('/permissions/{id}', [PermissionController::class, 'show']);
-Route::post('/permissions', [PermissionController::class, 'store']);
-Route::put('/permissions/{id}', [PermissionController::class, 'update']);
-Route::delete('/permissions/{id}', [PermissionController::class, 'destroy']);
+Route::apiResource('permissions', PermissionController::class);
+
+// Rutas para los roles
+Route::apiResource('roles', RoleController::class);
+
+//Asignar rol de usuario
+Route::post('/users/{userId}/role', [UserController::class, 'assignRoleToUser']);
+
+//Rutas para RolePermissionController
+Route::prefix('roles/{roleId}/permissions')->group(function () {
+    Route::get('/', [RolePermissionController::class, 'index']);
+    Route::post('/', [RolePermissionController::class, 'store']);
+    Route::delete('/{permissionId}', [RolePermissionController::class, 'destroy']);
+});
+
 
 Route::prefix('v1')->group(function () {
 
@@ -69,12 +81,10 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::controller(UserController::class)->prefix('users')->group(function(){
-        Route::middleware(['auth:sanctum', 'role:ADMIN'])->group(function () {
             Route::post('/', 'store');
             Route::get('/', 'index');
             Route::delete('/{id}', 'destroy');
             Route::put('/{id}', 'update');
-        });
     });
 
     Route::controller(ProductoController::class)->prefix('productos')->group(function(){
