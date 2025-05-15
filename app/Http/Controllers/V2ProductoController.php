@@ -9,6 +9,7 @@ use App\Models\Producto;
 use App\Http\Requests\V2StoreProductoRequest;
 use App\Http\Requests\V2UpdateProductoRequest;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class V2ProductoController extends Controller
 {
@@ -276,11 +277,28 @@ class V2ProductoController extends Controller
     public function destroy(string $id)
     {
         //
-        $producto = Producto::find($id);
-        if ($producto == null) {
-            return response()->json(["message"=>"Producto no encontrado"], status: 404);
+        DB::beginTransaction();
+        try {
+            $producto = Producto::with("imagenes")->find($id);
+            if ($producto == null) {
+                return response()->json(["message" => "Producto no encontrado"], status: 404);
+            }
+            $imagenesArray = $producto->imagenes->toArray();
+            $productoImagenes = array_map(function ($x) {
+                $archivo = str_ireplace("/storage/imagenes/", "", $x["url_imagen"]);
+                return $archivo;
+            }, $imagenesArray);
+            foreach ($productoImagenes as $imagen) {
+                Storage::delete("imagenes/" . $imagen);
+            }
+
+            $producto->delete();
+            DB::commit();
+            return response()->json(["message" => "Producto eliminado exitosamente"], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            error_log($e);
+            return response()->json(["message"=>"Hubo un error en el servidor"], 500);
         }
-        $producto->delete();
-        return response()->json(["message"=>"Producto eliminado exitosamente"], 200);
     }
 }
