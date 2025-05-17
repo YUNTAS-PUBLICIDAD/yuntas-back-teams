@@ -2614,7 +2614,7 @@
                     "Productos"
                 ],
                 "summary": "Crear un nuevo producto (no funciona en Swagger)",
-                "description": "Almacena un nuevo producto, guarda la imagen en el servidor y retorna los datos creados. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
+                "description": "Almacena un nuevo producto, guarda la imagen en el servidor. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
                 "operationId": "storeProducto2",
                 "requestBody": {
                     "required": true,
@@ -2726,6 +2726,147 @@
             }
         },
         "/api/v2/productos/{id}": {
+            "post": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Actualiza un producto específico (no funciona en Swagger)",
+                "description": "Actualiza producto, elimina todas las antiguas imagenes y guarda las nuevas imagen en el servidor. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
+                "operationId": "updateProducto2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del producto a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "titulo",
+                                    "subtitulo",
+                                    "stock",
+                                    "precio",
+                                    "seccion",
+                                    "lema",
+                                    "descripcion",
+                                    "especificaciones",
+                                    "imagenes",
+                                    "textos_alt",
+                                    "mensaje_correo",
+                                    "_method"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Selladora"
+                                    },
+                                    "titulo": {
+                                        "type": "string",
+                                        "example": "Titulo increíble"
+                                    },
+                                    "subtitulo": {
+                                        "type": "string",
+                                        "example": "Subtitulo increíble"
+                                    },
+                                    "stock": {
+                                        "type": "integer",
+                                        "example": 20
+                                    },
+                                    "precio": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100.5
+                                    },
+                                    "seccion": {
+                                        "type": "string",
+                                        "example": "Decoración"
+                                    },
+                                    "lema": {
+                                        "type": "string",
+                                        "example": "Lema increíble"
+                                    },
+                                    "descripcion": {
+                                        "type": "string",
+                                        "example": "Descripción increíble"
+                                    },
+                                    "especificaciones": {
+                                        "type": "string",
+                                        "example": "Especificaciones increíbles"
+                                    },
+                                    "imagenes": {
+                                        "description": "Array de imágenes a subir",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "textos_alt": {
+                                        "description": "Array de textos alternativos para las imágenes",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "Texto ALT para la imagen"
+                                        }
+                                    },
+                                    "mensaje_correo": {
+                                        "type": "string",
+                                        "example": "Mensaje increíble"
+                                    },
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PUT"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Producto actualizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Producto actualizado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Producto no encontrado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "Productos"
