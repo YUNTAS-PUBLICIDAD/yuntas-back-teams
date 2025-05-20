@@ -56,7 +56,8 @@ class ProductoController extends BasicController
      *         response=500,
      *         description="Error del servidor"
      *     )
-     * )
+     * ),
+     * security={}
      */
     public function index()
     {

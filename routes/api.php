@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
+use App\Http\Controllers\V2ProductoController;
 use App\Models\Reclamo;
 use App\Http\Controllers\Api\CardController;
 use App\Http\Controllers\Api\BlogHeadController;
@@ -129,5 +130,14 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{bloque}', 'destroy')->middleware('permission:eliminar-bloques');
         });
         */
+    });
+});
+
+Route::prefix("v2")->group(function(){
+    Route::controller(V2ProductoController::class)->prefix("/productos")->group(function(){
+        Route::get("/", "index");
+        Route::post("/", "store");
+        Route::put("/{id}", "update");
+        Route::delete("/{id}", "destroy")->whereNumber("id");
     });
 });
