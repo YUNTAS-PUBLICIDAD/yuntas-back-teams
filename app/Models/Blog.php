@@ -36,4 +36,8 @@ class Blog extends Model
         return $this->belongsTo(Card::class, 'id_blog', 'id_blog');
     }
 
+    public function producto(){
+        return $this->belongsTo(Producto::class, 'producto_id', 'id');
+    }
+
 }
