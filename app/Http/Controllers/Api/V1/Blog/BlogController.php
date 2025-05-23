@@ -47,6 +47,7 @@ class BlogController extends BasicController
  *                 @OA\Items(
  *                     type="object",
  *                     @OA\Property(property="id_blog", type="integer", example=1),
+ *                     @OA\Property(property="producto_id", type="integer", example=1),
  *                     @OA\Property(property="id_blog_head", type="integer", example=1),
  *                     @OA\Property(property="id_blog_body", type="integer", example=1),
  *                     @OA\Property(property="id_blog_footer", type="integer", example=1),
@@ -66,8 +67,12 @@ class BlogController extends BasicController
  */
 public function index()
 {
-    $blogs = Blog::with('card')->get();
-    return response()->json($blogs, 200);
+    $blogs = Blog::with('card', 'producto')->get();
+    return response()->json([
+        'status' => 200,
+        'message' => 'Operación exitosa',
+        'data' => $blogs
+    ], 200);
 }
 /**
  * @OA\Post(
@@ -79,7 +84,8 @@ public function index()
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             required={"id_blog_head", "id_blog_body", "id_blog_footer", "fecha"},
+ *             required={"producto_id","id_blog_head", "id_blog_body", "id_blog_footer", "fecha"},
+ *             @OA\Property(property="producto_id", type="integer", example=1),
  *             @OA\Property(property="id_blog_head", type="integer", example=1),
  *             @OA\Property(property="id_blog_body", type="integer", example=1),
  *             @OA\Property(property="id_blog_footer", type="integer", example=1),
@@ -115,6 +121,7 @@ public function create(Request $request)
 {
     try {
         $validator = Validator::make($request->all(), [
+            'producto_id' => 'required|integer|exists:productos,id',
             'id_blog_head' => 'required|integer|exists:blog_heads,id_blog_head',
             'id_blog_body' => 'required|integer|exists:blog_bodies,id_blog_body',
             'id_blog_footer' => 'required|integer|exists:blog_footers,id_blog_footer',
@@ -167,6 +174,7 @@ public function create(Request $request)
  *                 property="data",
  *                 type="object",
  *                 @OA\Property(property="id_blog", type="integer", example=1),
+ *                 @OA\Property(property="producto_id", type="integer", example=1),
  *                 @OA\Property(property="id_blog_head", type="integer", example=1),
  *                 @OA\Property(property="id_blog_body", type="integer", example=1),
  *                 @OA\Property(property="id_blog_footer", type="integer", example=1),
@@ -194,7 +202,7 @@ public function create(Request $request)
 public function show(int $id)
 {
     try {
-        $blog = Blog::with('card')->find($id);
+        $blog = Blog::with('card', 'producto')->find($id);
 
         if (!$blog) {
             return response()->json([
@@ -230,7 +238,8 @@ public function show(int $id)
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             required={"id_blog_head", "id_blog_body", "id_blog_footer", "fecha"},
+ *             required={"producto_id", "id_blog_head", "id_blog_body", "id_blog_footer", "fecha"},
+ *             @OA\Property(property="producto_id", type="integer", example=1),
  *             @OA\Property(property="id_blog_head", type="integer", example=1),
  *             @OA\Property(property="id_blog_body", type="integer", example=1),
  *             @OA\Property(property="id_blog_footer", type="integer", example=1),
@@ -274,6 +283,7 @@ public function update(Request $request, $id)
 {
     try {
         $validator = Validator::make($request->all(), [
+            'producto_id' => 'required|integer|exists:productos,id',
             'id_blog_head' => 'required|integer|exists:blog_heads,id_blog_head',
             'id_blog_body' => 'required|integer|exists:blog_bodies,id_blog_body',
             'id_blog_footer' => 'required|integer|exists:blog_footers,id_blog_footer',

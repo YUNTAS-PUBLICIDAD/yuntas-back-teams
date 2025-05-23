@@ -14,6 +14,7 @@ class Blog extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'producto_id',
         'id_blog_head',
         'id_blog_body',
         'id_blog_footer',
