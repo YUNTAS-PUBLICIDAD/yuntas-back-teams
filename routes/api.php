@@ -81,6 +81,7 @@ Route::prefix('v1')->group(function () {
     Route::controller(ProductoController::class)->prefix('productos')->group(function(){
         Route::get('/', 'index');
         Route::get('/{id}', 'show');
+        Route::get('/{link}', 'showByLink');
 
         Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
             Route::post('/', 'store');

@@ -273,6 +273,34 @@ class ProductoController extends BasicController
         }
     }
 
+    public function showByLink($link)
+    {
+        try {
+            $producto = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->where('link', $link)->firstOrFail();
+
+            $formattedProducto = [
+                'id' => $producto->id,
+                'title' => $producto->titulo,
+                'subtitle' => $producto->subtitulo,
+                'tagline' => $producto->lema,
+                'description' => $producto->descripcion,
+                'specs' => $producto->especificaciones,
+                'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
+                'relatedProducts' => $producto->productosRelacionados->pluck('id'),
+                'images' => $producto->imagenes->pluck('url_imagen'),
+                'image' => $producto->imagen_principal,
+                'nombreProducto' => $producto->nombre,
+                'stockProducto' => $producto->stock,
+                'precioProducto' => $producto->precio,
+                'seccion' => $producto->seccion
+            ];
+
+            return $this->successResponse($formattedProducto, 'Producto encontrado exitosamente');
+        } catch (\Exception $e) {
+            return $this->notFoundResponse('Producto no encontrado');
+        }
+    }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -354,6 +382,7 @@ class ProductoController extends BasicController
         try {
             $producto->update([
                 'nombre' => $request->nombre,
+                'link' => $request->link,
                 'titulo' => $request->titulo,
                 'subtitulo' => $request->subtitulo,
                 'lema' => $request->lema,

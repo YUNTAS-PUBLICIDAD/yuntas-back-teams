@@ -23,6 +23,7 @@ class UpdateProductoRequest extends FormRequest
     {
         return [
             'nombre' => 'nullable|string|max:255',
+            'link' => 'required|string|unique|max:255',
             'titulo' => 'nullable|string|max:255',
             'subtitulo' => 'nullable|string|max:255',
             'lema' => 'nullable|string|max:255',
