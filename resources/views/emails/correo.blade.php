@@ -1,0 +1,1 @@
+Hola, {{$name}} los correos funcionan

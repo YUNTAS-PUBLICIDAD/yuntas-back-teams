@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
 use App\Http\Controllers\V2ProductoController;
+use App\Http\Controllers\EmailController;
 use App\Models\Reclamo;
 use App\Http\Controllers\Api\CardController;
 use App\Http\Controllers\Api\BlogHeadController;
@@ -24,6 +25,8 @@ Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blog_head/{id}', [BlogHeadController::class, "show"]);
 Route::get('/blog_footer/{id}', [BlogFooterController::class, "show"]);
 Route::get('/blog_body/{id}', [BlogBodyController::class, "show"]);
+
+Route::get('/mail', [EmailController::class, 'getMail']);
 
 // rutas create blog
 Route::post('/card', [CardController::class, "create"]);
