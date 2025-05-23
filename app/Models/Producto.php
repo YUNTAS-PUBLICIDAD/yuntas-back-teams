@@ -19,8 +19,7 @@ class Producto extends Model
         'lema',
         'descripcion',
         'especificaciones',
-        'imagenes',
-        'mensaje_correo'
+        'imagenes'
     ];
 
     public $timestamps = true;
