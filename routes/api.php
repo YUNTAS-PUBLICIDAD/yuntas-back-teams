@@ -75,6 +75,14 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::prefix('v1')->group(function () {
+            // PRODUCTOS
+        Route::prefix('productos')->controller(ProductoController::class)->group(function () {
+            Route::get('/', 'index');
+            Route::get('/{id}', 'show');
+            Route::post('/', 'store');
+            Route::put('/{id}', 'update');
+            Route::delete('/{id}', 'destroy');
+        });
 
     // AUTH (login público)
     Route::controller(AuthController::class)->prefix('auth')->group(function () {
@@ -94,14 +102,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/role', 'assignRoleToUser')->middleware('permission:asignar-roles-usuarios');
         });
 
-        // PRODUCTOS
-        Route::prefix('productos')->controller(ProductoController::class)->group(function () {
-            Route::get('/', 'index');
-            Route::get('/{id}', 'show');
-            Route::post('/', 'store')->middleware('permission:crear-productos');
-            Route::put('/{id}', 'update')->middleware('permission:editar-productos');
-            Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-productos');
-        });
+
 
         // CLIENTES
         Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
