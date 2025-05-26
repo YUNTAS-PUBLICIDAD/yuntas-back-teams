@@ -8,14 +8,12 @@ use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
-    // Obtener todos los permisos
     public function index()
     {
         $permissions = Permission::all();
         return response()->json($permissions);
     }
 
-    // Obtener un permiso específico
     public function show($id)
     {
         $permission = Permission::find($id);
@@ -27,7 +25,6 @@ class PermissionController extends Controller
         return response()->json($permission);
     }
 
-    // Crear un nuevo permiso
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -39,7 +36,6 @@ class PermissionController extends Controller
         return response()->json($permission, 201);
     }
 
-    // Actualizar un permiso
     public function update(Request $request, $id)
     {
         $permission = Permission::find($id);
@@ -57,7 +53,6 @@ class PermissionController extends Controller
         return response()->json($permission);
     }
 
-    // Eliminar un permiso
     public function destroy($id)
     {
         $permission = Permission::find($id);
