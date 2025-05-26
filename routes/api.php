@@ -28,11 +28,12 @@ Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blog_head/{id}', [BlogHeadController::class, "show"]);
 Route::get('/blog_footer/{id}', [BlogFooterController::class, "show"]);
 Route::get('/blog_body/{id}', [BlogBodyController::class, "show"]);
+Route::get('/blogs/link/{link}', [BlogController::class, "getByLink"]);
 
 Route::middleware('auth:sanctum')->group(function () {
     //rutas create blog
     Route::middleware('permission:crear-blogs')->post('/card', [CardController::class, "create"]);
-    Route::middleware('permission:crear-blogs')->post('/blog', [BlogController::class, "create"]);
+    Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "create"]);
     Route::middleware('permission:crear-blogs')->post('/blog_head', [BlogHeadController::class, "create"]);
     Route::middleware('permission:crear-blogs')->post('/blog_body', [BlogBodyController::class, "create"]);
     Route::middleware('permission:crear-blogs')->post('/blog_footer', [BlogFooterController::class, "create"]);
