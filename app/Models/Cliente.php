@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Cliente extends Model
 {
     use HasFactory;
+    protected $table = 'clientes';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'name',

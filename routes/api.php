@@ -90,6 +90,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/login', 'login');
     });
 
+
     Route::middleware('auth:sanctum')->group(function () {
         // AUTH (logout autenticado)
         Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -102,8 +103,6 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-usuarios');
             Route::post('/{id}/role', 'assignRoleToUser')->middleware('permission:asignar-roles-usuarios');
         });
-
-
 
         // CLIENTES
         Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
