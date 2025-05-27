@@ -14,6 +14,8 @@ class Blog extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'producto_id',
+        'link',
         'id_blog_head',
         'id_blog_body',
         'id_blog_footer',
@@ -34,6 +36,10 @@ class Blog extends Model
 
     public function card(){
         return $this->belongsTo(Card::class, 'id_blog', 'id_blog');
+    }
+
+    public function producto(){
+        return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
 
 }
