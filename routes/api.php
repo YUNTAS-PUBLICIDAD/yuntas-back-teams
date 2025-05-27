@@ -155,6 +155,7 @@ Route::prefix('v1')->group(function () {
 Route::prefix("v2")->group(function(){
     Route::controller(V2ProductoController::class)->prefix("/productos")->group(function(){
         Route::get("/", "index");
+        Route::get('/link/{link}', 'showByLink');
         Route::post("/", "store");
         Route::put("/{id}", "update");
         Route::delete("/{id}", "destroy")->whereNumber("id");
