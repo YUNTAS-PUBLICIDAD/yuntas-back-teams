@@ -23,6 +23,7 @@ class StoreProductoRequest extends FormRequest
     {
         return [
             'nombre' => 'required|string|max:255',
+            'link' => 'required|string|unique:productos,link|max:255',
             'titulo' => 'required|string|max:255',
             'subtitulo' => 'nullable|string|max:255',
             'lema' => 'nullable|string|max:255',

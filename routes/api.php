@@ -75,14 +75,32 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::prefix('v1')->group(function () {
-            // PRODUCTOS
-        Route::prefix('productos')->controller(ProductoController::class)->group(function () {
+
+    Route::controller(AuthController::class)->prefix('auth')->group(function () {
+        Route::post('/login', 'login');
+        Route::post('/logout', 'logout')->middleware(['auth:sanctum', 'role:ADMIN|USER']);
+    });
+
+    Route::controller(UserController::class)->prefix('users')->group(function(){
+        Route::middleware(['auth:sanctum', 'role:ADMIN'])->group(function () {
+            Route::post('/', 'store');
             Route::get('/', 'index');
-            Route::get('/{id}', 'show');
+            Route::delete('/{id}', 'destroy');
+            Route::put('/{id}', 'update');
+        });
+    });
+
+    Route::controller(ProductoController::class)->prefix('productos')->group(function(){
+        Route::get('/', 'index');
+        Route::get('/{id}', 'show');
+        Route::get('/link/{link}', 'showByLink');
+
+        Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
             Route::post('/', 'store');
             Route::put('/{id}', 'update');
             Route::delete('/{id}', 'destroy');
         });
+    });
 
     // AUTH (login público)
     Route::controller(AuthController::class)->prefix('auth')->group(function () {
@@ -137,6 +155,8 @@ Route::prefix('v1')->group(function () {
 Route::prefix("v2")->group(function(){
     Route::controller(V2ProductoController::class)->prefix("/productos")->group(function(){
         Route::get("/", "index");
+        Route::get("/{id}", "show");
+        Route::get('/link/{link}', 'showByLink');
         Route::post("/", "store");
         Route::put("/{id}", "update");
         Route::delete("/{id}", "destroy")->whereNumber("id");
