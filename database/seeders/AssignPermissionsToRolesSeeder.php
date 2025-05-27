@@ -1,31 +1,24 @@
 <?php
 
+// database/seeders/AssignPermissionsToRoleSeeder.php
 namespace Database\Seeders;
-
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class AssignPermissionsToRolesSeeder extends Seeder
 {
-    
-    public function run(): void
+    public function run()
     {
-        $adminRole = Role::findByName('ADMIN', 'web');
-        $permissions = Permission::whereIn('name', ['VER', 'ACTUALIZAR', 'ELIMINAR', 'ENVIAR'])->get();
-        $adminRole->givePermissionTo($permissions);
+        $adminRole = Role::where('name', 'admin')->first();
 
-        $userRole = Role::findByName('USER', 'web');
-        $userPermissions = Permission::whereIn('name', ['VER'])->get();
-        $userRole->givePermissionTo($userPermissions);
+        $permissions = Permission::whereIn('name', [
+            'gestionar-roles',
+            'gestionar-permisos',
+            'asignar-permisos-roles',
+        ])->pluck('id');
 
-        $markRole = Role::findByName('MARK', 'web');
-        $markPermissions = Permission::whereIn('name', ['VER', 'ACTUALIZAR'])->get();
-        $markRole->givePermissionTo($markPermissions);
-
-        $ventasRole = Role::findByName('VENTAS', 'web');
-        $ventasPermissions = Permission::whereIn('name', ['VER', 'ACTUALIZAR', 'ELIMINAR'])->get();
-        $ventasRole->givePermissionTo($ventasPermissions);
+        $adminRole->syncPermissions($permissions);
     }
 }
+

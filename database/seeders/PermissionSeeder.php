@@ -1,21 +1,52 @@
 <?php
 
+// database/seeders/PermissionSeeder.php
 namespace Database\Seeders;
-
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
 class PermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        Permission::create(['name' => 'VER']);
-        Permission::create(['name' => 'ACTUALIZAR']);
-        Permission::create(['name' => 'ELIMINAR']);
-        Permission::create(['name' => 'ENVIAR']);
+        $permissions = [
+            // Gestión general
+            'gestionar-roles',
+            'gestionar-permisos',
+            'asignar-permisos-roles',
+            'asignar-roles-usuarios',
+
+            // Usuarios
+            'ver-usuarios',
+            'crear-usuarios',
+            'editar-usuarios',
+            'eliminar-usuarios',
+
+            // Clientes
+            'ver-clientes',
+            'crear-clientes',
+            'editar-clientes',
+            'eliminar-clientes',
+
+            // Reclamos
+            'ver-reclamos',
+            'crear-reclamos',
+            'editar-reclamos',
+            'eliminar-reclamos',
+
+            // Blogs
+            'crear-blogs',
+            'editar-blogs',
+            'eliminar-blogs',
+
+            // Tarjetas
+            'crear-tarjetas',
+            'editar-tarjetas',
+            'eliminar-tarjetas',
+        ];
+
+        foreach ($permissions as $perm) {
+            Permission::firstOrCreate(['name' => $perm]);
+        }
     }
 }
