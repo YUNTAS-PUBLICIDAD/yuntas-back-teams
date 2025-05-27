@@ -1,25 +1,22 @@
 <?php
 
 namespace Database\Seeders;
-
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+// database/seeders/AdminUserSeeder.php
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        $user = User::create([
-            'name' => 'admin',
-            'email' => 'admin@gmail.com',
-            'celular' => '000111000',
-            'password' => bcrypt('admin'), 
-        ]);
-
-        $user->assignRole('ADMIN');
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin',
+                'celular' => '999999999',
+                'password' => Hash::make('admin12345'),
+            ]
+        );
     }
 }
