@@ -241,33 +241,29 @@ class ProductoController extends BasicController
      *     )
      * )
      */
-    public function show($id)
-    {
-        try {
-            $producto = Producto::with(['especificaciones', 'dimensiones', 'imagenes', 'productosRelacionados'])->findOrFail($id);
+public function show($id)
+{
+    $producto = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->findOrFail($id);
 
-            $formattedProducto = [
-                'id' => $producto->id,
-                'title' => $producto->titulo,
-                'subtitle' => $producto->subtitulo,
-                'tagline' => $producto->lema,
-                'description' => $producto->descripcion,
-                'specs' => $producto->especificaciones->pluck('valor', 'clave'),
-                'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
-                'relatedProducts' => $producto->productosRelacionados->pluck('id'),
-                'images' => $producto->imagenes->pluck('url_imagen'),
-                'image' => $producto->imagen_principal,
-                'nombreProducto' => $producto->nombre,
-                'stockProducto' => $producto->stock,
-                'precioProducto' => $producto->precio,
-                'seccion' => $producto->seccion,
-            ];
+    $formattedProducto = [
+        'id' => $producto->id,
+        'title' => $producto->titulo,
+        'subtitle' => $producto->subtitulo,
+        'tagline' => $producto->lema,
+        'description' => $producto->descripcion,
+        'specs' => json_decode($producto->especificaciones, true) ?? [],
+        'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
+        'relatedProducts' => $producto->productosRelacionados->pluck('id'),
+        'images' => $producto->imagenes->pluck('url_imagen'),
+        'image' => $producto->imagen_principal,
+        'nombreProducto' => $producto->nombre,
+        'stockProducto' => $producto->stock,
+        'precioProducto' => $producto->precio,
+        'seccion' => $producto->seccion,
+    ];
 
-            return $this->successResponse($formattedProducto, 'Producto encontrado exitosamente');
-        } catch (\Exception $e) {
-            return $this->notFoundResponse('Producto no encontrado');
-        }
-    }
+    return $this->successResponse($formattedProducto, 'Producto obtenido exitosamente');
+}
 
     public function showByLink($link)
     {
