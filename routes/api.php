@@ -81,7 +81,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', 'logout')->middleware(['auth:sanctum', 'role:ADMIN|USER']);
     });
 
-    Route::controller(UserController::class)->prefix('users')->group(function(){
+    Route::controller(UserController::class)->prefix('users')->group(function () {
         Route::middleware(['auth:sanctum', 'role:ADMIN'])->group(function () {
             Route::post('/', 'store');
             Route::get('/', 'index');
@@ -90,7 +90,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::controller(ProductoController::class)->prefix('productos')->group(function(){
+    Route::controller(ProductoController::class)->prefix('productos')->group(function () {
         Route::get('/', 'index');
         Route::get('/{id}', 'show');
         Route::get('/link/{link}', 'showByLink');
@@ -152,8 +152,8 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-Route::prefix("v2")->group(function(){
-    Route::controller(V2ProductoController::class)->prefix("/productos")->group(function(){
+Route::prefix("v2")->group(function () {
+    Route::controller(V2ProductoController::class)->prefix("/productos")->group(function () {
         Route::get("/", "index");
         Route::get("/{id}", "show");
         Route::get('/link/{link}', 'showByLink');
