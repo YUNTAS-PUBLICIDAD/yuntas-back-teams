@@ -28,11 +28,12 @@ Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blog_head/{id}', [BlogHeadController::class, "show"]);
 Route::get('/blog_footer/{id}', [BlogFooterController::class, "show"]);
 Route::get('/blog_body/{id}', [BlogBodyController::class, "show"]);
+Route::get('/blogs/link/{link}', [BlogController::class, "getByLink"]);
 
 Route::middleware('auth:sanctum')->group(function () {
     //rutas create blog
     Route::middleware('permission:crear-blogs')->post('/card', [CardController::class, "create"]);
-    Route::middleware('permission:crear-blogs')->post('/blog', [BlogController::class, "create"]);
+    Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "create"]);
     Route::middleware('permission:crear-blogs')->post('/blog_head', [BlogHeadController::class, "create"]);
     Route::middleware('permission:crear-blogs')->post('/blog_body', [BlogBodyController::class, "create"]);
     Route::middleware('permission:crear-blogs')->post('/blog_footer', [BlogFooterController::class, "create"]);
@@ -82,11 +83,12 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::controller(UserController::class)->prefix('users')->group(function(){
-        Route::middleware(['auth:sanctum', 'role:ADMIN'])->group(function () {
-            Route::post('/', 'store');
+        Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
             Route::get('/', 'index');
-            Route::delete('/{id}', 'destroy');
+            Route::get('/{id}', 'show');
+            Route::post('/', 'store');
             Route::put('/{id}', 'update');
+            Route::delete('/{id}', 'destroy');
         });
     });
 
@@ -107,6 +109,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/login', 'login');
     });
 
+
     Route::middleware('auth:sanctum')->group(function () {
         // AUTH (logout autenticado)
         Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -119,8 +122,6 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-usuarios');
             Route::post('/{id}/role', 'assignRoleToUser')->middleware('permission:asignar-roles-usuarios');
         });
-
-
 
         // CLIENTES
         Route::prefix('clientes')->controller(ClienteController::class)->group(function () {

@@ -31,7 +31,7 @@ class ClienteController extends BasicController
      *         description="Lista de clientes obtenida correctamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Usuarios listados correctamente."),
+     *             @OA\Property(property="message", type="string", example="Clientes listados correctamente."),
      *             @OA\Property(property="data", type="array", @OA\Items(
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="John Doe"),
@@ -47,7 +47,7 @@ class ClienteController extends BasicController
      *         description="Error interno del servidor",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Ocurrió un problema al listar los usuarios.")
+     *             @OA\Property(property="message", type="string", example="Ocurrió un problema al listar los clientes.")
      *         )
      *     )
      * )
@@ -57,7 +57,7 @@ class ClienteController extends BasicController
         try {
             $clientes = Cliente::all();
 
-            $message = $clientes->isEmpty() ? 'No hay usuarios para listar.' : 'Usuarios listados correctamente.';
+            $message = $clientes->isEmpty() ? 'No hay clientes para listar.' : 'Clientes listados correctamente.';
 
             return $this->successResponse(
             $clientes,
@@ -65,7 +65,7 @@ class ClienteController extends BasicController
             HttpStatusCode::OK
             );
         } catch (\Exception $e) {
-            return $this->errorResponse('Ocurrio un problema al listar los usuarios. ' . $e->getMessage(),
+            return $this->errorResponse('Ocurrio un problema al listar los clientes. ' . $e->getMessage(),
             HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
@@ -82,7 +82,7 @@ class ClienteController extends BasicController
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "email"},
+     *             required={"name", "email", "celular"},
      *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
      *             @OA\Property(property="celular", type="string", example="999888777")
@@ -93,7 +93,7 @@ class ClienteController extends BasicController
      *         description="Cliente creado correctamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Usuario registrado exitosamente.")
+     *             @OA\Property(property="message", type="string", example="Cliente registrado exitosamente.")
      *         )
      *     ),
      *     @OA\Response(
@@ -122,7 +122,7 @@ class ClienteController extends BasicController
 
             return $this->successResponse(
                 $request->all(),
-                'Usuario registrado exitosamente.',
+                'Cliente registrado exitosamente.',
                 HttpStatusCode::OK);
             
         } catch (\Exception $e) {
@@ -152,7 +152,7 @@ class ClienteController extends BasicController
      *         description="Cliente encontrado correctamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Usuario encontrado."),
+     *             @OA\Property(property="message", type="string", example="Cliente encontrado."),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="John Doe"),
@@ -168,7 +168,7 @@ class ClienteController extends BasicController
      *         description="Cliente no encontrado",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Usuario no encontrado.")
+     *             @OA\Property(property="message", type="string", example="Cliente no encontrado.")
      *         )
      *     ),
      *     @OA\Response(
@@ -188,7 +188,7 @@ class ClienteController extends BasicController
 
             return $this->successResponse(
                 $cliente,
-                $cliente ? 'Usuario encontrado.' : 'Usuario no encontrado.', 
+                $cliente ? 'Cliente encontrado.' : 'Cliente no encontrado.', 
                 HttpStatusCode::OK
             );
         } catch (\Exception $e) {
@@ -241,7 +241,7 @@ class ClienteController extends BasicController
      *         description="Cliente no encontrado",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Usuario no encontrado.")
+     *             @OA\Property(property="message", type="string", example="Cliente no encontrado.")
      *         )
      *     ),
      *     @OA\Response(
@@ -304,7 +304,7 @@ class ClienteController extends BasicController
      *         description="Cliente eliminado correctamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Se eliminó correctamente el usuario.")
+     *             @OA\Property(property="message", type="string", example="Se eliminó correctamente el cliente.")
      *         )
      *     ),
      *     @OA\Response(
@@ -312,7 +312,7 @@ class ClienteController extends BasicController
      *         description="Cliente no encontrado",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Usuario no encontrado.")
+     *             @OA\Property(property="message", type="string", example="Cliente no encontrado.")
      *         )
      *     ),
      *     @OA\Response(
@@ -331,16 +331,16 @@ class ClienteController extends BasicController
             $cliente = Cliente::findOrFail($id);
             
             if (!$cliente) {
-                return $this->errorResponse('Usuario no encontrado.', 
+                return $this->errorResponse('Cliente no encontrado.', 
                 HttpStatusCode::NOT_FOUND);
             }
 
             if (!$cliente->delete()) {
-                return $this->errorResponse('No se pudo eliminar el usuario.', 
+                return $this->errorResponse('No se pudo eliminar el cliente.', 
                 HttpStatusCode::INTERNAL_SERVER_ERROR);
             }
 
-            return $this->successResponse(null, 'Se eliminó correctamente el usuario.', 
+            return $this->successResponse(null, 'Se eliminó correctamente el cliente.', 
             HttpStatusCode::OK);
         } catch(\Exception $e) {
             return $this->errorResponse('Ocurrió un problema al procesar la solicitud. ' . $e->getMessage(), 
