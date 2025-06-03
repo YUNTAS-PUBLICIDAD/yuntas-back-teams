@@ -545,6 +545,8 @@ class V2ProductoController extends Controller
             "descripcion" => $datosValidados["descripcion"],
             "especificaciones" => $especificaciones,
         ]);
+        
+        $producto->productosRelacionados()->sync($datosValidados['relacionados']);
 
         // Eliminar solo las imágenes que el usuario indicó
         if ($request->filled('imagenes_a_eliminar')) {
