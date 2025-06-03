@@ -24,7 +24,6 @@ class V2UpdateProductoRequest extends FormRequest
     {
         $producto_id = $this->route('id');
         return [
-            //
             'nombre' => [
                 "required",
                 "string",
@@ -35,7 +34,7 @@ class V2UpdateProductoRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('productos', 'link')->ignore($producto_id),
+                Rule::unique('productos', 'link')->ignore($this->route('id')),
             ],
             'titulo' => "required|string|max:255",
             'subtitulo' => "required|string|max:255",
@@ -44,10 +43,10 @@ class V2UpdateProductoRequest extends FormRequest
             'seccion' => "required|string|max:255",
             'lema' => "required|string|max:255",
             'descripcion' => "required|string|max:65535",
-            'especificaciones' => "required|string|max:65535",
-            'imagenes' => "required|array|min:1|max:10",
+            'especificaciones' => 'required|json|max:65535',
+            'imagenes' => "nullable|array|max:10",
             'imagenes.*' => "file|image|max:2048",
-            'textos_alt' => "required|array|min:1|max:10",
+            'textos_alt' => "nullable|array|min:1|max:10",
             'textos_alt.*' => "string|max:255",
             'relacionados' => "required|array",
             'relacionados.*' => "integer|exists:productos,id",
