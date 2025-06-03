@@ -56,9 +56,9 @@ class AuthController extends BasicController
             $deviceName = $request->device_name ?? ($request->userAgent() ?? 'API Token');
             
             // Si se solicita sesión única, eliminar otros tokens
-            if ($request->has('single_session') && $request->single_session) {
-                $user->tokens()->delete();
-            }
+            // if ($request->has('single_session') && $request->single_session) {
+            //     $user->tokens()->delete();
+            // }
             
             // Crear token de acceso
             $token = $user->createToken($deviceName)->plainTextToken;
