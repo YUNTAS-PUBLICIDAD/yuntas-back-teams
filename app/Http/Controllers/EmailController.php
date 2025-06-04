@@ -11,7 +11,7 @@ class EmailController extends Controller
 {
     public function getMail()
     {
-       $data= ['name' => 'Jefferson Peña'];
-       Mail::to('jefferson152530@gmail.com')->send(new CorreoPersonalizado($data));
+       $data= ['name' => 'Luiggi'];
+       Mail::to('luiggi.verano.45@gmail.com')->send(new CorreoPersonalizado($data));
     }
 }

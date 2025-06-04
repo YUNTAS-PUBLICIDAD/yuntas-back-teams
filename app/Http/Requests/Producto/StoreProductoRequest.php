@@ -27,11 +27,11 @@ class StoreProductoRequest extends FormRequest
             'subtitulo' => 'nullable|string|max:255',
             'lema' => 'nullable|string|max:255',
             'descripcion' => 'nullable|string',
-            'imagen_principal' => 'required|string|max:255',
+            'imagen_principal' => 'required|image',
             'stock' => 'required|integer|min:0',
             'precio' => 'required|numeric|min:0|max:99999999.99',
             'seccion' => 'nullable|string|max:100',
-            'mensaje_correo' => 'nullable|string',
+            'especificaciones' => 'nullable|array'
         ];
     }
 }

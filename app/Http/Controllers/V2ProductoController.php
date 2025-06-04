@@ -9,6 +9,7 @@ use App\Models\Producto;
 use App\Http\Requests\V2StoreProductoRequest;
 use App\Http\Requests\V2UpdateProductoRequest;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class V2ProductoController extends Controller
 {
@@ -80,7 +81,7 @@ class V2ProductoController extends Controller
  * @OA\Post(
  *     path="/api/v2/productos",
  *     summary="Crear un nuevo producto (no funciona en Swagger)",
- *     description="Almacena un nuevo producto, guarda la imagen en el servidor y retorna los datos creados. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
+ *     description="Almacena un nuevo producto, guarda la imagen en el servidor. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
  *     operationId="storeProducto2",
  *     tags={"Productos"},
  *     @OA\RequestBody(
@@ -196,19 +197,102 @@ class V2ProductoController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    /**
+     * Actualizar un producto específico
+     * 
+     * @OA\Post(
+     *     path="/api/v2/productos/{id}",
+     *     summary="Actualiza un producto específico (no funciona en Swagger)",
+     *     description="Actualiza producto, elimina todas las antiguas imagenes y guarda las nuevas imagen en el servidor. Si lo intentas usar en Swagger no funcionará, pero si lo pruebas desde Postman si funciona. Los campos a enviar ya sea o desde Postman o desde un frontend son los mismos listados a continuación.",
+     *     operationId="updateProducto2",
+     *     tags={"Productos"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del producto a actualizar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={
+     *                     "nombre", "titulo", "subtitulo", "stock", "precio", 
+     *                     "seccion", "lema", "descripcion", "especificaciones",
+     *                      "imagenes", "textos_alt", "mensaje_correo", "_method"
+     *                 },
+     *                 @OA\Property(property="nombre", type="string", example="Selladora"),
+     *                 @OA\Property(property="titulo", type="string", example="Titulo increíble"),
+     *                 @OA\Property(property="subtitulo", type="string", example="Subtitulo increíble"),
+     *                 @OA\Property(property="stock", type="integer", example=20),
+     *                 @OA\Property(property="precio", type="number", format="float", example=100.50),
+     *                 @OA\Property(property="seccion", type="string", example="Decoración"),
+     *                 @OA\Property(property="lema", type="string", example="Lema increíble"),
+     *                 @OA\Property(property="descripcion", type="string", example="Descripción increíble"),
+     *                 @OA\Property(property="especificaciones", type="string", example="Especificaciones increíbles"),
+     *                 
+     *                 @OA\Property(
+     *                     property="imagenes",
+     *                     type="array",
+     *                     @OA\Items(type="string", format="binary"),
+     *                     description="Array de imágenes a subir"
+     *                 ),
+     *                 
+     *                 @OA\Property(
+     *                     property="textos_alt",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="Texto ALT para la imagen"),
+     *                     description="Array de textos alternativos para las imágenes"
+     *                 ),
+     *                 
+     *                 @OA\Property(property="mensaje_correo", type="string", example="Mensaje increíble"),
+     *                 @OA\Property(property="_method", type="string", example="PUT")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Producto actualizado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object"),
+     *             @OA\Property(property="message", type="string", example="Producto actualizado exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Producto no encontrado"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error del servidor"
+     *     )
+     * )
+     */
     public function update(V2UpdateProductoRequest $request, string $id)
     {
         //
-        $producto = Producto::find($id)->with("imagenes");
+        $producto = Producto::with("imagenes")->find($id);
         if ($producto == null) {
             return response()->json(["message"=>"Producto no encontrado"], status: 404);
         }
-
         $datosValidados = $request->validated();
-        
         $imagenes = $datosValidados["imagenes"];
         $textos = $datosValidados["textos_alt"];
-
+        $imagenesArray = $producto->imagenes->toArray();
+        $productoImagenes = array_map(function ($x) {
+            $archivo = str_ireplace("/storage/imagenes/", "", $x["url_imagen"]);
+            return $archivo;
+        }, $imagenesArray);
+        foreach ($productoImagenes as $imagen) {
+            Storage::delete("imagenes/" . $imagen);
+        }
         $imagenesProcesadas = [];
         foreach ($imagenes as $i => $img) {
             $url = $this->guardarImagen($img);
@@ -218,7 +302,7 @@ class V2ProductoController extends Controller
             ];
         }
 
-        $producto = Producto::update([
+        $producto->update([
             "nombre" => $datosValidados["nombre"],
             "titulo" => $datosValidados["titulo"],
             "subtitulo" => $datosValidados["subtitulo"],
@@ -230,9 +314,9 @@ class V2ProductoController extends Controller
             "especificaciones" => $datosValidados["especificaciones"],
             "mensaje_correo" => $datosValidados["mensaje_correo"],
         ]);
-
+        $producto->imagenes()->delete();
         $producto->imagenes()->createMany($imagenesProcesadas);
-        return response()->json(["message"=>"Producto insertado exitosamente"], 201);
+        return response()->json(["message"=>"Producto actualizado exitosamente"], 201);
     }
 
     /**
@@ -276,11 +360,27 @@ class V2ProductoController extends Controller
     public function destroy(string $id)
     {
         //
-        $producto = Producto::find($id);
-        if ($producto == null) {
-            return response()->json(["message"=>"Producto no encontrado"], status: 404);
+        DB::beginTransaction();
+        try {
+            $producto = Producto::with("imagenes")->find($id);
+            if ($producto == null) {
+                return response()->json(["message" => "Producto no encontrado"], status: 404);
+            }
+            $imagenesArray = $producto->imagenes->toArray();
+            $productoImagenes = array_map(function ($x) {
+                $archivo = str_ireplace("/storage/imagenes/", "", $x["url_imagen"]);
+                return $archivo;
+            }, $imagenesArray);
+            foreach ($productoImagenes as $imagen) {
+                Storage::delete("imagenes/" . $imagen);
+            }
+
+            $producto->delete();
+            DB::commit();
+            return response()->json(["message" => "Producto eliminado exitosamente"], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(["message"=>"Hubo un error en el servidor"], 500);
         }
-        $producto->delete();
-        return response()->json(["message"=>"Producto eliminado exitosamente"], 200);
     }
 }
