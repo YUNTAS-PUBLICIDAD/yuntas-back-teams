@@ -528,11 +528,7 @@ class V2ProductoController extends Controller
         $datosValidados = $request->validated();
 
         $especificaciones = json_decode($datosValidados["especificaciones"], true);
-
-        if (!is_array($especificaciones) || !isset($especificaciones['color'], $especificaciones['material'])) {
-            return response()->json(["message" => "El campo especificaciones debe incluir 'color' y 'material'."], 422);
-        }
-
+        
         $producto->update([
             "nombre" => $datosValidados["nombre"],
             "link" => $datosValidados["link"],
