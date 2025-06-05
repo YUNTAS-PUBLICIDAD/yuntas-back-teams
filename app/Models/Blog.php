@@ -22,7 +22,6 @@ class Blog extends Model
         'imagen_principal'
     ];
 
-
     public function producto(){
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
