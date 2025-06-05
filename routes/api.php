@@ -163,3 +163,4 @@ Route::prefix("v2")->group(function(){
         Route::delete("/{id}", "destroy")->whereNumber("id");
     });
 });
+
