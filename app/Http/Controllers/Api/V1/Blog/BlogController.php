@@ -336,8 +336,6 @@ class BlogController extends BasicController
             return $this->apiResponse->errorResponse('Error al obtener el blog: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
-
-
     /**
      * @OA\Put(
      *     path="/api/blogs/{id}",
