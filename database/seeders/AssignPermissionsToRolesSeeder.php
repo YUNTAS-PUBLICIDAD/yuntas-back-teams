@@ -1,31 +1,54 @@
 <?php
 
+// database/seeders/AssignPermissionsToRoleSeeder.php
 namespace Database\Seeders;
-
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class AssignPermissionsToRolesSeeder extends Seeder
 {
-    
-    public function run(): void
+    public function run()
     {
-        $adminRole = Role::findByName('ADMIN', 'web');
-        $permissions = Permission::whereIn('name', ['VER', 'ACTUALIZAR', 'ELIMINAR', 'ENVIAR'])->get();
-        $adminRole->givePermissionTo($permissions);
+        $adminRole = Role::where('name', 'admin')->first();
 
-        $userRole = Role::findByName('USER', 'web');
-        $userPermissions = Permission::whereIn('name', ['VER'])->get();
-        $userRole->givePermissionTo($userPermissions);
+        $permissions = Permission::whereIn('name', [
+            // Gestión general
+            'gestionar-roles',
+            'gestionar-permisos',
+            'asignar-permisos-roles',
+            'asignar-roles-usuarios',
 
-        $markRole = Role::findByName('MARK', 'web');
-        $markPermissions = Permission::whereIn('name', ['VER', 'ACTUALIZAR'])->get();
-        $markRole->givePermissionTo($markPermissions);
+            // Usuarios
+            'ver-usuarios',
+            'crear-usuarios',
+            'editar-usuarios',
+            'eliminar-usuarios',
 
-        $ventasRole = Role::findByName('VENTAS', 'web');
-        $ventasPermissions = Permission::whereIn('name', ['VER', 'ACTUALIZAR', 'ELIMINAR'])->get();
-        $ventasRole->givePermissionTo($ventasPermissions);
+            // Clientes
+            'ver-clientes',
+            'crear-clientes',
+            'editar-clientes',
+            'eliminar-clientes',
+
+            // Reclamos
+            'ver-reclamos',
+            'crear-reclamos',
+            'editar-reclamos',
+            'eliminar-reclamos',
+
+            // Blogs
+            'crear-blogs',
+            'editar-blogs',
+            'eliminar-blogs',
+
+            // Tarjetas
+            'crear-tarjetas',
+            'editar-tarjetas',
+            'eliminar-tarjetas',
+        ])->pluck('id');
+
+        $adminRole->syncPermissions($permissions);
     }
 }
+

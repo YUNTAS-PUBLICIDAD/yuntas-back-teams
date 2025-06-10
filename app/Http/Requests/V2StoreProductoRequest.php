@@ -23,7 +23,8 @@ class V2StoreProductoRequest extends FormRequest
     {
         return [
             //
-            'nombre' => "required|string|max:255",
+            'nombre' => "required|unique:productos,nombre|string|max:255",
+            'link' => 'required|string|unique:productos,link|max:255',
             'titulo' => "required|string|max:255",
             'subtitulo' => "required|string|max:255",
             'stock' => "required|integer|max:1000|min:0",
@@ -36,6 +37,8 @@ class V2StoreProductoRequest extends FormRequest
             'imagenes.*' => "file|image|max:2048",
             'textos_alt' => "required|array|min:1|max:10",
             'textos_alt.*' => "string|max:255",
+            'relacionados' => "required|array|min:1",
+            'relacionados.*' => "integer|exists:productos,id",
         ];
     }
 }

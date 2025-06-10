@@ -11,7 +11,7 @@ class ProductoSeeder extends Seeder
     public function run()
     {
         // Crear un producto
-        $producto = Producto::create([
+        $producto = Producto::create([/////////////
             'nombre' => 'Producto Ejemplo',
             'titulo' => 'Producto Premium',
             'subtitulo' => 'La mejor calidad',

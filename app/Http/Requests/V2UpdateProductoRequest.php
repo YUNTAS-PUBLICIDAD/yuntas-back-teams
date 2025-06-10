@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class V2UpdateProductoRequest extends FormRequest
 {
@@ -21,9 +22,20 @@ class V2UpdateProductoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $producto_id = $this->route('id');
         return [
-            //
-            'nombre' => "required|string|max:255",
+            'nombre' => [
+                "required",
+                "string",
+                "max:255",
+                Rule::unique('productos', 'nombre')->ignore($producto_id),
+            ],
+            'link' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('productos', 'link')->ignore($this->route('id')),
+            ],
             'titulo' => "required|string|max:255",
             'subtitulo' => "required|string|max:255",
             'stock' => "required|integer|max:1000|min:0",
@@ -31,12 +43,13 @@ class V2UpdateProductoRequest extends FormRequest
             'seccion' => "required|string|max:255",
             'lema' => "required|string|max:255",
             'descripcion' => "required|string|max:65535",
-            'especificaciones' => "required|string|max:65535",
-            'imagenes' => "required|array|min:1|max:10",
+            'especificaciones' => 'required|json|max:65535',
+            'imagenes' => "nullable|array|max:10",
             'imagenes.*' => "file|image|max:2048",
-            'textos_alt' => "required|array|min:1|max:10",
+            'textos_alt' => "nullable|array|min:1|max:10",
             'textos_alt.*' => "string|max:255",
-            'mensaje_correo' => "required|string|max:255",
+            'relacionados' => "required|array",
+            'relacionados.*' => "integer|exists:productos,id",
         ];
     }
 }
