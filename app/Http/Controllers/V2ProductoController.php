@@ -154,40 +154,50 @@ class V2ProductoController extends Controller
     }
 
     public function store(V2StoreProductoRequest $request)
-    {
-        //
-        $datosValidados = $request->validated();
+        {
+            $datosValidados = $request->validated();
 
-        $imagenes = $datosValidados["imagenes"];
-        $textos = $datosValidados["textos_alt"];
+            $imagenes = $datosValidados["imagenes"];
+            $textos = $datosValidados["textos_alt"];
 
-        $imagenesProcesadas = [];
-        foreach ($imagenes as $i => $img) {
-            $url = $this->guardarImagen($img);
-            $imagenesProcesadas[] = [
-                "url_imagen" => $url,
-                "texto_alt_SEO" => $textos[$i]
-            ];
+            $imagenesProcesadas = [];
+            foreach ($imagenes as $i => $img) {
+                $url = $this->guardarImagen($img);
+                $imagenesProcesadas[] = [
+                    "url_imagen" => $url,
+                    "texto_alt_SEO" => $textos[$i]
+                ];
+            }
+
+            $producto = Producto::create([
+                "nombre" => $datosValidados["nombre"],
+                "link" => $datosValidados["link"],
+                "titulo" => $datosValidados["titulo"],
+                "subtitulo" => $datosValidados["subtitulo"],
+                "stock" => $datosValidados["stock"],
+                "precio" => $datosValidados["precio"],
+                "seccion" => $datosValidados["seccion"],
+                "lema" => $datosValidados["lema"],
+                "descripcion" => $datosValidados["descripcion"],
+            ]);
+
+            $producto->productosRelacionados()->sync($datosValidados['relacionados'] ?? []);
+            $producto->imagenes()->createMany($imagenesProcesadas);
+
+            // Aquí solo este bloque basta
+            $especificaciones = json_decode($datosValidados['especificaciones'], true);
+
+            if (is_array($especificaciones)) {
+                foreach ($especificaciones as $clave => $valor) {
+                    $producto->especificaciones()->create([
+                        'clave' => $clave,
+                        'valor' => $valor,
+                    ]);
+                }
+            }
+
+            return response()->json(["message" => "Producto insertado exitosamente"],201);
         }
-
-        $producto = Producto::create([
-            "nombre" => $datosValidados["nombre"],
-            "link" => $datosValidados["link"],
-            "titulo" => $datosValidados["titulo"],
-            "subtitulo" => $datosValidados["subtitulo"],
-            "stock" => $datosValidados["stock"],
-            "precio" => $datosValidados["precio"],
-            "seccion" => $datosValidados["seccion"],
-            "lema" => $datosValidados["lema"],
-            "descripcion" => $datosValidados["descripcion"],
-            "especificaciones" => $datosValidados["especificaciones"],
-        ]);
-
-        $producto->productosRelacionados()->sync($datosValidados['relacionados']);
-        $producto->imagenes()->createMany($imagenesProcesadas);
-        return response()->json(["message" => "Producto insertado exitosamente"], 201);
-    }
-
     /**
      * Obtener un producto por su ID
      * 
@@ -518,66 +528,58 @@ class V2ProductoController extends Controller
      * )
      */
     public function update(V2UpdateProductoRequest $request, string $id)
-    {
-
-
-        $producto = Producto::with("imagenes")->find($id);
-        if ($producto == null) {
-            return response()->json(["message" => "Producto no encontrado"], status: 404);
-        }
-        $datosValidados = $request->validated();
-
-        $especificaciones = json_decode($datosValidados["especificaciones"], true);
-        
-        $producto->update([
-            "nombre" => $datosValidados["nombre"],
-            "link" => $datosValidados["link"],
-            "titulo" => $datosValidados["titulo"],
-            "subtitulo" => $datosValidados["subtitulo"],
-            "stock" => $datosValidados["stock"],
-            "precio" => $datosValidados["precio"],
-            "seccion" => $datosValidados["seccion"],
-            "lema" => $datosValidados["lema"],
-            "descripcion" => $datosValidados["descripcion"],
-            "especificaciones" => $especificaciones,
-        ]);
-        
-        $producto->productosRelacionados()->sync($datosValidados['relacionados']);
-
-        // Eliminar solo las imágenes que el usuario indicó
-        if ($request->filled('imagenes_a_eliminar')) {
-            $idsAEliminar = json_decode($request->input('imagenes_a_eliminar'), true);
-
-            if (is_array($idsAEliminar)) {
-                $imagenesAEliminar = $producto->imagenes()->whereIn('id', $idsAEliminar)->get();
-                foreach ($imagenesAEliminar as $imagen) {
-                    $archivo = str_ireplace("/storage/imagenes/", "", $imagen->url_imagen);
-                    Storage::delete("imagenes/" . $archivo);
-                    $imagen->delete();
-                }
+        {
+            //
+            $producto = Producto::with("imagenes")->find($id);
+            if ($producto == null) {
+                return response()->json(["message"=>"Producto no encontrado"], status: 404);
             }
-        }
-
-        // Agregar nuevas imágenes si las hay
-        if ($request->hasFile("imagenes")) {
+            $datosValidados = $request->validated();
             $imagenes = $datosValidados["imagenes"];
             $textos = $datosValidados["textos_alt"];
+            $imagenesArray = $producto->imagenes->toArray();
+            $productoImagenes = array_map(function ($x) {
+                $archivo = str_ireplace("/storage/imagenes/", "", $x["url_imagen"]);
+                return $archivo;
+            }, $imagenesArray);
+            foreach ($productoImagenes as $imagen) {
+                Storage::delete("imagenes/" . $imagen);
+            }
             $imagenesProcesadas = [];
-
             foreach ($imagenes as $i => $img) {
                 $url = $this->guardarImagen($img);
                 $imagenesProcesadas[] = [
                     "url_imagen" => $url,
-                    "texto_alt_SEO" => $textos[$i] ?? ''
+                    "texto_alt_SEO" => $textos[$i]
                 ];
             }
 
+            $producto->update([
+                "nombre" => $datosValidados["nombre"],
+                "link" => $datosValidados["link"],
+                "titulo" => $datosValidados["titulo"],
+                "subtitulo" => $datosValidados["subtitulo"],
+                "stock" => $datosValidados["stock"],
+                "precio" => $datosValidados["precio"],
+                "seccion" => $datosValidados["seccion"],
+                "lema" => $datosValidados["lema"],
+                "descripcion" => $datosValidados["descripcion"],
+            ]);
+            $producto->imagenes()->delete();
             $producto->imagenes()->createMany($imagenesProcesadas);
-        }
-
-        return response()->json(["message" => "Producto actualizado exitosamente"], 200);
+            $producto->especificaciones()->delete();
+            $especificaciones = json_decode($datosValidados['especificaciones'], true);
+            if (is_array($especificaciones)) {
+                foreach ($especificaciones as $clave => $valor) {
+                    $producto->especificaciones()->create([
+                        'clave' => $clave,
+                        'valor' => $valor,
+                    ]);
+                }
+            }
+            $producto->productosRelacionados()->sync($datosValidados['relacionados'] ?? []);
+            return response()->json(["message"=>"Producto actualizado exitosamente"],201);
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -621,7 +623,7 @@ class V2ProductoController extends Controller
         //
         DB::beginTransaction();
         try {
-            $producto = Producto::with("imagenes")->find($id);
+             $producto = Producto::with(['imagenes', 'especificaciones'])->find($id);
             if ($producto == null) {
                 return response()->json(["message" => "Producto no encontrado"], status: 404);
             }
@@ -634,12 +636,14 @@ class V2ProductoController extends Controller
                 Storage::delete("imagenes/" . $imagen);
             }
 
+            $producto->especificaciones()->delete(); 
+
             $producto->delete();
             DB::commit();
             return response()->json(["message" => "Producto eliminado exitosamente"], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(["message" => "Hubo un error en el servidor"], 500);
+            return response()->json(["message"=>"Hubo un error en el servidor"], 500);
         }
     }
 }

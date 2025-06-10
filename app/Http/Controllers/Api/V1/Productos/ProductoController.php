@@ -145,49 +145,60 @@ class ProductoController extends BasicController
      *     )
      * )
      */
-    public function store(StoreProductoRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            // Guardamos especificaciones como JSON en el campo 'especificaciones'
-            $data = $request->except(['especificaciones', 'dimensiones', 'imagenes', 'relacionados']);
-            if ($request->has('especificaciones')) {
-                // Convertimos el array asociativo de especificaciones a JSON
-                $data['especificaciones'] = json_encode($request->especificaciones);
+public function store(StoreProductoRequest $request)
+{
+    DB::beginTransaction();
+    try {
+        // Excluimos las relaciones del request para crear solo el producto base
+        $data = $request->except(['especificaciones', 'dimensiones', 'imagenes', 'relacionados']);
+
+        // Creamos el producto
+        $producto = Producto::create($data);
+
+        // Guardamos especificaciones en la tabla relacionada
+        if ($request->has('especificaciones')) {
+            foreach ($request->especificaciones as $clave => $valor) {
+                $producto->especificaciones()->create([
+                    'clave' => $clave,
+                    'valor' => $valor
+                ]);
             }
-
-            $producto = Producto::create($data);
-
-            if ($request->has('dimensiones')) {
-                foreach ($request->dimensiones as $tipo => $valor) {
-                    $producto->dimensiones()->create([
-                        'tipo' => $tipo,
-                        'valor' => $valor
-                    ]);
-                }
-            }
-
-            if ($request->has('imagenes')) {
-                foreach ($request->imagenes as $url) {
-                    $producto->imagenes()->create([
-                        'url_imagen' => $url
-                    ]);
-                }
-            }
-
-            if ($request->has('relacionados')) {
-                foreach ($request->relacionados as $idRelacionado) {
-                    $producto->productosRelacionados()->attach($idRelacionado);
-                }
-            }
-
-            DB::commit();
-            return $this->successResponse($producto, 'Producto creado exitosamente', HttpStatusCode::CREATED);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse('Error al crear el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
+
+        // Guardamos dimensiones
+        if ($request->has('dimensiones')) {
+            foreach ($request->dimensiones as $tipo => $valor) {
+                $producto->dimensiones()->create([
+                    'tipo' => $tipo,
+                    'valor' => $valor
+                ]);
+            }
+        }
+
+        // Guardamos imágenes
+        if ($request->has('imagenes')) {
+            foreach ($request->imagenes as $url) {
+                $producto->imagenes()->create([
+                    'url_imagen' => $url
+                ]);
+            }
+        }
+
+        // Relacionamos productos
+        if ($request->has('relacionados')) {
+            foreach ($request->relacionados as $idRelacionado) {
+                $producto->productosRelacionados()->attach($idRelacionado);
+            }
+        }
+
+        DB::commit();
+        return $this->successResponse($producto, 'Producto creado exitosamente', HttpStatusCode::CREATED);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return $this->errorResponse('Error al crear el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
     }
+}
+
 
 
     /**
