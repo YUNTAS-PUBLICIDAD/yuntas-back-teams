@@ -21,12 +21,7 @@ class ProductoSeeder extends Seeder
                 'stock' => 50,
                 'precio' => 299.99,
                 'seccion' => 'iluminación',
-                'especificaciones' => json_encode([
-                    'color' => 'multicolor',
-                    'material' => 'acrílico',
-                    'voltaje' => '12V',
-                    'consumo' => '24W',
-                ]),
+                
             ],
             [
                 'nombre' => 'Letrero Vintage Retro',
@@ -38,11 +33,7 @@ class ProductoSeeder extends Seeder
                 'stock' => 30,
                 'precio' => 189.99,
                 'seccion' => 'decoración',
-                'especificaciones' => json_encode([
-                    'color' => 'sepia',
-                    'material' => 'madera',
-                    'acabado' => 'envejecido',
-                ]),
+                
             ],
             [
                 'nombre' => 'Letrero Digital Inteligente',
@@ -54,12 +45,6 @@ class ProductoSeeder extends Seeder
                 'stock' => 25,
                 'precio' => 599.99,
                 'seccion' => 'tecnología',
-                'especificaciones' => json_encode([
-                    'resolución' => '1920x1080',
-                    'conectividad' => 'WiFi',
-                    'pantalla' => '32 pulgadas',
-                    'control' => 'app móvil',
-                ]),
             ],
             [
                 'nombre' => 'Letrero Acrílico Minimalista',
@@ -71,12 +56,6 @@ class ProductoSeeder extends Seeder
                 'stock' => 75,
                 'precio' => 149.99,
                 'seccion' => 'oficina',
-                'especificaciones' => json_encode([
-                    'color' => 'transparente',
-                    'material' => 'acrílico',
-                    'grosor' => '5mm',
-                    'montaje' => 'pared',
-                ]),
             ],
             [
                 'nombre' => 'Letrero Personalizado XL',
@@ -88,12 +67,6 @@ class ProductoSeeder extends Seeder
                 'stock' => 15,
                 'precio' => 899.99,
                 'seccion' => 'exterior',
-                'especificaciones' => json_encode([
-                    'tamaño' => 'personalizable',
-                    'material' => 'PVC',
-                    'resistencia' => 'intemperie',
-                    'instalación' => 'profesional',
-                ]),
             ],
             [
                 'nombre' => 'Letrero Eco-Friendly',
@@ -105,12 +78,6 @@ class ProductoSeeder extends Seeder
                 'stock' => 40,
                 'precio' => 399.99,
                 'seccion' => 'sostenible',
-                'especificaciones' => json_encode([
-                    'material' => 'bambú',
-                    'energía' => 'solar',
-                    'certificación' => 'eco-friendly',
-                    'reciclable' => '100%',
-                ]),
             ],
             [
                 'nombre' => 'Letrero Interactivo Táctil',
@@ -122,12 +89,6 @@ class ProductoSeeder extends Seeder
                 'stock' => 20,
                 'precio' => 1299.99,
                 'seccion' => 'interactivo',
-                'especificaciones' => json_encode([
-                    'pantalla' => 'táctil 43"',
-                    'procesador' => 'Android',
-                    'conectividad' => 'WiFi/Bluetooth',
-                    'software' => 'incluido',
-                ]),
             ],
             [
                 'nombre' => 'Letrero Clásico Madera',
@@ -139,12 +100,6 @@ class ProductoSeeder extends Seeder
                 'stock' => 35,
                 'precio' => 249.99,
                 'seccion' => 'artesanal',
-                'especificaciones' => json_encode([
-                    'material' => 'roble',
-                    'acabado' => 'barniz natural',
-                    'tallado' => 'manual',
-                    'tratamiento' => 'anti-humedad',
-                ]),
             ],
         ];
 
