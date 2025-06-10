@@ -20,7 +20,6 @@ class Producto extends Model
         'seccion',
         'lema',
         'descripcion',
-        'especificaciones',
         'imagenes'
     ];
 
@@ -49,5 +48,9 @@ class Producto extends Model
     public function blogs()
     {
         return $this->hasMany(Blog::class, 'producto_id', 'id');
+    }
+    public function especificaciones(): HasMany
+    {
+        return $this->hasMany(Especificacion::class, 'producto_id');
     }
 }
