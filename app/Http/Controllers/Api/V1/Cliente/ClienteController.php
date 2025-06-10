@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Contains\HttpStatusCode;
 use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * @OA\Tag(
@@ -342,6 +343,9 @@ class ClienteController extends BasicController
 
             return $this->successResponse(null, 'Se eliminó correctamente el cliente.', 
             HttpStatusCode::OK);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('Cliente no encontrado.', 
+            HttpStatusCode::NOT_FOUND);
         } catch(\Exception $e) {
             return $this->errorResponse('Ocurrió un problema al procesar la solicitud. ' . $e->getMessage(), 
             HttpStatusCode::INTERNAL_SERVER_ERROR);
