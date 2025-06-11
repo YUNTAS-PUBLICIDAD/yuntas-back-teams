@@ -61,7 +61,7 @@ class V2ProductoController extends Controller
     public function index()
     {
         //
-        $productos = Producto::with('dimensiones', 'imagenes')->get();
+        $productos = Producto::with('imagenes')->get();
 
         // Para decodificar especificaciones
         $productos->transform(function ($producto) {
@@ -234,16 +234,6 @@ class V2ProductoController extends Controller
      *                 @OA\Property(property="color", type="string", example="rojo"),
      *                 @OA\Property(property="material", type="string", example="aluminio")
      *             ),
-     *             @OA\Property(
-     *                 property="dimensiones",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="tipo", type="string", example="alto"),
-     *                     @OA\Property(property="valor", type="string", example="30cm")
-     *                 )
-     *             ),
      *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(
@@ -282,7 +272,7 @@ class V2ProductoController extends Controller
     public function show(string $id)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes'])->find($id);
+            $producto = Producto::with(['imagenes'])->find($id);
 
             if ($producto === null) {
                 return response()->json([
@@ -302,7 +292,6 @@ class V2ProductoController extends Controller
                 'lema' => $producto->lema,
                 'descripcion' => $producto->descripcion,
                 'especificaciones' => json_decode($producto->especificaciones, true) ?? [],
-                'dimensiones' => $producto->dimensiones,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
                 'imagenes' => $producto->imagenes,
@@ -355,16 +344,6 @@ class V2ProductoController extends Controller
      *                 @OA\Property(property="color", type="string", example="rojo"),
      *                 @OA\Property(property="material", type="string", example="aluminio")
      *             ),
-     *             @OA\Property(
-     *                 property="dimensiones",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="tipo", type="string", example="alto"),
-     *                     @OA\Property(property="valor", type="string", example="30cm")
-     *                 )
-     *             ),
      *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(
@@ -403,7 +382,7 @@ class V2ProductoController extends Controller
     public function showByLink($link)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes'])
+            $producto = Producto::with(['imagenes'])
                 ->where('link', $link)
                 ->first();
 
@@ -423,7 +402,6 @@ class V2ProductoController extends Controller
                 'lema' => $producto->lema,
                 'descripcion' => $producto->descripcion,
                 'especificaciones' => json_decode($producto->especificaciones, true) ?? [],
-                'dimensiones' => $producto->dimensiones,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
                 'imagenes' => $producto->imagenes,

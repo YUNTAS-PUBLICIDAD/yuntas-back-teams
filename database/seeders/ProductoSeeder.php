@@ -104,17 +104,7 @@ class ProductoSeeder extends Seeder
         ];
 
         foreach ($productos as $productoData) {
-            $producto = Producto::create($productoData);
-
-            // Crear dimensiones si el método existe
-            if (method_exists($producto, 'dimensiones')) {
-                $dimensiones = [
-                    ['tipo' => 'alto', 'valor' => rand(20, 100) . 'cm'],
-                    ['tipo' => 'ancho', 'valor' => rand(30, 200) . 'cm'],
-                    ['tipo' => 'largo', 'valor' => rand(5, 20) . 'cm'],
-                ];
-                $producto->dimensiones()->createMany($dimensiones);
-            }
+            Producto::create($productoData);
         }
     }
 }
