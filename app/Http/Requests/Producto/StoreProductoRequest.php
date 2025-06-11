@@ -32,7 +32,7 @@ class StoreProductoRequest extends FormRequest
             'stock' => 'required|integer|min:0',
             'precio' => 'required|numeric|min:0|max:99999999.99',
             'seccion' => 'nullable|string|max:100',
-            'especificaciones' => 'nullable|array'
+            'especificaciones' => 'sometimes|array'
         ];
     }
 }

@@ -70,8 +70,7 @@ class ProductoController extends BasicController
                 'subtitle' => $producto->subtitulo,
                 'tagline' => $producto->lema,
                 'description' => $producto->descripcion,
-                // Aquí obtenemos especificaciones como JSON decodificado (array asociativo)
-                'specs' => json_decode($producto->especificaciones, true) ?? [],
+                'specs' => $producto->especificaciones->pluck('valor', 'clave'), 
                 'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
                 'relatedProducts' => $producto->productosRelacionados->pluck('id'),
                 'images' => $producto->imagenes->pluck('url_imagen'),
@@ -254,7 +253,7 @@ public function store(StoreProductoRequest $request)
      */
 public function show($id)
 {
-    $producto = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->findOrFail($id);
+    $producto = Producto::with(['especificaciones','dimensiones', 'imagenes', 'productosRelacionados'])->findOrFail($id);
 
     $formattedProducto = [
         'id' => $producto->id,
@@ -262,7 +261,7 @@ public function show($id)
         'subtitle' => $producto->subtitulo,
         'tagline' => $producto->lema,
         'description' => $producto->descripcion,
-        'specs' => json_decode($producto->especificaciones, true) ?? [],
+        'specs' => $producto->especificaciones->pluck('valor', 'clave'),
         'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
         'relatedProducts' => $producto->productosRelacionados->pluck('id'),
         'images' => $producto->imagenes->pluck('url_imagen'),
@@ -279,7 +278,7 @@ public function show($id)
     public function showByLink($link)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->where('link', $link)->firstOrFail();
+            $producto = Producto::with(['especificaciones','dimensiones', 'imagenes', 'productosRelacionados'])->where('link', $link)->firstOrFail();
 
             $formattedProducto = [
                 'id' => $producto->id,
@@ -287,7 +286,7 @@ public function show($id)
                 'subtitle' => $producto->subtitulo,
                 'tagline' => $producto->lema,
                 'description' => $producto->descripcion,
-                'specs' => $producto->especificaciones,
+                'specs' => $producto->especificaciones->pluck('valor', 'clave'),
                 'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
                 'relatedProducts' => $producto->productosRelacionados->pluck('id'),
                 'images' => $producto->imagenes->pluck('url_imagen'),
