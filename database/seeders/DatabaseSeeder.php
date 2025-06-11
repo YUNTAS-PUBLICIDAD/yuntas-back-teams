@@ -26,6 +26,16 @@ class DatabaseSeeder extends Seeder
             DimensionSeeder::class,
             ImagenProductoSeeder::class,
             ProductoRelacionadoSeeder::class,
+            EspecificacionSeeder::class,
+
+
+            InteresadoSeeder::class,
+            
+            //BLOG
+            BlogSeeder::class,
+            DetalleBlogSeeder::class,
+            ImagenBlogSeeder::class,
+            VideoBlogSeeder::class,
 
             //Reclamos
             DatosPersonalSeeder::class,

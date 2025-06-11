@@ -20,7 +20,7 @@ return new class extends Migration
 
             $table->string('titulo', 120);
             $table->string('parrafo', 100);
-            $table->string('descripción', 255);
+            $table->string('descripcion', 255);
             $table->string('imagen_principal');
             $table->timestamps();;
         });

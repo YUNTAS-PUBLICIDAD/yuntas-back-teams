@@ -20,9 +20,9 @@ use App\Http\Controllers\Api\TarjetaController;
 use App\Http\Controllers\Api\CommendTarjetaController;
 use App\Models\BlogBody;
 use App\Services\ApiResponseService;
-use App\Services\ImgurService;
 use App\Models\Producto;
 use App\Models\ImagenBlog;
+use App\Services\LocalStorageService;
 
 /**
  * @OA\Tag(
@@ -33,15 +33,16 @@ use App\Models\ImagenBlog;
 class BlogController extends BasicController
 {
 
-    protected ApiResponseService $apiResponse;
-    protected $imgurService;
+    protected $apiResponse;
+    protected $storageService;
 
-    public function __construct(ApiResponseService $apiResponse, ImgurService $imgurService)
-    {
+    public function __construct(
+        ApiResponseService $apiResponse,
+        LocalStorageService $storageService
+    ) {
         $this->apiResponse = $apiResponse;
-        $this->imgurService = $imgurService;
+        $this->storageService = $storageService;
     }
-
     /**
      * @OA\Get(
      *     path="/api/blogs",
@@ -164,46 +165,63 @@ class BlogController extends BasicController
      */
     public function store(StoreBlogRequest $request)
     {
-       $data = $request->validated();
+        $data = $request->validated();
         DB::beginTransaction();
+
         try {
-
-            $data = $request->validated();
-
-            //Validar que el producto existe
-            $request->validate(
-                [
-                    'producto_id' => ['required', 'integer', 'exists:productos,id'],
-                ]
-            );
-
+            // Validar que el producto existe
+            $request->validate([
+                'producto_id' => ['required', 'integer', 'exists:productos,id'],
+            ]);
 
             // 🟡 Validar y subir imagen principal si existe
             if (!empty($data['imagen_principal']) && $data['imagen_principal'] instanceof \Illuminate\Http\UploadedFile) {
                 $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
                 if (!in_array($data['imagen_principal']->getMimeType(), $validMimeTypes)) {
-                    throw new \Exception("El archivo de imagen principal no es válido.");
+                    throw new \Exception("El archivo de imagen principal no es válido. Tipo recibido: " . $data['imagen_principal']->getMimeType());
                 }
-                // Subir imagen principal a Imgur
-                $uploadedMainImageUrl = $this->imgurService->uploadImage($data['imagen_principal']);
-                if (!$uploadedMainImageUrl) {
-                    throw new \Exception("Falló la subida de la imagen principal.");
+
+                // Verificar el tamaño del archivo (ejemplo: máximo 10MB)
+                if ($data['imagen_principal']->getSize() > 10485760) {
+                    throw new \Exception("La imagen principal excede el tamaño máximo permitido de 10MB.");
                 }
-                // Reemplazar el valor en el array original
-                $data['imagen_principal'] = $uploadedMainImageUrl;
+
+                // Subir imagen principal al almacenamiento local
+                try {
+                    $uploadedMainImageUrl = $this->storageService->uploadImage($data['imagen_principal']);
+
+                    if (!$uploadedMainImageUrl) {
+                        throw new \Exception("No se pudo guardar la imagen principal.");
+                    }
+
+                    $data['imagen_principal'] = $uploadedMainImageUrl;
+
+                    \Log::info('Imagen principal guardada exitosamente', [
+                        'url' => $uploadedMainImageUrl
+                    ]);
+                } catch (\Exception $storageException) {
+                    \Log::error('Error al guardar imagen', [
+                        'error' => $storageException->getMessage()
+                    ]);
+                    throw new \Exception("Error al guardar la imagen: " . $storageException->getMessage());
+                }
             }
 
             // Crear el blog (excluyendo relaciones)
             $blog = Blog::create(array_diff_key($data, array_flip([
                 'imagenes',
                 'video',
-                'detalle'
+                'detalle',
+                'titulo_blog',
+                'subtitulo_beneficio',
+                'url_video',
+                'titulo_video'
             ])));
 
             // Relación: detalle del blog
             if (!empty($data['titulo_blog']) || !empty($data['subtitulo_beneficio'])) {
                 $blog->detalle()->create([
-                    'id_blog' => $blog->id,  // Vincular al blog creado
                     'titulo_blog' => $data['titulo_blog'] ?? null,
                     'subtitulo_beneficio' => $data['subtitulo_beneficio'] ?? null,
                 ]);
@@ -212,52 +230,75 @@ class BlogController extends BasicController
             // Relación: video
             if (!empty($data['url_video']) || !empty($data['titulo_video'])) {
                 $blog->video()->create([
-                    'id_blog' => $blog->id,  // Vincular al blog creado
                     'url_video' => $data['url_video'] ?? null,
                     'titulo_video' => $data['titulo_video'] ?? null,
                 ]);
             }
+
             // Relación: imágenes adicionales
             if (!empty($data['imagenes']) && is_array($data['imagenes'])) {
                 foreach ($data['imagenes'] as $index => $item) {
-                    if (isset($item['imagen']) && $item['imagen'] instanceof \Illuminate\Http\UploadedFile) {
-                        $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-                        if (!in_array($item['imagen']->getMimeType(), $validMimeTypes)) {
-                            throw new \Exception("El archivo de imagen adicional en la posición $index no es válido.");
-                        }
+                    if (!isset($item['imagen']) || !($item['imagen'] instanceof \Illuminate\Http\UploadedFile)) {
+                        throw new \Exception("Falta imagen válida en el índice $index.");
+                    }
 
-                        $uploadedImageUrl = $this->imgurService->uploadImage($item['imagen']);
+                    $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                    if (!in_array($item['imagen']->getMimeType(), $validMimeTypes)) {
+                        throw new \Exception("El archivo de imagen adicional en la posición $index no es válido. Tipo: " . $item['imagen']->getMimeType());
+                    }
+
+                    // Verificar tamaño
+                    if ($item['imagen']->getSize() > 10485760) {
+                        throw new \Exception("La imagen en la posición $index excede el tamaño máximo permitido de 10MB.");
+                    }
+
+                    try {
+                        $uploadedImageUrl = $this->storageService->uploadImage($item['imagen']);
+
                         if (!$uploadedImageUrl) {
-                            throw new \Exception("Falló la subida de la imagen adicional en la posición $index.");
+                            throw new \Exception("No se pudo guardar la imagen.");
                         }
 
                         $blog->imagenes()->create([
                             'url_imagen' => $uploadedImageUrl,
                             'parrafo_imagen' => $item['parrafo'] ?? '',
-                            'id_blog' => $blog->id,
                         ]);
-                    } else {
-                        throw new \Exception("Falta imagen válida en el índice $index.");
+
+                        \Log::info('Imagen adicional guardada', [
+                            'index' => $index,
+                            'url' => $uploadedImageUrl
+                        ]);
+                    } catch (\Exception $storageException) {
+                        throw new \Exception("Error al guardar imagen $index: " . $storageException->getMessage());
                     }
                 }
-            } else {
-                throw new \Exception("Array de imágenes vacío o mal estructurado.");
             }
 
-
-            // ✅ Las relaciones ya están cargadas al momento de la creación, no es necesario cargar de nuevo
             DB::commit();
 
-            return $this->apiResponse->successResponse($blog->fresh(), 'Blog creado con éxito.', HttpStatusCode::CREATED);
+            // Cargar todas las relaciones antes de devolver
+            $blog->load(['detalle', 'video', 'imagenes']);
+
+            return $this->apiResponse->successResponse(
+                $blog,
+                'Blog creado con éxito.',
+                HttpStatusCode::CREATED
+            );
         } catch (\Exception $e) {
             DB::rollBack();
+
+            \Log::error('Blog creation failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
             return $this->apiResponse->errorResponse(
                 'Error al crear el blog: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
             );
         }
     }
-
     /**
      * @OA\Get(
      *     path="/api/blogs/{id}",
@@ -310,7 +351,7 @@ class BlogController extends BasicController
      */
     public function show(int $id)
     {
-         try {
+        try {
             $blog = Blog::with(['imagenes', 'detalle', 'video'])->findOrFail($id);
 
             $showBlog = [
@@ -320,19 +361,18 @@ class BlogController extends BasicController
                 'parrafo' => $blog->parrafo,
                 'descripcion' => $blog->descripcion,
                 'imagenPrincipal' => $blog->imagen_principal,
-                'tituloBlog' => optional($blog->detalle)->titulo_blog, 
+                'tituloBlog' => optional($blog->detalle)->titulo_blog,
                 'subTituloBlog' => optional($blog->detalle)->subtitulo_beneficio,
-                'imagenesBlog' => $blog->imagenes->pluck('url_imagen'), 
+                'imagenesBlog' => $blog->imagenes->pluck('url_imagen'),
                 'parrafoImagenesBlog' => $blog->imagenes->pluck('parrafo_imagen'),
                 'video_id' => $this->obtenerIdVideoYoutube(optional($blog->video)->url_video),
-                'videoBlog' => optional($blog->video)->url_video, 
+                'videoBlog' => optional($blog->video)->url_video,
                 'tituloVideoBlog' => optional($blog->video)->titulo_video,
                 'created_at' => $blog->created_at,
             ];
 
             return $this->apiResponse->successResponse($showBlog, 'Blog obtenido exitosamente', HttpStatusCode::OK);
-
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             return $this->apiResponse->errorResponse('Error al obtener el blog: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
@@ -395,90 +435,230 @@ class BlogController extends BasicController
      *     )
      * )
      */
+
+
     public function update(UpdateBlogRequest $request, $id)
     {
         $data = $request->validated();
+        DB::beginTransaction();
 
         try {
-            $blog = Blog::findOrFail($id);
+            // Buscar el blog con sus relaciones
+            $blog = Blog::with(['detalle', 'video', 'imagenes'])->findOrFail($id);
 
-            $producto = Producto::find($data['producto_id']);
-            if (!$producto) {
-                throw new \Exception("El producto con ID {$data['producto_id']} no existe.");
+            // Validar que el producto existe si se está actualizando
+            if (isset($data['producto_id'])) {
+                $request->validate([
+                    'producto_id' => ['required', 'integer', 'exists:productos,id'],
+                ]);
             }
 
-            // Validar y subir imagen principal si viene en el request
+            // 🟡 Validar y subir imagen principal si se envió una nueva
             if (!empty($data['imagen_principal']) && $data['imagen_principal'] instanceof \Illuminate\Http\UploadedFile) {
                 $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
                 if (!in_array($data['imagen_principal']->getMimeType(), $validMimeTypes)) {
-                    throw new \Exception("El archivo de imagen principal no es válido.");
+                    throw new \Exception("El archivo de imagen principal no es válido. Tipo recibido: " . $data['imagen_principal']->getMimeType());
                 }
-                $uploadedMainImageUrl = $this->imgurService->uploadImage($data['imagen_principal']);
-                if (!$uploadedMainImageUrl) {
-                    throw new \Exception("Falló la subida de la imagen principal.");
+
+                // Verificar el tamaño del archivo (ejemplo: máximo 10MB)
+                if ($data['imagen_principal']->getSize() > 10485760) {
+                    throw new \Exception("La imagen principal excede el tamaño máximo permitido de 10MB.");
                 }
-                $data['imagen_principal'] = $uploadedMainImageUrl;
+
+                // Subir nueva imagen principal al almacenamiento local
+                try {
+                    // Eliminar imagen anterior si existe y es del almacenamiento local
+                    if ($blog->imagen_principal && str_contains($blog->imagen_principal, '/storage/')) {
+                        $this->storageService->deleteImage($blog->imagen_principal);
+                        \Log::info('Imagen principal anterior eliminada', [
+                            'url' => $blog->imagen_principal
+                        ]);
+                    }
+
+                    $uploadedMainImageUrl = $this->storageService->uploadImage($data['imagen_principal']);
+
+                    if (!$uploadedMainImageUrl) {
+                        throw new \Exception("No se pudo guardar la nueva imagen principal.");
+                    }
+
+                    $data['imagen_principal'] = $uploadedMainImageUrl;
+
+                    \Log::info('Nueva imagen principal guardada exitosamente', [
+                        'url' => $uploadedMainImageUrl
+                    ]);
+                } catch (\Exception $storageException) {
+                    \Log::error('Error al guardar nueva imagen principal', [
+                        'error' => $storageException->getMessage()
+                    ]);
+                    throw new \Exception("Error al guardar la imagen: " . $storageException->getMessage());
+                }
             }
 
-            $blog->update([
-                'producto_id' => $data['producto_id'],
-                'titulo' => $data['titulo'],
-                'link' => $data['link'],
-                'parrafo' => $data['parrafo'],
-                'descripcion' => $data['descripcion'],
-                'imagen_principal' => $data['imagen_principal'] ?? $blog->imagen_principal,
-                'updated_at' => now(),
-            ]);
+            // Actualizar el blog (excluyendo relaciones)
+            $blog->update(array_diff_key($data, array_flip([
+                'imagenes',
+                'video',
+                'detalle',
+                'titulo_blog',
+                'subtitulo_beneficio',
+                'url_video',
+                'titulo_video',
+                'imagenes_a_eliminar'
+            ])));
 
-            // Imágenes adicionales
+            // Actualizar o crear relación: detalle del blog
+            if (isset($data['titulo_blog']) || isset($data['subtitulo_beneficio'])) {
+                if ($blog->detalle) {
+                    // Actualizar detalle existente
+                    $blog->detalle->update([
+                        'titulo_blog' => $data['titulo_blog'] ?? $blog->detalle->titulo_blog,
+                        'subtitulo_beneficio' => $data['subtitulo_beneficio'] ?? $blog->detalle->subtitulo_beneficio,
+                    ]);
+                } else {
+                    // Crear nuevo detalle si no existe
+                    $blog->detalle()->create([
+                        'titulo_blog' => $data['titulo_blog'] ?? null,
+                        'subtitulo_beneficio' => $data['subtitulo_beneficio'] ?? null,
+                    ]);
+                }
+            }
+
+            // Actualizar o crear relación: video
+            if (isset($data['url_video']) || isset($data['titulo_video'])) {
+                if ($blog->video) {
+                    // Actualizar video existente
+                    $blog->video->update([
+                        'url_video' => $data['url_video'] ?? $blog->video->url_video,
+                        'titulo_video' => $data['titulo_video'] ?? $blog->video->titulo_video,
+                    ]);
+                } else {
+                    // Crear nuevo video si no existe
+                    $blog->video()->create([
+                        'url_video' => $data['url_video'] ?? null,
+                        'titulo_video' => $data['titulo_video'] ?? null,
+                    ]);
+                }
+            }
+
+            // Eliminar imágenes marcadas para eliminación
+            if (!empty($data['imagenes_a_eliminar']) && is_array($data['imagenes_a_eliminar'])) {
+                $imagenesAEliminar = $blog->imagenes()->whereIn('id', $data['imagenes_a_eliminar'])->get();
+
+                foreach ($imagenesAEliminar as $imagen) {
+                    // Eliminar archivo físico si es del almacenamiento local
+                    if ($imagen->url_imagen && str_contains($imagen->url_imagen, '/storage/')) {
+                        $this->storageService->deleteImage($imagen->url_imagen);
+                        \Log::info('Imagen adicional eliminada', [
+                            'id' => $imagen->id,
+                            'url' => $imagen->url_imagen
+                        ]);
+                    }
+                    // Eliminar registro de la base de datos
+                    $imagen->delete();
+                }
+            }
+
+            // Actualizar o agregar imágenes adicionales
             if (!empty($data['imagenes']) && is_array($data['imagenes'])) {
-                $blog->imagenes()->delete(); // Eliminar imágenes anteriores
+                foreach ($data['imagenes'] as $index => $item) {
+                    // Si solo se actualiza el párrafo de una imagen existente
+                    if (isset($item['id']) && !isset($item['imagen'])) {
+                        $imagenExistente = $blog->imagenes()->find($item['id']);
+                        if ($imagenExistente && isset($item['parrafo'])) {
+                            $imagenExistente->update([
+                                'parrafo_imagen' => $item['parrafo']
+                            ]);
+                            \Log::info('Párrafo de imagen actualizado', [
+                                'id' => $item['id']
+                            ]);
+                        }
+                    }
+                    // Si se sube una nueva imagen (con o sin ID)
+                    else if (isset($item['imagen']) && $item['imagen'] instanceof \Illuminate\Http\UploadedFile) {
+                        $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                        if (!in_array($item['imagen']->getMimeType(), $validMimeTypes)) {
+                            throw new \Exception("El archivo de imagen adicional en la posición $index no es válido. Tipo: " . $item['imagen']->getMimeType());
+                        }
 
-                $imagenes = collect($data['imagenes'])->map(fn($imagen) => [
-                    'url_imagen' => $imagen['imagen'],
-                    'parrafo_imagen' => $imagen['parrafo'],
-                    'id_blog' => $blog->id,
-                ])->toArray();
+                        // Verificar tamaño
+                        if ($item['imagen']->getSize() > 10485760) {
+                            throw new \Exception("La imagen en la posición $index excede el tamaño máximo permitido de 10MB.");
+                        }
 
-                ImagenBlog::insert($imagenes);
-            }
+                        try {
+                            $uploadedImageUrl = $this->storageService->uploadImage($item['imagen']);
 
-            // Manejo detalle blog
-            $detalle = $blog->detalle()->first();
-            if ($detalle) {
-                $detalle->update([
-                    'titulo_blog' => $data['titulo_blog'],
-                    'subtitulo_beneficio' => $data['subtitulo_beneficio'],
-                ]);
-            } else {
-                $blog->detalle()->create([
-                    'titulo_blog' => $data['titulo_blog'],
-                    'subtitulo_beneficio' => $data['subtitulo_beneficio'],
-                ]);
-            }
+                            if (!$uploadedImageUrl) {
+                                throw new \Exception("No se pudo guardar la imagen.");
+                            }
 
-            // Manejo video blog
-            $video = $blog->video()->first();
-            if ($video) {
-                $video->update([
-                    'url_video' => $data['url_video'],
-                    'titulo_video' => $data['titulo_video'],
-                ]);
-            } else {
-                $blog->video()->create([
-                    'url_video' => $data['url_video'],
-                    'titulo_video' => $data['titulo_video'],
-                ]);
+                            // Si tiene ID, es un reemplazo de imagen existente
+                            if (isset($item['id'])) {
+                                $imagenExistente = $blog->imagenes()->find($item['id']);
+                                if ($imagenExistente) {
+                                    // Eliminar imagen anterior
+                                    if ($imagenExistente->url_imagen && str_contains($imagenExistente->url_imagen, '/storage/')) {
+                                        $this->storageService->deleteImage($imagenExistente->url_imagen);
+                                    }
+
+                                    // Actualizar con nueva imagen
+                                    $imagenExistente->update([
+                                        'url_imagen' => $uploadedImageUrl,
+                                        'parrafo_imagen' => $item['parrafo'] ?? $imagenExistente->parrafo_imagen,
+                                    ]);
+
+                                    \Log::info('Imagen adicional reemplazada', [
+                                        'id' => $item['id'],
+                                        'nueva_url' => $uploadedImageUrl
+                                    ]);
+                                }
+                            } else {
+                                // Es una imagen completamente nueva
+                                $blog->imagenes()->create([
+                                    'url_imagen' => $uploadedImageUrl,
+                                    'parrafo_imagen' => $item['parrafo'] ?? '',
+                                ]);
+
+                                \Log::info('Nueva imagen adicional agregada', [
+                                    'index' => $index,
+                                    'url' => $uploadedImageUrl
+                                ]);
+                            }
+                        } catch (\Exception $storageException) {
+                            throw new \Exception("Error al guardar imagen $index: " . $storageException->getMessage());
+                        }
+                    }
+                }
             }
 
             DB::commit();
 
-            return $this->apiResponse->successResponse(null, 'Blog actualizado exitosamente', HttpStatusCode::OK);
+            // Cargar todas las relaciones actualizadas antes de devolver
+            $blog->load(['detalle', 'video', 'imagenes']);
+
+            return $this->apiResponse->successResponse(
+                $blog,
+                'Blog actualizado con éxito.',
+                HttpStatusCode::OK
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->apiResponse->errorResponse('Error al actualizar el blog: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+
+            \Log::error('Blog update failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'blog_id' => $id
+            ]);
+
+            return $this->apiResponse->errorResponse(
+                'Error al actualizar el blog: ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
     }
+
 
     /**
      * @OA\Delete(
@@ -519,18 +699,38 @@ class BlogController extends BasicController
      *     )
      * )
      */
-    public function destroy(int $id)
+    public function destroy($id)
     {
-       try {
-            $blog = Blog::findOrFail($id);
+        DB::beginTransaction();
+
+        try {
+            $blog = Blog::with(['imagenes'])->findOrFail($id);
+
+            // Eliminar imagen principal si existe
+            if ($blog->imagen_principal && str_contains($blog->imagen_principal, '/storage/')) {
+                $this->storageService->deleteImage($blog->imagen_principal);
+            }
+
+            // Eliminar imágenes adicionales
+            foreach ($blog->imagenes as $imagen) {
+                if ($imagen->url_imagen && str_contains($imagen->url_imagen, '/storage/')) {
+                    $this->storageService->deleteImage($imagen->url_imagen);
+                }
+            }
+
+            // Eliminar el blog (las relaciones se eliminarán por cascade)
             $blog->delete();
 
+            DB::commit();
+
             return $this->apiResponse->successResponse(
-                $blog,
-                'Blog eliminado exitosamente',
+                null,
+                'Blog eliminado con éxito.',
                 HttpStatusCode::OK
             );
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return $this->apiResponse->errorResponse(
                 'Error al eliminar el blog: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
