@@ -1,1 +1,1 @@
-Hola, {{$name}} los correos funcionan
+{{ $data['mensaje'] }}

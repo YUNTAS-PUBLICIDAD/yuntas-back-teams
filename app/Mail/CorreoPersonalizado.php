@@ -19,9 +19,11 @@ class CorreoPersonalizado extends Mailable
 
     public function build()
     {
-        return $this->from(env('MAIL_FROM_ADDRESS'),    env('MAIL_FROM_NAME'))
-                    ->view('emails.correo')
-                    ->subject('Titulo del correo')
-                    ->with($this->data);
+        return $this
+            ->subject($this->data['asunto'])
+            ->view('emails.correo')
+            ->with([
+                'mensaje' => $this->data['mensaje'],
+            ]);
     }
 }

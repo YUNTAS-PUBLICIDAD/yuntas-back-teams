@@ -20,7 +20,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Mail;
 
 // blogs públicos
 
@@ -28,7 +28,6 @@ Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blogs/{id}', [BlogController::class, "show"]);
 Route::get('/blogs/link/{link}', [BlogController::class, "getByLink"]);
 
-Route::get('/mail', [EmailController::class, 'getMail']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
@@ -83,6 +82,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/login', 'login');
     });
 
+    Route::controller(EmailController::class)->prefix('email')->group(function () {
+        Route::post('/', 'sendEmail');
+    });
 
     Route::middleware('auth:sanctum')->group(function () {
         // AUTH (logout autenticado)
