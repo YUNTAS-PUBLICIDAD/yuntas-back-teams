@@ -61,7 +61,7 @@ class ProductoController extends BasicController
      */
     public function index()
     {
-        $productos = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->get();
+        $productos = Producto::with(['especificaciones','dimensiones', 'imagenes', 'productosRelacionados'])->get();
 
         $formattedProductos = $productos->map(function ($producto) {
             return [
