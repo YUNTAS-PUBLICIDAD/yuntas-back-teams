@@ -26,13 +26,6 @@ class ProductoSeeder extends Seeder
             ]),
         ]);
 
-        if (method_exists($producto, 'especificaciones')) {
-            $producto->especificaciones()->createMany([
-                ['clave' => 'color', 'valor' => 'rojo'],
-                ['clave' => 'material', 'valor' => 'aluminio'],
-            ]);
-        }
-
         // Crear dimensiones (si tienes relación y modelo)
         if (method_exists($producto, 'dimensiones')) {
             $producto->dimensiones()->createMany([
