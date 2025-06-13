@@ -16,14 +16,13 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('titulo');
             $table->string('subtitulo')->nullable();
-            $table->string('lema')->nullable();
-            $table->text('descripcion')->nullable();
-            $table->string('imagen_principal');
             $table->integer('stock')->default(0);
             $table->decimal('precio', 10, 2);
-            $table->string('seccion', 100)->nullable();
+            $table->string('seccion', 100);
+            $table->string('lema')->nullable();
+            $table->text('descripcion');
+            $table->text('especificaciones');
             $table->text('mensaje_correo')->nullable();
-            
             $table->timestamps();
         });
     }
