@@ -8,6 +8,7 @@ use App\Http\Requests\PostReclamo\PostReclamo;
 use App\Models\DatosPersonal;
 use App\Models\Reclamo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\ModelNotFoundException; // Importar ModelNotFoundException
 
 /**
  * @OA\Tag(
@@ -346,12 +347,19 @@ class ReclamosController extends BasicController
     public function destroy($id)
     {
         try {
+            DB::beginTransaction();
+
             $reclamo = DatosPersonal::findOrFail($id);
             $reclamo->delete();
 
-            return $this->successResponse(null, 'Reclamo eliminado exitosamente', HttpStatusCode::OK);
+            DB::commit();
+            return $this->successNoContentResponse('Reclamo eliminado exitosamente');
 
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            return $this->errorResponse('Recurso no encontrado', HttpStatusCode::NOT_FOUND, $e->getMessage());
         } catch (\Exception $e) {
+            DB::rollBack();
             return $this->errorResponse('Error al eliminar el reclamo: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
