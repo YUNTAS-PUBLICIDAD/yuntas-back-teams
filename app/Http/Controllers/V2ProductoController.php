@@ -42,7 +42,6 @@ class V2ProductoController extends Controller
      *                     @OA\Property(property="lema", type="string"),
      *                     @OA\Property(property="descripcion", type="string"),
      *                     @OA\Property(property="especificaciones", type="string"),
-     *                     @OA\Property(property="mensaje_correo", type="string"),
      *                     @OA\Property(property="created_at", type="string"),
      *                     @OA\Property(property="updated_at", type="string"),
      *                     @OA\Property(property="imagenes", type="object")
@@ -61,7 +60,7 @@ class V2ProductoController extends Controller
     public function index()
     {
         //
-        $productos = Producto::with('dimensiones', 'imagenes')->get();
+        $productos = Producto::with( 'imagenes')->get();
 
         // Para decodificar especificaciones
         $productos->transform(function ($producto) {
@@ -69,20 +68,14 @@ class V2ProductoController extends Controller
             return $producto;
         });
 
+        $productos->transform(function ($producto) {
+            $producto->productos_relacionados = json_decode($producto->productos_relacionados, true) ?? [];
+            return $producto;
+        });
+
         return response()->json($productos);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     /**
      * Crear un nuevo producto
      * 
@@ -100,7 +93,7 @@ class V2ProductoController extends Controller
      *                 required={
      *                     "nombre", "titulo", "subtitulo", "stock", "precio", 
      *                     "seccion", "lema", "descripcion", "especificaciones",
-     *                     "imagenes", "textos_alt", "mensaje_correo"
+     *                     "imagenes", "textos_alt"
      *                 },
      *                 @OA\Property(property="nombre", type="string", example="Selladora"),
      *                 @OA\Property(property="titulo", type="string", example="Titulo increíble"),
@@ -126,7 +119,6 @@ class V2ProductoController extends Controller
      *                     description="Array de textos alternativos para las imágenes"
      *                 ),
      *                 
-     *                 @OA\Property(property="mensaje_correo", type="string", example="Mensaje increíble")
      *             )
      *         )
      *     ),
@@ -181,7 +173,7 @@ class V2ProductoController extends Controller
                 "descripcion" => $datosValidados["descripcion"],
             ]);
 
-            $producto->productosRelacionados()->sync($datosValidados['relacionados'] ?? []);
+            $producto->productos_relacionados()->sync($datosValidados['relacionados'] ?? []);
             $producto->imagenes()->createMany($imagenesProcesadas);
 
             // Aquí solo este bloque basta
@@ -234,16 +226,6 @@ class V2ProductoController extends Controller
      *                 @OA\Property(property="color", type="string", example="rojo"),
      *                 @OA\Property(property="material", type="string", example="aluminio")
      *             ),
-     *             @OA\Property(
-     *                 property="dimensiones",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="tipo", type="string", example="alto"),
-     *                     @OA\Property(property="valor", type="string", example="30cm")
-     *                 )
-     *             ),
      *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(
@@ -282,7 +264,7 @@ class V2ProductoController extends Controller
     public function show(string $id)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes'])->find($id);
+            $producto = Producto::with([ 'imagenes'])->find($id);
 
             if ($producto === null) {
                 return response()->json([
@@ -302,7 +284,6 @@ class V2ProductoController extends Controller
                 'lema' => $producto->lema,
                 'descripcion' => $producto->descripcion,
                 'especificaciones' => json_decode($producto->especificaciones, true) ?? [],
-                'dimensiones' => $producto->dimensiones,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
                 'imagenes' => $producto->imagenes,
@@ -355,16 +336,6 @@ class V2ProductoController extends Controller
      *                 @OA\Property(property="color", type="string", example="rojo"),
      *                 @OA\Property(property="material", type="string", example="aluminio")
      *             ),
-     *             @OA\Property(
-     *                 property="dimensiones",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="tipo", type="string", example="alto"),
-     *                     @OA\Property(property="valor", type="string", example="30cm")
-     *                 )
-     *             ),
      *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(
@@ -403,7 +374,7 @@ class V2ProductoController extends Controller
     public function showByLink($link)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes'])
+            $producto = Producto::with(['imagenes'])
                 ->where('link', $link)
                 ->first();
 
@@ -423,7 +394,6 @@ class V2ProductoController extends Controller
                 'lema' => $producto->lema,
                 'descripcion' => $producto->descripcion,
                 'especificaciones' => json_decode($producto->especificaciones, true) ?? [],
-                'dimensiones' => $producto->dimensiones,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
                 'imagenes' => $producto->imagenes,
@@ -438,13 +408,6 @@ class V2ProductoController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -473,7 +436,7 @@ class V2ProductoController extends Controller
      *                 required={
      *                     "nombre", "titulo", "subtitulo", "stock", "precio", 
      *                     "seccion", "lema", "descripcion", "especificaciones",
-     *                      "imagenes", "textos_alt", "mensaje_correo", "_method"
+     *                      "imagenes", "textos_alt", "_method"
      *                 },
      *                 @OA\Property(property="nombre", type="string", example="Selladora"),
      *                 @OA\Property(property="titulo", type="string", example="Titulo increíble"),
@@ -499,7 +462,6 @@ class V2ProductoController extends Controller
      *                     description="Array de textos alternativos para las imágenes"
      *                 ),
      *                 
-     *                 @OA\Property(property="mensaje_correo", type="string", example="Mensaje increíble"),
      *                 @OA\Property(property="_method", type="string", example="PUT")
      *             )
      *         )
@@ -577,7 +539,7 @@ class V2ProductoController extends Controller
                     ]);
                 }
             }
-            $producto->productosRelacionados()->sync($datosValidados['relacionados'] ?? []);
+            $producto->productos_relacionados()->sync($datosValidados['relacionados'] ?? []);
             return response()->json(["message"=>"Producto actualizado exitosamente"],201);
     }
     /**
