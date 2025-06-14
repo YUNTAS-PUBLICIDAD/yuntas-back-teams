@@ -75,7 +75,7 @@ class ReclamosController extends BasicController
                 ];
             });
 
-            return $this->successResponse($reclamos, 'Productos obtenidos exitosamente', HttpStatusCode::OK);
+            return $this->successResponse($reclamos, 'Reclamos obtenidos exitosamente', HttpStatusCode::OK);
 
         } catch(\Exception $e) {
             return $this->errorResponse('Error al mostrar los reclamos: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
@@ -214,9 +214,9 @@ class ReclamosController extends BasicController
                 'numero_doc' => $personal->numero_doc,
                 'correo' => $personal->correo,
                 'telefono' => $personal->telefono,
-                'fecha_compra' => $personal->fecha_compra,
-                'detalle_reclamo' => $personal->detalle_reclamo,
-                'monto_reclamo' => $personal->monto_reclamo,
+                'fecha_compra' => $personal->reclamos->pluck('fecha_compra'),
+                'detalle_reclamo' => $personal->reclamos->pluck('detalle_reclamo'),
+                'monto_reclamo' => $personal->reclamos->pluck('monto_reclamo'),
             ];
 
             return $this->successResponse($reclamos, 'Reclamo encontrado exitosamente', HttpStatusCode::OK);
