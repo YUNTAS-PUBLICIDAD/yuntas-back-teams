@@ -25,6 +25,7 @@ class StoreBlogRequest extends FormRequest
          return [
             'titulo' => 'required|string|max:255',
             'link' => 'required|string|max:255',
+            'producto_id' => ['required', 'integer', 'exists:productos,id'],
             'parrafo' => 'required|string',
             'descripcion' => 'required|string',
             'imagen_principal' => 'required|image|mimes:jpeg,jpg,png|max:2048',

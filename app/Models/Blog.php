@@ -22,12 +22,13 @@ class Blog extends Model
         'imagen_principal'
     ];
 
-    public function producto(){
+    public function producto()
+    {
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
-        public function imagenes()
+    public function imagenes()
     {
-        return $this->hasMany(ImagenBlog::class, 'id_blog'); 
+        return $this->hasMany(ImagenBlog::class, 'id_blog');
     }
 
     public function video()
@@ -39,5 +40,4 @@ class Blog extends Model
     {
         return $this->hasOne(DetalleBlog::class, 'id_blog');
     }
-
 }

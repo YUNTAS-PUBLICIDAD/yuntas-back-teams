@@ -19,11 +19,11 @@ class LocalStorageService
     public function uploadImage(UploadedFile $file): ?string
     {
         $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storePubliclyAs($this->imagePath, $fileName, 'public');
+        $path = $file->store('imagenes', 'public');
 
         if ($path) {
             // Retorna la URL pública completa
-            return Storage::url($path);
+            return 'storage/' . $path;
         }
 
         return null;
@@ -42,4 +42,6 @@ class LocalStorageService
 
         return false;
     }
+
+    
 }

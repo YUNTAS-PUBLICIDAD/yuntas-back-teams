@@ -30,17 +30,22 @@ Route::get('/blogs/link/{link}', [BlogController::class, "getByLink"]);
 
 
 Route::middleware('auth:sanctum')->group(function () {
+
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
     Route::middleware('permission:editar-blogs')->put('/blog/{id}', [BlogController::class, "update"]);
     Route::middleware('permission:eliminar-blogs')->delete('/blogs/{id}', [BlogController::class, "destroy"]);
 
-    // Rutas para los permisos
-    Route::middleware('permission:gestionar-permisos')->apiResource('permissions', PermissionController::class);
 
-    // Rutas para los roles
+    Route::controller(PermissionController::class)->prefix("permissions")->middleware('permission:gestionar-permisos')->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::get('/{id}', 'show');
+        Route::put('/{id}', 'update');
+        Route::delete('/{id}', 'destroy');
+    });
+
     Route::middleware('permission:gestionar-roles')->apiResource('roles', RoleController::class);
 
-    // Rutas para asignar/quitar permisos a los roles
     Route::prefix('roles/{roleId}/permissions')->middleware('permission:asignar-permisos-roles')->group(function () {
         Route::get('/', [RolePermissionController::class, 'index']);
         Route::post('/', [RolePermissionController::class, 'store']);
@@ -55,7 +60,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', 'logout')->middleware(['auth:sanctum', 'role:ADMIN|USER']);
     });
 
-    Route::controller(UserController::class)->prefix('users')->group(function(){
+    Route::controller(UserController::class)->prefix('users')->group(function () {
         Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
             Route::get('/', 'index');
             Route::get('/{id}', 'show');
@@ -116,16 +121,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', 'update')->middleware('permission:editar-reclamos');
             Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-reclamos');
         });
-        // BLOQUES
-        /*
-        Route::prefix('bloques')->controller(BloqueContenidoController::class)->group(function () {
-            Route::get('/', 'index')->middleware('permission:ver-bloques');
-            Route::get('/{bloque}', 'show')->middleware('permission:ver-bloques');
-            Route::post('/', 'store')->middleware('permission:crear-bloques');
-            Route::put('/{bloque}', 'update')->middleware('permission:editar-bloques');
-            Route::delete('/{bloque}', 'destroy')->middleware('permission:eliminar-bloques');
-        });
-        */
+        
     });
 });
 
