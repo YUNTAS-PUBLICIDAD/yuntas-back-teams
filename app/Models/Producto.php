@@ -24,7 +24,6 @@ class Producto extends Model
 
     public $timestamps = true;
 
-
     public function imagenes()
     {
         return $this->hasMany(ProductoImagenes::class, 'producto_id');
