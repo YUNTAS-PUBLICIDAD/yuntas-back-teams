@@ -27,6 +27,7 @@ class UpdateBlogRequest extends FormRequest
        return [
             'titulo' => 'required|string|max:120',
             'link' => 'required|string|max:120|unique:blogs,link,' . $blogId,
+            'producto_id' => ['required', 'integer', 'exists:productos,id'],
             'parrafo' => 'required|string|max:100',
             'descripcion' => 'required|string|max:255',
             'imagen_principal' => 'required|file|image',  
