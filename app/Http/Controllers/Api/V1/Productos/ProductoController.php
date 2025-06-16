@@ -39,7 +39,6 @@ class ProductoController extends BasicController
      *                     @OA\Property(property="tagline", type="string", example="Innovación y calidad"),
      *                     @OA\Property(property="description", type="string"),
      *                     @OA\Property(property="specs", type="object"),
-     *                     @OA\Property(property="dimensions", type="object"),
      *                     @OA\Property(property="relatedProducts", type="array", @OA\Items(type="integer")),
      *                     @OA\Property(property="images", type="array", @OA\Items(type="string")),
      *                     @OA\Property(property="image", type="string"),
@@ -61,7 +60,7 @@ class ProductoController extends BasicController
      */
     public function index()
     {
-        $productos = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->get();
+        $productos = Producto::with(['especificaciones', 'imagenes', 'productos_relacionados'])->get();
 
         $formattedProductos = $productos->map(function ($producto) {
             return [
@@ -70,10 +69,8 @@ class ProductoController extends BasicController
                 'subtitle' => $producto->subtitulo,
                 'tagline' => $producto->lema,
                 'description' => $producto->descripcion,
-                // Aquí obtenemos especificaciones como JSON decodificado (array asociativo)
-                'specs' => json_decode($producto->especificaciones, true) ?? [],
-                'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
-                'relatedProducts' => $producto->productosRelacionados->pluck('id'),
+                'specs' => $producto->especificaciones->pluck('valor', 'clave'),
+                'relatedProducts' => $producto->productos_relacionados->pluck('id'),
                 'images' => $producto->imagenes->pluck('url_imagen'),
                 'image' => $producto->imagen_principal,
                 'nombreProducto' => $producto->nombre,
@@ -84,14 +81,6 @@ class ProductoController extends BasicController
         });
 
         return $this->successResponse($formattedProductos, 'Productos obtenidos exitosamente');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -119,9 +108,6 @@ class ProductoController extends BasicController
      *             @OA\Property(property="especificaciones", type="object",
      *                 example={"color": "rojo", "material": "aluminio"}
      *             ),
-     *             @OA\Property(property="dimensiones", type="object",
-     *                 example={"alto": "10cm", "ancho": "20cm", "largo": "30cm"}
-     *             ),
      *             @OA\Property(property="imagenes", type="array", @OA\Items(type="string"), example={"https://placehold.co/100x150/blue/white?text=Product_X", "https://placehold.co/100x150/blue/white?text=Product_Y"}),
      *             @OA\Property(property="relacionados", type="array", @OA\Items(type="integer"), example={1,2,3})
      *         )
@@ -145,61 +131,49 @@ class ProductoController extends BasicController
      *     )
      * )
      */
-public function store(StoreProductoRequest $request)
-{
-    DB::beginTransaction();
-    try {
-        // Excluimos las relaciones del request para crear solo el producto base
-        $data = $request->except(['especificaciones', 'dimensiones', 'imagenes', 'relacionados']);
+    public function store(StoreProductoRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Excluimos las relaciones del request para crear solo el producto base
+            $data = $request->except(['especificaciones', 'imagenes', 'relacionados']);
 
-        // Creamos el producto
-        $producto = Producto::create($data);
+            // Creamos el producto
+            $producto = Producto::create($data);
 
-        // Guardamos especificaciones en la tabla relacionada
-        if ($request->has('especificaciones')) {
-            foreach ($request->especificaciones as $clave => $valor) {
-                $producto->especificaciones()->create([
-                    'clave' => $clave,
-                    'valor' => $valor
-                ]);
+            // Guardamos especificaciones en la tabla relacionada
+            if ($request->has('especificaciones')) {
+                foreach ($request->especificaciones as $clave => $valor) {
+                    $producto->especificaciones()->create([
+                        'clave' => $clave,
+                        'valor' => $valor
+                    ]);
+                }
             }
-        }
 
-        // Guardamos dimensiones
-        if ($request->has('dimensiones')) {
-            foreach ($request->dimensiones as $tipo => $valor) {
-                $producto->dimensiones()->create([
-                    'tipo' => $tipo,
-                    'valor' => $valor
-                ]);
+            // Guardamos imágenes
+            if ($request->has('imagenes')) {
+                foreach ($request->imagenes as $url) {
+                    $producto->imagenes()->create([
+                        'url_imagen' => $url
+                    ]);
+                }
             }
-        }
 
-        // Guardamos imágenes
-        if ($request->has('imagenes')) {
-            foreach ($request->imagenes as $url) {
-                $producto->imagenes()->create([
-                    'url_imagen' => $url
-                ]);
+            // Relacionamos productos
+            if ($request->has('relacionados')) {
+                foreach ($request->relacionados as $idRelacionado) {
+                    $producto->productos_relacionados()->attach($idRelacionado);
+                }
             }
-        }
 
-        // Relacionamos productos
-        if ($request->has('relacionados')) {
-            foreach ($request->relacionados as $idRelacionado) {
-                $producto->productosRelacionados()->attach($idRelacionado);
-            }
+            DB::commit();
+            return $this->successResponse($producto, 'Producto creado exitosamente', HttpStatusCode::CREATED);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse('Error al crear el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
-
-        DB::commit();
-        return $this->successResponse($producto, 'Producto creado exitosamente', HttpStatusCode::CREATED);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return $this->errorResponse('Error al crear el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
     }
-}
-
-
 
     /**
      * Mostrar un producto específico
@@ -229,7 +203,6 @@ public function store(StoreProductoRequest $request)
      *                 @OA\Property(property="tagline", type="string", example="Innovación y calidad"),
      *                 @OA\Property(property="description", type="string"),
      *                 @OA\Property(property="specs", type="object"),
-     *                 @OA\Property(property="dimensions", type="object"),
      *                 @OA\Property(property="relatedProducts", type="array", @OA\Items(type="integer")),
      *                 @OA\Property(property="images", type="array", @OA\Items(type="string")),
      *                 @OA\Property(property="image", type="string"),
@@ -252,34 +225,33 @@ public function store(StoreProductoRequest $request)
      *     )
      * )
      */
-public function show($id)
-{
-    $producto = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->findOrFail($id);
+    public function show($id)
+    {
+        $producto = Producto::with(['especificaciones', 'imagenes', 'productos_relacionados'])->findOrFail($id);
 
-    $formattedProducto = [
-        'id' => $producto->id,
-        'title' => $producto->titulo,
-        'subtitle' => $producto->subtitulo,
-        'tagline' => $producto->lema,
-        'description' => $producto->descripcion,
-        'specs' => json_decode($producto->especificaciones, true) ?? [],
-        'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
-        'relatedProducts' => $producto->productosRelacionados->pluck('id'),
-        'images' => $producto->imagenes->pluck('url_imagen'),
-        'image' => $producto->imagen_principal,
-        'nombreProducto' => $producto->nombre,
-        'stockProducto' => $producto->stock,
-        'precioProducto' => $producto->precio,
-        'seccion' => $producto->seccion,
-    ];
+        $formattedProducto = [
+            'id' => $producto->id,
+            'title' => $producto->titulo,
+            'subtitle' => $producto->subtitulo,
+            'tagline' => $producto->lema,
+            'description' => $producto->descripcion,
+            'specs' => $producto->especificaciones->pluck('valor', 'clave'),
+            'relatedProducts' => $producto->productos_relacionados->pluck('id'),
+            'images' => $producto->imagenes->pluck('url_imagen'),
+            'image' => $producto->imagen_principal,
+            'nombreProducto' => $producto->nombre,
+            'stockProducto' => $producto->stock,
+            'precioProducto' => $producto->precio,
+            'seccion' => $producto->seccion,
+        ];
 
-    return $this->successResponse($formattedProducto, 'Producto obtenido exitosamente');
-}
+        return $this->successResponse($formattedProducto, 'Producto obtenido exitosamente');
+    }
 
     public function showByLink($link)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes', 'productosRelacionados'])->where('link', $link)->firstOrFail();
+            $producto = Producto::with(['especificaciones', 'imagenes', 'productos_relacionados'])->where('link', $link)->firstOrFail();
 
             $formattedProducto = [
                 'id' => $producto->id,
@@ -287,9 +259,8 @@ public function show($id)
                 'subtitle' => $producto->subtitulo,
                 'tagline' => $producto->lema,
                 'description' => $producto->descripcion,
-                'specs' => $producto->especificaciones,
-                'dimensions' => $producto->dimensiones->pluck('valor', 'tipo'),
-                'relatedProducts' => $producto->productosRelacionados->pluck('id'),
+                'specs' => $producto->especificaciones->pluck('valor', 'clave'),
+                'relatedProducts' => $producto->productos_relacionados->pluck('id'),
                 'images' => $producto->imagenes->pluck('url_imagen'),
                 'image' => $producto->imagen_principal,
                 'nombreProducto' => $producto->nombre,
@@ -304,13 +275,6 @@ public function show($id)
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Producto $producto)
-    {
-        //
-    }
 
     /**
      * Actualizar un producto específico
@@ -342,9 +306,6 @@ public function show($id)
      *             @OA\Property(property="seccion", type="string", example="electrónica premium"),
      *             @OA\Property(property="especificaciones", type="object",
      *                 example={"color": "negro", "material": "titanio"}
-     *             ),
-     *             @OA\Property(property="dimensiones", type="object",
-     *                 example={"alto": "12cm", "ancho": "22cm", "largo": "32cm"}
      *             ),
      *             @OA\Property(property="imagenes", type="array", @OA\Items(type="string")),
      *             @OA\Property(property="relacionados", type="array", @OA\Items(type="integer"))
@@ -406,16 +367,6 @@ public function show($id)
                 }
             }
 
-            if ($request->has('dimensiones')) {
-                $producto->dimensiones()->delete();
-                foreach ($request->dimensiones as $tipo => $valor) {
-                    $producto->dimensiones()->create([
-                        'tipo' => $tipo,
-                        'valor' => $valor
-                    ]);
-                }
-            }
-
             // Actualizamos imágenes
             if ($request->has('imagenes')) {
                 // Eliminamos imágenes anteriores
@@ -430,7 +381,7 @@ public function show($id)
             // Actualizamos productos relacionados
             if ($request->has('relacionados')) {
                 // Sincronizamos relaciones (quita las que no están y agrega las nuevas)
-                $producto->productosRelacionados()->sync($request->relacionados);
+                $producto->productos_relacionados()->sync($request->relacionados);
             }
 
             DB::commit();
@@ -440,6 +391,8 @@ public function show($id)
             return $this->errorResponse('Error al actualizar el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
+
+
     /**
      * Eliminar un producto específico
      * 
@@ -484,7 +437,7 @@ public function show($id)
                 $item->delete();
             }
             $producto->delete();
-            
+
             return $this->successResponse(null, 'Producto eliminado exitosamente');
         } catch (\Exception $e) {
             if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
