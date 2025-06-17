@@ -87,8 +87,6 @@ class UserController extends BasicController
         }
     }
 
-
-
     /**
      * @OA\Get(
      * path="/api/v1/users/{id}",
@@ -157,16 +155,13 @@ class UserController extends BasicController
                 'name' => $user->name,
                 'email' => $user->email,
                 'celular' => $user->celular,
-                'fecha' => $user->fecha, // Asegúrate de que 'fecha' exista en tu modelo User
                 'roles' => $user->getRoleNames(),
             ];
 
             return $this->successResponse($data, 'Usuario encontrado correctamente.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Captura específica para 404 si el usuario no existe
+        } catch (ModelNotFoundException $e) {
             return $this->notFoundResponse('Recurso no encontrado');
         } catch (\Exception $e) {
-            // Captura general para otros errores del servidor
             return $this->internalServerErrorResponse("Ocurrió un problema al obtener el usuario: " . $e->getMessage());
         }
     }

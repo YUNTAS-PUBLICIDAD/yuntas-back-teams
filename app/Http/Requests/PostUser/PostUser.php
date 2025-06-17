@@ -25,7 +25,6 @@ class PostUser extends FormRequest
             'name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email|max:100',
             'celular' => 'required|string|regex:/^[0-9]{9}$/',
-            'fecha' => 'date',
             'password' => 'required|string|min:1|max:255'
         ];
     }
