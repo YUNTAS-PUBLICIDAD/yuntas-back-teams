@@ -20,10 +20,6 @@ class ProductoSeeder extends Seeder
             'stock' => 100,
             'precio' => 199.99,
             'seccion' => 'electrónica',
-            'especificaciones' => json_encode([
-                'color' => 'rojo',
-                'material' => 'aluminio',
-            ]),
         ]);
 
         // Crear dimensiones (si tienes relación y modelo)
