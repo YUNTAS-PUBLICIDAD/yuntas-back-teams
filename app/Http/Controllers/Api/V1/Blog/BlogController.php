@@ -162,48 +162,49 @@ class BlogController extends BasicController
      *     )
      * )
      */
+    private function guardarImagen($archivo)
+    {
+        Storage::putFileAs("public/imagenes", $archivo, $archivo->hashName());
+        return "/storage/imagenes/" . $archivo->hashName();
+    }
+
     public function store(StoreBlogRequest $request)
     {
-       $data = $request->validated();
+        $data = $request->validated();
+
         DB::beginTransaction();
         try {
+            // Validar que el producto existe
+            $request->validate([
+                'producto_id' => ['required', 'integer', 'exists:productos,id'],
+            ]);
 
-            $data = $request->validated();
-
-            //Validar que el producto existe
-            $request->validate(
-                [
-                    'producto_id' => ['required', 'integer', 'exists:productos,id'],
-                ]
-            );
-
-
-            // 🟡 Validar y subir imagen principal si existe
+            // 🟡 Subir imagen principal
             if (!empty($data['imagen_principal']) && $data['imagen_principal'] instanceof \Illuminate\Http\UploadedFile) {
                 $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
                 if (!in_array($data['imagen_principal']->getMimeType(), $validMimeTypes)) {
                     throw new \Exception("El archivo de imagen principal no es válido.");
                 }
-                // Subir imagen principal a Imgur
-                $uploadedMainImageUrl = $this->imgurService->uploadImage($data['imagen_principal']);
+
+                $uploadedMainImageUrl = $this->guardarImagen($data['imagen_principal']);
                 if (!$uploadedMainImageUrl) {
                     throw new \Exception("Falló la subida de la imagen principal.");
                 }
-                // Reemplazar el valor en el array original
+
                 $data['imagen_principal'] = $uploadedMainImageUrl;
             }
 
-            // Crear el blog (excluyendo relaciones)
+            // Crear blog
             $blog = Blog::create(array_diff_key($data, array_flip([
                 'imagenes',
                 'video',
                 'detalle'
             ])));
 
-            // Relación: detalle del blog
+            // Relación: detalle
             if (!empty($data['titulo_blog']) || !empty($data['subtitulo_beneficio'])) {
                 $blog->detalle()->create([
-                    'id_blog' => $blog->id,  // Vincular al blog creado
+                    'id_blog' => $blog->id,
                     'titulo_blog' => $data['titulo_blog'] ?? null,
                     'subtitulo_beneficio' => $data['subtitulo_beneficio'] ?? null,
                 ]);
@@ -212,11 +213,12 @@ class BlogController extends BasicController
             // Relación: video
             if (!empty($data['url_video']) || !empty($data['titulo_video'])) {
                 $blog->video()->create([
-                    'id_blog' => $blog->id,  // Vincular al blog creado
+                    'id_blog' => $blog->id,
                     'url_video' => $data['url_video'] ?? null,
                     'titulo_video' => $data['titulo_video'] ?? null,
                 ]);
             }
+
             // Relación: imágenes adicionales
             if (!empty($data['imagenes']) && is_array($data['imagenes'])) {
                 foreach ($data['imagenes'] as $index => $item) {
@@ -226,7 +228,7 @@ class BlogController extends BasicController
                             throw new \Exception("El archivo de imagen adicional en la posición $index no es válido.");
                         }
 
-                        $uploadedImageUrl = $this->imgurService->uploadImage($item['imagen']);
+                        $uploadedImageUrl = $this->guardarImagen($item['imagen']);
                         if (!$uploadedImageUrl) {
                             throw new \Exception("Falló la subida de la imagen adicional en la posición $index.");
                         }
@@ -244,11 +246,10 @@ class BlogController extends BasicController
                 throw new \Exception("Array de imágenes vacío o mal estructurado.");
             }
 
-
-            // ✅ Las relaciones ya están cargadas al momento de la creación, no es necesario cargar de nuevo
             DB::commit();
 
             return $this->apiResponse->successResponse($blog->fresh(), 'Blog creado con éxito.', HttpStatusCode::CREATED);
+
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->apiResponse->errorResponse(
@@ -257,6 +258,7 @@ class BlogController extends BasicController
             );
         }
     }
+
 
     /**
      * @OA\Get(
