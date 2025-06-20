@@ -211,6 +211,16 @@ class BlogController extends BasicController
             DB::commit();
 
             return $this->apiResponse->successResponse($blog->fresh(), 'Blog creado con éxito.', HttpStatusCode::CREATED);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->apiResponse->errorResponse(
+                'Error al crear el blog: ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
     public function show(int $id)
     {
         try {
@@ -296,7 +306,7 @@ class BlogController extends BasicController
     public function update(UpdateBlogRequest $request, $id)
     {
         Log::info('Datos RAW recibidos:', $request->all());
-        
+
         $data = $request->validated();
         Log::info('Datos validados:', $data);
         Log::info('¿Tiene producto_id?', ['tiene_producto_id' => isset($data['producto_id'])]);
