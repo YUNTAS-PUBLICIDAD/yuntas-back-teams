@@ -36,6 +36,12 @@ class DatabaseSeeder extends Seeder
             ImagenBlogSeeder::class,
             VideoBlogSeeder::class,
 
+            // Blogs
+            BlogSeeder::class,
+            DetalleBlogSeeder::class,
+            ImagenBlogSeeder::class,
+            VideoBlogSeeder::class,
+
             //Reclamos
             DatosPersonalSeeder::class,
             ReclamoSeeder::class,

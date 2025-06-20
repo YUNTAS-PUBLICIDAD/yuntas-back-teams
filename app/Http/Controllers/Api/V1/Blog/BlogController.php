@@ -79,6 +79,137 @@ class BlogController extends BasicController
             );
         }
     }
+    /**
+     * @OA\Post(
+     *     path="/api/blogs",
+     *     summary="Crear un nuevo blog",
+     *     description="Crea un nuevo blog con sus atributos",
+     *     operationId="createBlog",
+     *     tags={"Blogs"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"producto_id","link","id_blog_head", "id_blog_body", "id_blog_footer", "fecha"},
+     *             @OA\Property(property="producto_id", type="integer", example=1),
+     *             @OA\Property(property="link", type="string", example="producto"),
+     *             @OA\Property(property="id_blog_head", type="integer", example=1),
+     *             @OA\Property(property="id_blog_body", type="integer", example=1),
+     *             @OA\Property(property="id_blog_footer", type="integer", example=1),
+     *             @OA\Property(property="fecha", type="string", format="date", example="2025-05-09")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Blog creado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Blog creada correctamente"),
+     *             @OA\Property(property="id", type="integer", example=1)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Datos de entrada inválidos",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Error en el servidor")
+     *         )
+     *     )
+     * )
+     */
+    private function guardarImagen($archivo)
+    {
+        Storage::putFileAs("public/imagenes", $archivo, $archivo->hashName());
+        return "/storage/imagenes/" . $archivo->hashName();
+    }
+
+    public function store(StoreBlogRequest $request)
+    {
+        $data = $request->validated();
+
+        DB::beginTransaction();
+        try {
+            // Validar que el producto existe
+            $request->validate([
+                'producto_id' => ['required', 'integer', 'exists:productos,id'],
+            ]);
+
+            // 🟡 Subir imagen principal
+            if (!empty($data['imagen_principal']) && $data['imagen_principal'] instanceof \Illuminate\Http\UploadedFile) {
+                $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                if (!in_array($data['imagen_principal']->getMimeType(), $validMimeTypes)) {
+                    throw new \Exception("El archivo de imagen principal no es válido.");
+                }
+
+                $uploadedMainImageUrl = $this->guardarImagen($data['imagen_principal']);
+                if (!$uploadedMainImageUrl) {
+                    throw new \Exception("Falló la subida de la imagen principal.");
+                }
+
+                $data['imagen_principal'] = $uploadedMainImageUrl;
+            }
+
+            // Crear blog
+            $blog = Blog::create(array_diff_key($data, array_flip([
+                'imagenes',
+                'video',
+                'detalle'
+            ])));
+
+            // Relación: detalle
+            if (!empty($data['titulo_blog']) || !empty($data['subtitulo_beneficio'])) {
+                $blog->detalle()->create([
+                    'id_blog' => $blog->id,
+                    'titulo_blog' => $data['titulo_blog'] ?? null,
+                    'subtitulo_beneficio' => $data['subtitulo_beneficio'] ?? null,
+                ]);
+            }
+
+            // Relación: video
+            if (!empty($data['url_video']) || !empty($data['titulo_video'])) {
+                $blog->video()->create([
+                    'id_blog' => $blog->id,
+                    'url_video' => $data['url_video'] ?? null,
+                    'titulo_video' => $data['titulo_video'] ?? null,
+                ]);
+            }
+
+            // Relación: imágenes adicionales
+            if (!empty($data['imagenes']) && is_array($data['imagenes'])) {
+                foreach ($data['imagenes'] as $index => $item) {
+                    if (isset($item['imagen']) && $item['imagen'] instanceof \Illuminate\Http\UploadedFile) {
+                        $validMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                        if (!in_array($item['imagen']->getMimeType(), $validMimeTypes)) {
+                            throw new \Exception("El archivo de imagen adicional en la posición $index no es válido.");
+                        }
+
+                        $uploadedImageUrl = $this->guardarImagen($item['imagen']);
+                        if (!$uploadedImageUrl) {
+                            throw new \Exception("Falló la subida de la imagen adicional en la posición $index.");
+                        }
+
+                        $blog->imagenes()->create([
+                            'url_imagen' => $uploadedImageUrl,
+                            'parrafo_imagen' => $item['parrafo'] ?? '',
+                            'id_blog' => $blog->id,
+                        ]);
+                    } else {
+                        throw new \Exception("Falta imagen válida en el índice $index.");
+                    }
+                }
+            } else {
+                throw new \Exception("Array de imágenes vacío o mal estructurado.");
+            }
+
+            DB::commit();
+
+            return $this->apiResponse->successResponse($blog->fresh(), 'Blog creado con éxito.', HttpStatusCode::CREATED);
     public function show(int $id)
     {
         try {
@@ -161,34 +292,6 @@ class BlogController extends BasicController
         return null;
     }
 
-    public function store(StoreBlogRequest $request)
-    {
-        $data = $request->validated();
-
-        DB::beginTransaction();
-
-        try {
-            $this->validateProductExists($request, $data['producto_id']);
-
-            // Procesar imagen principal
-            if ($this->hasValidUploadedFile($data, 'imagen_principal')) {
-                $data['imagen_principal'] = $this->processMainImage($data['imagen_principal']);
-            }
-
-            // Crear blog principal
-            $blog = $this->createBlog($data);
-
-            // Crear relaciones
-            $this->createBlogRelations($blog, $data);
-
-            DB::commit();
-            return $this->successResponseWithRelations($blog, 'Blog creado con éxito.', HttpStatusCode::CREATED);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->handleError($e, 'Error al crear el blog');
-        }
-    }
-
     public function update(UpdateBlogRequest $request, $id)
     {
         \Log::info('Datos RAW recibidos:', $request->all());
@@ -260,6 +363,7 @@ class BlogController extends BasicController
             );
         }
     }
+
 
     /**
      * Procesar imagen principal para creación
