@@ -3,7 +3,8 @@
 namespace App\Http\Requests\Blog;
 
 use Illuminate\Foundation\Http\FormRequest;
-
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 class StoreBlogRequest extends FormRequest
 {
     /**
@@ -21,16 +22,20 @@ class StoreBlogRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+         return [
             'titulo' => 'required|string|max:255',
-            'descripcion' => 'required|string|max:65535',
-            'imagen_principal' => 'required|string|url',
-            'estatus' => 'nullable|string|in:borrador,publicado,archivado',
-            'bloques_contenido' => 'nullable|array',
-            'bloques_contenido.*.parrafo' => 'nullable|string|max:5000',
-            'bloques_contenido.*.imagen' => 'nullable|string|url',
-            'bloques_contenido.*.descripcion_imagen' => 'nullable|string|max:255',
-            'bloques_contenido.*.orden' => 'nullable|integer|min:1',
+            'link' => 'required|string|max:255',
+            'producto_id' => ['required', 'integer', 'exists:productos,id'],
+            'parrafo' => 'required|string',
+            'descripcion' => 'required|string',
+            'imagen_principal' => 'required|image|mimes:jpeg,jpg,png|max:2048',
+            'titulo_blog' => 'required|string',
+            'subtitulo_beneficio' => 'required|string',
+            'url_video' => 'required|url',
+            'titulo_video' => 'required|string',
+            'imagenes' => 'required|array',
+            'imagenes.*.imagen' => 'required|image|mimes:jpeg,jpg,png|max:2048',
+            'imagenes.*.parrafo' => 'nullable|string|max:500',
         ];
     }
     
@@ -39,13 +44,12 @@ class StoreBlogRequest extends FormRequest
      *
      * @return array
      */
-    public function messages(): array
+    protected function failedValidation(Validator $validator)
     {
-        return [
-            'titulo.required' => 'El título es obligatorio',
-            'descripcion.required' => 'La descripción es obligatoria',
-            'imagen_principal.required' => 'La imagen principal es obligatoria',
-            'estatus.in' => 'El estatus debe ser: borrador, publicado o archivado',
-        ];
+        throw new HttpResponseException(
+            response()->json([
+                'errors' => $validator->errors(),
+            ], 422)
+        );
     }
 }

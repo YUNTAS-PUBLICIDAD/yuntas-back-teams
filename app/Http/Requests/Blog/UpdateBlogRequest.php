@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Blog;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateBlogRequest extends FormRequest
 {
@@ -21,17 +23,21 @@ class UpdateBlogRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'titulo' => 'sometimes|string|max:255',
-            'descripcion' => 'sometimes|string|max:65535',
-            'imagen_principal' => 'sometimes|string|url',
-            'estatus' => 'nullable|string|in:borrador,publicado,archivado',
-            'bloques_contenido' => 'nullable|array',
-            'bloques_contenido.*.id_bloque' => 'nullable|integer|exists:bloque_contenidos,id',
-            'bloques_contenido.*.parrafo' => 'nullable|string|max:5000',
-            'bloques_contenido.*.imagen' => 'nullable|string|url',
-            'bloques_contenido.*.descripcion_imagen' => 'nullable|string|max:255',
-            'bloques_contenido.*.orden' => 'nullable|integer|min:1',
+        $blogId = $this->route('id'); 
+       return [
+            'titulo' => 'required|string|max:120',
+            'link' => 'required|string|max:120|unique:blogs,link,' . $blogId,
+            'producto_id' => ['required', 'integer', 'exists:productos,id'],
+            'parrafo' => 'required|string|max:100',
+            'descripcion' => 'required|string|max:255',
+            'imagen_principal' => 'required|file|image',  
+            'titulo_blog' => 'required|string|max:80',
+            'subtitulo_beneficio' => 'required|string|max:80',
+            'url_video' => 'required|string|url',
+            'titulo_video' => 'required|string|max:40',
+            'imagenes' => 'required|array',
+            'imagenes.*.imagen' => 'required_with:imagenes|file|image',
+            'imagenes.*.parrafo' => 'required_with:imagenes|string|max:65535',
         ];
     }
     
@@ -40,11 +46,12 @@ class UpdateBlogRequest extends FormRequest
      *
      * @return array
      */
-    public function messages(): array
+    protected function failedValidation(Validator $validator)
     {
-        return [
-            'estatus.in' => 'El estatus debe ser: borrador, publicado o archivado',
-            'bloques_contenido.*.id_bloque.exists' => 'El bloque de contenido especificado no existe',
-        ];
+        throw new HttpResponseException(
+            response()->json([
+                'errors' => $validator->errors(),
+            ], 422)
+        );
     }
 }

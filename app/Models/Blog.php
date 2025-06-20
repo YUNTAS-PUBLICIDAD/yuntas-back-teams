@@ -10,36 +10,34 @@ class Blog extends Model
 {
     use HasFactory;
     protected $table = 'blogs';
-    protected $primaryKey = 'id_blog';
-    public $timestamps = false;
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
         'producto_id',
         'link',
-        'id_blog_head',
-        'id_blog_body',
-        'id_blog_footer',
-        'fecha'
+        'titulo',
+        'parrafo',
+        'descripcion',
+        'imagen_principal'
     ];
 
-    public function head(){
-        return $this->hasOne(BlogHead::class, 'id_blog_head', 'id_blog_head');
-    }
-
-    public function body(){
-        return $this->hasOne(BlogBody::class, 'id_blog_body', 'id_blog_body');
-    }
-
-    public function footer(){
-        return $this->hasOne(BlogFooter::class, 'id_blog_footer', 'id_blog_footer');
-    }
-
-    public function card(){
-        return $this->belongsTo(Card::class, 'id_blog', 'id_blog');
-    }
-
-    public function producto(){
+    public function producto()
+    {
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
+    public function imagenes()
+    {
+        return $this->hasMany(ImagenBlog::class, 'id_blog');
+    }
 
+    public function video()
+    {
+        return $this->hasOne(VideoBlog::class, 'id_blog');
+    }
+
+    public function detalle()
+    {
+        return $this->hasOne(DetalleBlog::class, 'id_blog');
+    }
 }

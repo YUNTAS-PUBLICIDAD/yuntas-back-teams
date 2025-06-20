@@ -13,42 +13,44 @@ class BlogSeeder extends Seeder
      */
     public function run(): void
     {
-        $blogs = [
+        $blog = [
             [
-                'id_blog' => 1,
-                'titulo' => 'Transformando espacios con iluminación LED: Tendencias 2023',
-                'descripcion' => 'Descubre cómo la iluminación LED está revolucionando el diseño de interiores y eventos.',
-                'imagen_principal' => '/Blogs/tendencias-led-2023.webp',
-                'estatus' => 'publicado',
-                'fecha_creacion' => Carbon::now(),
-                'fecha_actualizacion' => Carbon::now(),
+                'link' => 'panel-fibra-bamboo',
+                'producto_id' => 1,
+                'titulo' => 'Panel de fibra de bamboo',
+                'parrafo' => 'Panel de Fibra de Bambú: Sostenibilidad y Estética para la construcción moderna',
+                'descripcion' => 'Futuro verde en la construcción Beneficios del bambú',
+                'imagen_principal' => 'https://i.imgur.com/bKisDUE.png',
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
             ],
             [
-                'id_blog' => 2,
-                'titulo' => 'Eventos inolvidables: El poder de los pisos y mobiliario LED',
-                'descripcion' => 'Las nuevas tendencias en diseño de eventos incorporan elementos LED para crear experiencias inmersivas.',
-                'imagen_principal' => '/Blogs/eventos-led.webp',
-                'estatus' => 'publicado',
-                'fecha_creacion' => Carbon::now(),
-                'fecha_actualizacion' => Carbon::now(),
+                'link' => 'soldadora-lingba',
+                'producto_id' => 1,
+                'titulo' => 'Soldadora lingba',
+                'parrafo' => 'Diseño Sostenible: Interiores Eco-Friendly para Oficinas Modernas',
+                'descripcion' => 'Descubre cómo incorporar materiales reciclados y energías renovables',
+                'imagen_principal' => 'https://i.imgur.com/vgxpLns.png',
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
             ],
             [
-                'id_blog' => 3,
-                'titulo' => 'Letreros Neón LED: El nuevo estándar para negocios modernos',
-                'descripcion' => 'Los letreros tradicionales de neón dan paso a la tecnología LED: más segura, eficiente y versátil.',
-                'imagen_principal' => '/Blogs/letreros-led.webp',
-                'estatus' => 'publicado',
-                'fecha_creacion' => Carbon::now(),
-                'fecha_actualizacion' => Carbon::now(),
+                'link' => 'soldadora-spark',
+                'producto_id' => 1,
+                'titulo' => 'Soldadora spark',
+                'parrafo' => 'Iluminación Inteligente: Optimizando Espacios de Trabajo',
+                'descripcion' => 'Explora las últimas tendencias en iluminación LED y sistemas de control',
+                'imagen_principal' => 'https://i.imgur.com/ZfXUcxC.png',
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
             ],
+            [
+                'link' => 'ventilador-holografico',
+                'producto_id' => 1,
+                'titulo' => 'Ventilador holográfico',
+                'parrafo' => 'Acústica en Restaurantes: Diseño para una Experiencia Culinaria Óptima',
+                'descripcion' => 'Aprende sobre materiales y técnicas de diseño para crear ambientes acústicamente agradables',
+                'imagen_principal' => 'https://i.imgur.com/ZgElRO5.png',
+                'created_at' => Carbon::now(),
+            ]
         ];
-
-        DB::table('blogs')->insert($blogs);
+        DB::table('blogs')->insert($blog);
     }
 }

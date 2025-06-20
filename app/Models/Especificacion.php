@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Especificacion extends Model
 {
-    protected $table = 'especificacions';
+    protected $table = 'especificaciones';
     
     protected $fillable = [
-        'id_producto',
+        'producto_id',
         'clave',
         'valor'
     ];
@@ -18,6 +18,6 @@ class Especificacion extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class, 'id_producto');
+        return $this->belongsTo(Producto::class, 'producto_id');
     }
 }

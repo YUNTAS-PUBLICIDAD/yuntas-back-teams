@@ -21,8 +21,6 @@ return new class extends Migration
             $table->string('seccion', 100);
             $table->string('lema')->nullable();
             $table->text('descripcion');
-            $table->text('especificaciones');
-            $table->text('mensaje_correo')->nullable();
             $table->timestamps();
         });
     }

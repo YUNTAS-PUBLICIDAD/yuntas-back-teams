@@ -12,11 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('blogs', function (Blueprint $table) {
-            $table->id('id_blog');
-            $table->foreignId('id_blog_head')->unique()->references('id_blog_head')->on('blog_heads')->onDelete('cascade');
-            $table->foreignId('id_blog_body')->unique()->references('id_blog_body')->on('blog_bodies')->onDelete('cascade');
-            $table->foreignId('id_blog_footer')->unique()->references('id_blog_footer')->on('blog_footers')->onDelete('cascade');
-            $table->timestamp('fecha')->useCurrent();
+            $table->id();
+            $table->string('link')->unique();
+
+            $table->unsignedBigInteger('producto_id')->nullable();
+            $table->foreign('producto_id')->references('id')->on('productos')->onDelete('cascade');
+
+            $table->string('titulo', 120);
+            $table->string('parrafo', 100);
+            $table->string('descripcion', 255);
+            $table->string('imagen_principal');
+            $table->timestamps();;
         });
     }
 

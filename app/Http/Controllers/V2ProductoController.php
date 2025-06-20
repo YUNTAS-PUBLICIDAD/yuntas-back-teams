@@ -42,7 +42,6 @@ class V2ProductoController extends Controller
      *                     @OA\Property(property="lema", type="string"),
      *                     @OA\Property(property="descripcion", type="string"),
      *                     @OA\Property(property="especificaciones", type="string"),
-     *                     @OA\Property(property="mensaje_correo", type="string"),
      *                     @OA\Property(property="created_at", type="string"),
      *                     @OA\Property(property="updated_at", type="string"),
      *                     @OA\Property(property="imagenes", type="object")
@@ -61,7 +60,7 @@ class V2ProductoController extends Controller
     public function index()
     {
         //
-        $productos = Producto::with('dimensiones', 'imagenes')->get();
+        $productos = Producto::with('imagenes')->get();
 
         // Para decodificar especificaciones
         $productos->transform(function ($producto) {
@@ -69,20 +68,14 @@ class V2ProductoController extends Controller
             return $producto;
         });
 
+        $productos->transform(function ($producto) {
+            $producto->productos_relacionados = json_decode($producto->productos_relacionados, true) ?? [];
+            return $producto;
+        });
+
         return response()->json($productos);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     /**
      * Crear un nuevo producto
      * 
@@ -100,7 +93,7 @@ class V2ProductoController extends Controller
      *                 required={
      *                     "nombre", "titulo", "subtitulo", "stock", "precio", 
      *                     "seccion", "lema", "descripcion", "especificaciones",
-     *                     "imagenes", "textos_alt", "mensaje_correo"
+     *                     "imagenes", "textos_alt"
      *                 },
      *                 @OA\Property(property="nombre", type="string", example="Selladora"),
      *                 @OA\Property(property="titulo", type="string", example="Titulo increíble"),
@@ -126,7 +119,6 @@ class V2ProductoController extends Controller
      *                     description="Array de textos alternativos para las imágenes"
      *                 ),
      *                 
-     *                 @OA\Property(property="mensaje_correo", type="string", example="Mensaje increíble")
      *             )
      *         )
      *     ),
@@ -154,40 +146,50 @@ class V2ProductoController extends Controller
     }
 
     public function store(V2StoreProductoRequest $request)
-    {
-        //
-        $datosValidados = $request->validated();
+        {
+            $datosValidados = $request->validated();
 
-        $imagenes = $datosValidados["imagenes"];
-        $textos = $datosValidados["textos_alt"];
+            $imagenes = $datosValidados["imagenes"];
+            $textos = $datosValidados["textos_alt"];
 
-        $imagenesProcesadas = [];
-        foreach ($imagenes as $i => $img) {
-            $url = $this->guardarImagen($img);
-            $imagenesProcesadas[] = [
-                "url_imagen" => $url,
-                "texto_alt_SEO" => $textos[$i]
-            ];
+            $imagenesProcesadas = [];
+            foreach ($imagenes as $i => $img) {
+                $url = $this->guardarImagen($img);
+                $imagenesProcesadas[] = [
+                    "url_imagen" => $url,
+                    "texto_alt_SEO" => $textos[$i]
+                ];
+            }
+
+            $producto = Producto::create([
+                "nombre" => $datosValidados["nombre"],
+                "link" => $datosValidados["link"],
+                "titulo" => $datosValidados["titulo"],
+                "subtitulo" => $datosValidados["subtitulo"],
+                "stock" => $datosValidados["stock"],
+                "precio" => $datosValidados["precio"],
+                "seccion" => $datosValidados["seccion"],
+                "lema" => $datosValidados["lema"],
+                "descripcion" => $datosValidados["descripcion"],
+            ]);
+
+            $producto->productos_relacionados()->sync($datosValidados['relacionados'] ?? []);
+            $producto->imagenes()->createMany($imagenesProcesadas);
+
+            // Aquí solo este bloque basta
+            $especificaciones = json_decode($datosValidados['especificaciones'], true);
+
+            if (is_array($especificaciones)) {
+                foreach ($especificaciones as $clave => $valor) {
+                    $producto->especificaciones()->create([
+                        'clave' => $clave,
+                        'valor' => $valor,
+                    ]);
+                }
+            }
+
+            return response()->json(["message" => "Producto insertado exitosamente"],201);
         }
-
-        $producto = Producto::create([
-            "nombre" => $datosValidados["nombre"],
-            "link" => $datosValidados["link"],
-            "titulo" => $datosValidados["titulo"],
-            "subtitulo" => $datosValidados["subtitulo"],
-            "stock" => $datosValidados["stock"],
-            "precio" => $datosValidados["precio"],
-            "seccion" => $datosValidados["seccion"],
-            "lema" => $datosValidados["lema"],
-            "descripcion" => $datosValidados["descripcion"],
-            "especificaciones" => $datosValidados["especificaciones"],
-        ]);
-
-        $producto->productosRelacionados()->sync($datosValidados['relacionados']);
-        $producto->imagenes()->createMany($imagenesProcesadas);
-        return response()->json(["message" => "Producto insertado exitosamente"], 201);
-    }
-
     /**
      * Obtener un producto por su ID
      * 
@@ -223,16 +225,6 @@ class V2ProductoController extends Controller
      *                 type="object",
      *                 @OA\Property(property="color", type="string", example="rojo"),
      *                 @OA\Property(property="material", type="string", example="aluminio")
-     *             ),
-     *             @OA\Property(
-     *                 property="dimensiones",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="tipo", type="string", example="alto"),
-     *                     @OA\Property(property="valor", type="string", example="30cm")
-     *                 )
      *             ),
      *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
@@ -272,8 +264,7 @@ class V2ProductoController extends Controller
     public function show(string $id)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes'])->find($id);
-
+            $producto = Producto::with(['imagenes'])->find($id);
             if ($producto === null) {
                 return response()->json([
                     'message' => 'Producto no encontrado'
@@ -292,7 +283,6 @@ class V2ProductoController extends Controller
                 'lema' => $producto->lema,
                 'descripcion' => $producto->descripcion,
                 'especificaciones' => json_decode($producto->especificaciones, true) ?? [],
-                'dimensiones' => $producto->dimensiones,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
                 'imagenes' => $producto->imagenes,
@@ -345,16 +335,6 @@ class V2ProductoController extends Controller
      *                 @OA\Property(property="color", type="string", example="rojo"),
      *                 @OA\Property(property="material", type="string", example="aluminio")
      *             ),
-     *             @OA\Property(
-     *                 property="dimensiones",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="tipo", type="string", example="alto"),
-     *                     @OA\Property(property="valor", type="string", example="30cm")
-     *                 )
-     *             ),
      *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-28T21:52:09.000000Z"),
      *             @OA\Property(
@@ -393,7 +373,7 @@ class V2ProductoController extends Controller
     public function showByLink($link)
     {
         try {
-            $producto = Producto::with(['dimensiones', 'imagenes'])
+            $producto = Producto::with(['imagenes'])
                 ->where('link', $link)
                 ->first();
 
@@ -413,7 +393,6 @@ class V2ProductoController extends Controller
                 'lema' => $producto->lema,
                 'descripcion' => $producto->descripcion,
                 'especificaciones' => json_decode($producto->especificaciones, true) ?? [],
-                'dimensiones' => $producto->dimensiones,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
                 'imagenes' => $producto->imagenes,
@@ -428,13 +407,6 @@ class V2ProductoController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -463,7 +435,7 @@ class V2ProductoController extends Controller
      *                 required={
      *                     "nombre", "titulo", "subtitulo", "stock", "precio", 
      *                     "seccion", "lema", "descripcion", "especificaciones",
-     *                      "imagenes", "textos_alt", "mensaje_correo", "_method"
+     *                      "imagenes", "textos_alt", "_method"
      *                 },
      *                 @OA\Property(property="nombre", type="string", example="Selladora"),
      *                 @OA\Property(property="titulo", type="string", example="Titulo increíble"),
@@ -489,7 +461,6 @@ class V2ProductoController extends Controller
      *                     description="Array de textos alternativos para las imágenes"
      *                 ),
      *                 
-     *                 @OA\Property(property="mensaje_correo", type="string", example="Mensaje increíble"),
      *                 @OA\Property(property="_method", type="string", example="PUT")
      *             )
      *         )
@@ -518,70 +489,58 @@ class V2ProductoController extends Controller
      * )
      */
     public function update(V2UpdateProductoRequest $request, string $id)
-    {
-
-
-        $producto = Producto::with("imagenes")->find($id);
-        if ($producto == null) {
-            return response()->json(["message" => "Producto no encontrado"], status: 404);
-        }
-        $datosValidados = $request->validated();
-
-        $especificaciones = json_decode($datosValidados["especificaciones"], true);
-
-        if (!is_array($especificaciones) || !isset($especificaciones['color'], $especificaciones['material'])) {
-            return response()->json(["message" => "El campo especificaciones debe incluir 'color' y 'material'."], 422);
-        }
-
-        $producto->update([
-            "nombre" => $datosValidados["nombre"],
-            "link" => $datosValidados["link"],
-            "titulo" => $datosValidados["titulo"],
-            "subtitulo" => $datosValidados["subtitulo"],
-            "stock" => $datosValidados["stock"],
-            "precio" => $datosValidados["precio"],
-            "seccion" => $datosValidados["seccion"],
-            "lema" => $datosValidados["lema"],
-            "descripcion" => $datosValidados["descripcion"],
-            "especificaciones" => $especificaciones,
-        ]);
-        
-        $producto->productosRelacionados()->sync($datosValidados['relacionados']);
-
-        // Eliminar solo las imágenes que el usuario indicó
-        if ($request->filled('imagenes_a_eliminar')) {
-            $idsAEliminar = json_decode($request->input('imagenes_a_eliminar'), true);
-
-            if (is_array($idsAEliminar)) {
-                $imagenesAEliminar = $producto->imagenes()->whereIn('id', $idsAEliminar)->get();
-                foreach ($imagenesAEliminar as $imagen) {
-                    $archivo = str_ireplace("/storage/imagenes/", "", $imagen->url_imagen);
-                    Storage::delete("imagenes/" . $archivo);
-                    $imagen->delete();
-                }
+        {
+            //
+            $producto = Producto::with("imagenes")->find($id);
+            if ($producto == null) {
+                return response()->json(["message"=>"Producto no encontrado"], status: 404);
             }
-        }
-
-        // Agregar nuevas imágenes si las hay
-        if ($request->hasFile("imagenes")) {
+            $datosValidados = $request->validated();
             $imagenes = $datosValidados["imagenes"];
             $textos = $datosValidados["textos_alt"];
+            $imagenesArray = $producto->imagenes->toArray();
+            $productoImagenes = array_map(function ($x) {
+                $archivo = str_ireplace("/storage/imagenes/", "", $x["url_imagen"]);
+                return $archivo;
+            }, $imagenesArray);
+            foreach ($productoImagenes as $imagen) {
+                Storage::delete("imagenes/" . $imagen);
+            }
             $imagenesProcesadas = [];
-
             foreach ($imagenes as $i => $img) {
                 $url = $this->guardarImagen($img);
                 $imagenesProcesadas[] = [
                     "url_imagen" => $url,
-                    "texto_alt_SEO" => $textos[$i] ?? ''
+                    "texto_alt_SEO" => $textos[$i]
                 ];
             }
 
+            $producto->update([
+                "nombre" => $datosValidados["nombre"],
+                "link" => $datosValidados["link"],
+                "titulo" => $datosValidados["titulo"],
+                "subtitulo" => $datosValidados["subtitulo"],
+                "stock" => $datosValidados["stock"],
+                "precio" => $datosValidados["precio"],
+                "seccion" => $datosValidados["seccion"],
+                "lema" => $datosValidados["lema"],
+                "descripcion" => $datosValidados["descripcion"],
+            ]);
+            $producto->imagenes()->delete();
             $producto->imagenes()->createMany($imagenesProcesadas);
-        }
-
-        return response()->json(["message" => "Producto actualizado exitosamente"], 200);
+            $producto->especificaciones()->delete();
+            $especificaciones = json_decode($datosValidados['especificaciones'], true);
+            if (is_array($especificaciones)) {
+                foreach ($especificaciones as $clave => $valor) {
+                    $producto->especificaciones()->create([
+                        'clave' => $clave,
+                        'valor' => $valor,
+                    ]);
+                }
+            }
+            $producto->productos_relacionados()->sync($datosValidados['relacionados'] ?? []);
+            return response()->json(["message"=>"Producto actualizado exitosamente"],201);
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -625,7 +584,7 @@ class V2ProductoController extends Controller
         //
         DB::beginTransaction();
         try {
-            $producto = Producto::with("imagenes")->find($id);
+             $producto = Producto::with(['imagenes', 'especificaciones'])->find($id);
             if ($producto == null) {
                 return response()->json(["message" => "Producto no encontrado"], status: 404);
             }
@@ -638,12 +597,14 @@ class V2ProductoController extends Controller
                 Storage::delete("imagenes/" . $imagen);
             }
 
+            $producto->especificaciones()->delete(); 
+
             $producto->delete();
             DB::commit();
             return response()->json(["message" => "Producto eliminado exitosamente"], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(["message" => "Hubo un error en el servidor"], 500);
+            return response()->json(["message"=>"Hubo un error en el servidor"], 500);
         }
     }
 }
