@@ -20,6 +20,7 @@ use App\Services\ApiResponseService;
 use App\Models\Producto;
 use App\Models\ImagenBlog;
 use App\Services\LocalStorageService;
+use Illuminate\Support\Facades\Log;
 
 
 class BlogController extends BasicController
@@ -294,12 +295,11 @@ class BlogController extends BasicController
 
     public function update(UpdateBlogRequest $request, $id)
     {
-        \Log::info('Datos RAW recibidos:', $request->all());
+        Log::info('Datos RAW recibidos:', $request->all());
         
         $data = $request->validated();
-
-        \Log::info('Datos validados:', $data);
-        \Log::info('¿Tiene producto_id?', ['tiene_producto_id' => isset($data['producto_id'])]);
+        Log::info('Datos validados:', $data);
+        Log::info('¿Tiene producto_id?', ['tiene_producto_id' => isset($data['producto_id'])]);
 
 
         DB::beginTransaction();
@@ -379,11 +379,11 @@ class BlogController extends BasicController
                 throw new \Exception("No se pudo guardar la imagen principal.");
             }
 
-            \Log::info('Imagen principal guardada exitosamente', ['url' => $uploadedUrl]);
+            Log::info('Imagen principal guardada exitosamente', ['url' => $uploadedUrl]);
 
             return $uploadedUrl;
         } catch (\Exception $e) {
-            \Log::error('Error al guardar imagen principal', ['error' => $e->getMessage()]);
+            Log::error('Error al guardar imagen principal', ['error' => $e->getMessage()]);
             throw new \Exception("Error al guardar la imagen: " . $e->getMessage());
         }
     }
@@ -399,7 +399,7 @@ class BlogController extends BasicController
             // Eliminar imagen anterior si existe
             if ($blog->imagen_principal && $this->isLocalStorageImage($blog->imagen_principal)) {
                 $this->storageService->deleteImage($blog->imagen_principal);
-                \Log::info('Imagen principal anterior eliminada', ['url' => $blog->imagen_principal]);
+                Log::info('Imagen principal anterior eliminada', ['url' => $blog->imagen_principal]);
             }
 
             $uploadedUrl = $this->storageService->uploadImage($image);
@@ -408,11 +408,11 @@ class BlogController extends BasicController
                 throw new \Exception("No se pudo guardar la nueva imagen principal.");
             }
 
-            \Log::info('Nueva imagen principal guardada exitosamente', ['url' => $uploadedUrl]);
+            Log::info('Nueva imagen principal guardada exitosamente', ['url' => $uploadedUrl]);
 
             return $uploadedUrl;
         } catch (\Exception $e) {
-            \Log::error('Error al guardar nueva imagen principal', ['error' => $e->getMessage()]);
+            Log::error('Error al guardar nueva imagen principal', ['error' => $e->getMessage()]);
             throw new \Exception("Error al guardar la imagen: " . $e->getMessage());
         }
     }
@@ -447,7 +447,7 @@ class BlogController extends BasicController
 
         $blogUpdateData = array_diff_key($data, array_flip($excludedFields));
 
-        \Log::info('Actualizando blog con datos:', $blogUpdateData);
+        Log::info('Actualizando blog con datos:', $blogUpdateData);
 
         $blog->update($blogUpdateData);
     }
@@ -542,7 +542,7 @@ class BlogController extends BasicController
                     'parrafo_imagen' => $item['parrafo'] ?? '',
                 ]);
 
-                \Log::info('Imagen adicional guardada', [
+                Log::info('Imagen adicional guardada', [
                     'index' => $index,
                     'url' => $uploadedUrl
                 ]);
@@ -565,7 +565,7 @@ class BlogController extends BasicController
         foreach ($imagesToDelete as $imagen) {
             if ($imagen->url_imagen && $this->isLocalStorageImage($imagen->url_imagen)) {
                 $this->storageService->deleteImage($imagen->url_imagen);
-                \Log::info('Imagen adicional eliminada', [
+                Log::info('Imagen adicional eliminada', [
                     'id' => $imagen->id,
                     'url' => $imagen->url_imagen
                 ]);
@@ -599,7 +599,7 @@ class BlogController extends BasicController
         $existingImage = $blog->imagenes()->find($item['id']);
         if ($existingImage) {
             $existingImage->update(['parrafo_imagen' => $item['parrafo']]);
-            \Log::info('Párrafo de imagen actualizado', ['id' => $item['id']]);
+            Log::info('Párrafo de imagen actualizado', ['id' => $item['id']]);
         }
     }
 
@@ -624,7 +624,7 @@ class BlogController extends BasicController
                     'parrafo_imagen' => $item['parrafo'] ?? '',
                 ]);
 
-                \Log::info('Nueva imagen adicional agregada', [
+                Log::info('Nueva imagen adicional agregada', [
                     'index' => $index,
                     'url' => $uploadedUrl
                 ]);
@@ -651,7 +651,7 @@ class BlogController extends BasicController
             'parrafo_imagen' => $item['parrafo'] ?? $existingImage->parrafo_imagen,
         ]);
 
-        \Log::info('Imagen adicional reemplazada', [
+        Log::info('Imagen adicional reemplazada', [
             'id' => $item['id'],
             'nueva_url' => $newUrl
         ]);
@@ -681,7 +681,7 @@ class BlogController extends BasicController
             $logData['blog_id'] = $blogId;
         }
 
-        \Log::error($baseMessage . ' failed', $logData);
+        Log::error($baseMessage . ' failed', $logData);
 
         return $this->apiResponse->errorResponse(
             $baseMessage . ': ' . $e->getMessage(),
