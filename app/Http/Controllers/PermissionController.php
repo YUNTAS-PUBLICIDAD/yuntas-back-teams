@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
+
 /**
  * @OA\Tag(
  *     name="Permissions",
@@ -13,7 +15,7 @@ use Spatie\Permission\Models\Permission;
  */
 class PermissionController extends Controller
 {
-        /**
+    /**
      * @OA\Get(
      *     path="/api/permissions",
      *     summary="Obtener todos los permisos",
@@ -65,9 +67,10 @@ class PermissionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|unique:permissions,name|max:255',
+            'name' => 'required|string|unique:permissions,name|max:95',
         ]);
 
+        $validated['guard_name'] = 'web';
         $permission = Permission::create($validated);
 
         return response()->json($permission, 201);
@@ -100,7 +103,7 @@ class PermissionController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions,name,' . $id,
+            'name' => 'required|string|max:95|unique:permissions,name,' . $id,
         ]);
 
         $permission->update($validated);
@@ -117,16 +120,38 @@ class PermissionController extends Controller
      *     @OA\Response(response=404, description="Permiso no encontrado")
      * )
      */
-    public function destroy($id)
-    {
-        $permission = Permission::find($id);
 
-        if (!$permission) {
-            return response()->json(['error' => 'Permission not found'], 404);
-        }
+public function destroy($id)
+{
+    $permission = Permission::find($id);
 
-        $permission->delete();
+    if (!$permission) {
+        return response()->json(['error' => 'Permission not found'], 404);
+    }
+
+    try {
+        DB::transaction(function () use ($permission) {
+            // Eliminar directamente de las tablas pivot usando el ID
+            DB::table('model_has_permissions')
+                ->where('permission_id', $permission->id)
+                ->delete();
+                
+            DB::table('role_has_permissions')
+                ->where('permission_id', $permission->id)
+                ->delete();
+            
+            // Eliminar el permiso
+            $permission->delete();
+        });
+
+        // Limpiar caché de permisos
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         return response()->json(['message' => 'Permission deleted successfully']);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error deleting permission: ' . $e->getMessage()
+        ], 500);
     }
+}
 }

@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('dimensions');
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
         Schema::create('dimensions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_producto')
@@ -20,13 +28,5 @@ return new class extends Migration
             $table->string('valor', 50);
             $table->timestamps();
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('dimensions');
     }
 };
