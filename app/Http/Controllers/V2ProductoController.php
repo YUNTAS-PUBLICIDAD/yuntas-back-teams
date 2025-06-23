@@ -264,12 +264,7 @@ class V2ProductoController extends Controller
     public function show(string $id)
     {
         try {
-<<<<<<< HEAD
-            $producto = Producto::with([ 'imagenes'])->find($id);
-=======
             $producto = Producto::with(['imagenes'])->find($id);
->>>>>>> origin/pre-main
-
             if ($producto === null) {
                 return response()->json([
                     'message' => 'Producto no encontrado'

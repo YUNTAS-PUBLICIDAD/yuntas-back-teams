@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
 use App\Http\Controllers\V2ProductoController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\EmailController;
 use App\Models\Reclamo;
 use App\Http\Controllers\Api\CardController;
@@ -135,3 +136,8 @@ Route::prefix("v2")->group(function () {
         Route::delete("/{id}", "destroy")->whereNumber("id");
     });
 });
+
+Route::get('/exportProducto', [ExportController::class, 'exportProducto']);
+Route::get('/exportBlog', [ExportController::class, 'exportBlog']);
+Route::get('/exportCliente', [ExportController::class, 'exportCliente']);
+Route::get('/exportReclamo', [ExportController::class, 'exportReclamo']);
