@@ -65,6 +65,7 @@ class ProductoController extends BasicController
         $formattedProductos = $productos->map(function ($producto) {
             return [
                 'id' => $producto->id,
+                'link' => $producto->link, // <-- AGREGADO
                 'title' => $producto->titulo,
                 'subtitle' => $producto->subtitulo,
                 'tagline' => $producto->lema,
@@ -136,7 +137,15 @@ class ProductoController extends BasicController
         DB::beginTransaction();
         try {
             // Excluimos las relaciones del request para crear solo el producto base
-            $data = $request->except(['especificaciones', 'imagenes', 'relacionados']);
+            $data = $request->except(['especificaciones', 'imagenes', 'relacionados', 'imagen_principal']);
+
+            // Manejar la imagen principal (requerida)
+            if ($request->hasFile('imagen_principal')) {
+                $imagenPrincipal = $request->file('imagen_principal');
+                $nombreArchivo = time() . '_' . $imagenPrincipal->getClientOriginalName();
+                $rutaImagen = $imagenPrincipal->storeAs('productos', $nombreArchivo, 'public');
+                $data['imagen_principal'] = '/storage/' . $rutaImagen;
+            }
 
             // Creamos el producto
             $producto = Producto::create($data);
@@ -151,12 +160,25 @@ class ProductoController extends BasicController
                 }
             }
 
-            // Guardamos imágenes
+            // Guardamos imágenes adicionales
             if ($request->has('imagenes')) {
-                foreach ($request->imagenes as $url) {
-                    $producto->imagenes()->create([
-                        'url_imagen' => $url
-                    ]);
+                foreach ($request->imagenes as $index => $imagen) {
+                    if ($request->hasFile("imagenes.$index")) {
+                        $archivo = $request->file("imagenes.$index");
+                        $nombreArchivo = time() . '_' . $index . '_' . $archivo->getClientOriginalName();
+                        $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
+                        
+                        $producto->imagenes()->create([
+                            'url_imagen' => '/storage/' . $rutaImagen,
+                            'texto_alt_SEO' => 'Imagen ' . ($index + 1) . ' del producto ' . $producto->nombre
+                        ]);
+                    } elseif (is_string($imagen)) {
+                        // Si es una URL string
+                        $producto->imagenes()->create([
+                            'url_imagen' => $imagen,
+                            'texto_alt_SEO' => 'Imagen del producto ' . $producto->nombre
+                        ]);
+                    }
                 }
             }
 
@@ -261,7 +283,12 @@ class ProductoController extends BasicController
                 'description' => $producto->descripcion,
                 'specs' => $producto->especificaciones->pluck('valor', 'clave'),
                 'relatedProducts' => $producto->productos_relacionados->pluck('id'),
-                'images' => $producto->imagenes->pluck('url_imagen'),
+                'images' => $producto->imagenes->map(function($imagen) {
+                    return [
+                        'url_imagen' => $imagen->url_imagen,
+                        'texto_alt_SEO' => $imagen->texto_alt_SEO ?? ''
+                    ];
+                }),
                 'image' => $producto->imagen_principal,
                 'nombreProducto' => $producto->nombre,
                 'stockProducto' => $producto->stock,
