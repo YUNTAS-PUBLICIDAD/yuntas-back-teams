@@ -76,10 +76,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/{id}', 'show');
         Route::get('/link/{link}', 'showByLink');
 
-        Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
-            Route::post('/', 'store');
-            Route::put('/{id}', 'update');
-            Route::delete('/{id}', 'destroy');
+        Route::middleware(['auth:sanctum', 'role:admin|user'])->group(function () {
+            Route::post('/', 'store')->middleware('permission:crear-productos');
+            Route::put('/{id}', 'update')->middleware('permission:editar-productos');
+            Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-productos');
         });
     });
 

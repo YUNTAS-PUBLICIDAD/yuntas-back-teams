@@ -39,6 +39,12 @@ class PermissionSeeder extends Seeder
             'editar-blogs',
             'eliminar-blogs',
 
+            // Productos
+            'ver-productos',
+            'crear-productos',
+            'editar-productos',
+            'eliminar-productos',
+
             // Tarjetas
             'crear-tarjetas',
             'editar-tarjetas',
