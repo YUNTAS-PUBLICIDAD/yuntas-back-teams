@@ -458,15 +458,36 @@ class ProductoController extends BasicController
     public function destroy($id)
     {
         try {
+            DB::beginTransaction();
+            
+            // Buscar el producto
             $producto = Producto::findOrFail($id);
-            $blog = $producto->blogs;
-            foreach ($blog as $item) {
-                $item->delete();
+            
+            // Desvincular productos relacionados en lugar de eliminarlos
+            $producto->productos_relacionados()->detach();
+            
+            // Eliminar las imágenes asociadas
+            $producto->imagenes()->delete();
+            
+            // Eliminar especificaciones
+            $producto->especificaciones()->delete();
+            
+            // Manejar los blogs asociados sin eliminarlos
+            // Solo desvincular la relación estableciendo producto_id a null
+            $blogs = $producto->blogs;
+            foreach ($blogs as $blog) {
+                // Actualizar el blog para desvincularlo del producto
+                $blog->producto_id = null;
+                $blog->save();
             }
+            
+            // Finalmente eliminar el producto
             $producto->delete();
-
+            
+            DB::commit();
             return $this->successResponse(null, 'Producto eliminado exitosamente');
         } catch (\Exception $e) {
+            DB::rollBack();
             if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
                 return $this->notFoundResponse('Producto no encontrado');
             }
