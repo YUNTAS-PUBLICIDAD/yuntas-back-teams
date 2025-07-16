@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
 use App\Http\Controllers\V2ProductoController;
+use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\EmailController;
 use App\Models\Reclamo;
@@ -24,6 +25,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 // blogs públicos
+
+// RUTAS TEMPORALES DE DIAGNÓSTICO (ELIMINAR DESPUÉS)
+Route::get('/diagnostico-permisos', [DiagnosticoController::class, 'diagnostico']);
+Route::post('/reparar-permisos', [DiagnosticoController::class, 'reparar']);
 
 Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blogs/{id}', [BlogController::class, "show"]);
@@ -87,7 +92,7 @@ Route::prefix('v1')->group(function () {
 
         Route::post('/', 'store');
 
-        Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
+        Route::middleware(['auth:sanctum', 'role:admin|user', 'permission:crear-productos'])->group(function () {
            
         });
     });
