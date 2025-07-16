@@ -29,12 +29,11 @@ class DatabaseSeeder extends Seeder
 
 
             InteresadoSeeder::class,
-            
-            //BLOG
+
+            // Blogs
             BlogSeeder::class,
             DetalleBlogSeeder::class,
             ImagenBlogSeeder::class,
-            VideoBlogSeeder::class,
 
             //Reclamos
             DatosPersonalSeeder::class,
