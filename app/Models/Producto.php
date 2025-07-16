@@ -19,6 +19,7 @@ class Producto extends Model
         'seccion',
         'lema',
         'descripcion',
+        'imagen_principal',
         'imagenes'
     ];
 

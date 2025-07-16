@@ -23,7 +23,7 @@ Route::get('/blogs/link/{link}', [BlogController::class, "getByLink"]);
 
 
 Route::middleware('auth:sanctum')->group(function () {
-
+  
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
     Route::middleware('permission:editar-blogs')->put('/blog/{id}', [BlogController::class, "update"]);
     Route::middleware('permission:eliminar-blogs')->delete('/blogs/{id}', [BlogController::class, "destroy"]);
@@ -68,10 +68,19 @@ Route::prefix('v1')->group(function () {
         Route::get('/{id}', 'show');
         Route::get('/link/{link}', 'showByLink');
 
-        Route::middleware(['auth:sanctum', 'permission:ENVIAR'])->group(function () {
-            Route::post('/', 'store');
-            Route::put('/{id}', 'update');
-            Route::delete('/{id}', 'destroy');
+        Route::middleware(['auth:sanctum', 'role:admin|user'])->group(function () {
+            Route::post('/', 'store')->middleware('permission:crear-productos');
+            Route::put('/{id}', 'update')->middleware('permission:editar-productos');
+            Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-productos');
+        });
+    });
+
+    Route::controller(BlogController::class)->prefix('blogs')->group(function () {
+
+        Route::post('/', 'store');
+
+        Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
+           
         });
     });
 
@@ -87,6 +96,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // AUTH (logout autenticado)
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        
+        // Ruta para obtener información del usuario autenticado
+        Route::get('/user', [UserController::class, 'me']);
 
         // USERS
         Route::prefix('users')->controller(UserController::class)->group(function () {
@@ -114,7 +126,16 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', 'update')->middleware('permission:editar-reclamos');
             Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-reclamos');
         });
-        
+        // BLOQUES
+        /*
+        Route::prefix('bloques')->controller(BloqueContenidoController::class)->group(function () {
+            Route::get('/', 'index')->middleware('permission:ver-bloques');
+            Route::get('/{bloque}', 'show')->middleware('permission:ver-bloques');
+            Route::post('/', 'store')->middleware('permission:crear-bloques');
+            Route::put('/{bloque}', 'update')->middleware('permission:editar-bloques');
+            Route::delete('/{bloque}', 'destroy')->middleware('permission:eliminar-bloques');
+        });
+        */
     });
 });
 
