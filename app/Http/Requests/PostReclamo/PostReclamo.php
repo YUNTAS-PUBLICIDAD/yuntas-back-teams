@@ -3,6 +3,7 @@
 namespace App\Http\Requests\PostReclamo;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PostReclamo extends FormRequest
 {
@@ -24,7 +25,12 @@ class PostReclamo extends FormRequest
         return [
             'datos' => 'required|string|max:255',
             'tipo_doc' => 'required|string|in:DNI,Pasaporte,Carnet de Extranjeria',
-            'numero_doc' => 'required|string|max:20|unique:datos_personals,numero_doc',
+            'numero_doc' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('datos_personals', 'numero_doc')->ignore($this->route('id'))
+            ],
             'correo' => 'required|email|max:255|unique:datos_personals,correo',
             'telefono' => 'required|string|max:20',
 

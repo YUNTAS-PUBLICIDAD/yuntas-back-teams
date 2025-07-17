@@ -106,4 +106,24 @@ class AuthController extends BasicController
         }
     }
 
+    public function verify(Request $request)
+{
+    try {
+        // El middleware 'auth:sanctum' ya validó el token
+        // Si llegamos aquí, el token es válido
+        $user = $request->user();
+        
+        return $this->successResponse([
+            'authenticated' => true,
+            'user' => $user,
+        ], 'Token válido', HttpStatusCode::OK);
+        
+    } catch (\Exception $e) {
+        return $this->errorResponse(
+            'Error al verificar el token: ' . $e->getMessage(),
+            HttpStatusCode::INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
 }
