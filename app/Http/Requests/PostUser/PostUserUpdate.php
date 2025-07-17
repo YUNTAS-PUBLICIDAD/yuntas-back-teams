@@ -25,8 +25,7 @@ class PostUserUpdate extends FormRequest
             'name' => 'required|string|max:100',
             'email' => 'sometimes|email|unique:users,email,' . $this->route('id') . '|max:100',
             'password' => 'sometimes|string|min:1',
-            'celular' => 'sometimes|nullable|string|max:15',
-            'fecha' => 'sometimes|nullable|date_format:Y-m-d',
+            'celular' => 'sometimes|nullable|string|max:15'
         ];
     }
 }
