@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\Mail;
 
 // blogs públicos
 
+// RUTAS TEMPORALES DE DIAGNÓSTICO (ELIMINAR DESPUÉS)
+Route::get('/diagnostico-permisos', [DiagnosticoController::class, 'diagnostico']);
+Route::post('/reparar-permisos', [DiagnosticoController::class, 'reparar']);
+
 Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blogs/{id}', [BlogController::class, "show"]);
 Route::get('/blogs/link/{link}', [BlogController::class, "getByLink"]);
@@ -79,7 +83,7 @@ Route::prefix('v1')->group(function () {
 
         Route::post('/', 'store');
 
-        Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
+        Route::middleware(['auth:sanctum', 'role:admin|user', 'permission:crear-productos'])->group(function () {
            
         });
     });
