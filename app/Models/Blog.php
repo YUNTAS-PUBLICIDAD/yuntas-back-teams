@@ -25,18 +25,24 @@ class Blog extends Model
         'imagen_principal'
     ];
 
-    public function producto(){
+    public function producto()
+    {
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
+<<<<<<< HEAD
 
     public function imagenes(): HasMany
     {
         return $this->hasMany(BlogImagenes::class, 'blog_id'); 
+=======
+    public function imagenes()
+    {
+        return $this->hasMany(ImagenBlog::class, 'id_blog');
+>>>>>>> 64cff5f58f56ecf62c12e61853792701966b524b
     }
 
     public function parrafos(): HasMany
     {
         return $this->hasMany(BlogParrafos::class, 'blog_id'); 
     }
-
 }

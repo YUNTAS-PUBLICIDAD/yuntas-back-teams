@@ -26,8 +26,8 @@ return new class extends Migration
 
         Schema::create('permissions', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 95); // <-- ¡Cambia esto! O a 95 si el problema persiste.
-            $table->string('guard_name', 95); // <-- ¡Y esto! O a 95.
+            $table->string('name', 95); 
+            $table->string('guard_name', 95);
             $table->timestamps();
 
             $table->unique(['name', 'guard_name']);
