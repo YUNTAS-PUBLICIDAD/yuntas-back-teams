@@ -7,16 +7,8 @@ use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
-use App\Http\Controllers\V2ProductoController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\EmailController;
-use App\Models\Reclamo;
-use App\Http\Controllers\Api\CardController;
-use App\Http\Controllers\Api\BlogHeadController;
-use App\Http\Controllers\Api\BlogFooterController;
-use App\Http\Controllers\Api\BlogBodyController;
-use App\Http\Controllers\Api\CommendTarjetaController;
-use App\Http\Controllers\Api\TarjetaController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
@@ -24,7 +16,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 // blogs públicos
-
 Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blogs/{id}', [BlogController::class, "show"]);
 Route::get('/blogs/link/{link}', [BlogController::class, "showLink"]);
@@ -76,10 +67,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/{id}', 'show');
         Route::get('/link/{link}', 'showByLink');
 
-        Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
-            Route::post('/', 'store');
-            Route::put('/{id}', 'update');
-            Route::delete('/{id}', 'destroy');
+        Route::middleware(['auth:sanctum', 'role:admin|user'])->group(function () {
+            Route::post('/', 'store')->middleware('permission:crear-productos');
+            Route::put('/{id}', 'update')->middleware('permission:editar-productos');
+            Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-productos');
         });
     });
 
@@ -87,7 +78,7 @@ Route::prefix('v1')->group(function () {
 
         Route::post('/', 'store');
 
-        Route::middleware(['auth:sanctum', 'role:ADMIN|USER', 'permission:ENVIAR'])->group(function () {
+        Route::middleware(['auth:sanctum', 'role:admin|user', 'permission:crear-productos'])->group(function () {
            
         });
     });
@@ -104,6 +95,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // AUTH (logout autenticado)
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        
+        // Ruta para obtener información del usuario autenticado
+        Route::get('/user', [UserController::class, 'me']);
 
         // USERS
         Route::prefix('users')->controller(UserController::class)->group(function () {
@@ -141,17 +135,6 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{bloque}', 'destroy')->middleware('permission:eliminar-bloques');
         });
         */
-    });
-});
-
-Route::prefix("v2")->group(function () {
-    Route::controller(V2ProductoController::class)->prefix("/productos")->group(function () {
-        Route::get("/", "index");
-        Route::get("/{id}", "show");
-        Route::get('/link/{link}', 'showByLink');
-        Route::post("/", "store");
-        Route::put("/{id}", "update");
-        Route::delete("/{id}", "destroy")->whereNumber("id");
     });
 });
 

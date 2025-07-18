@@ -87,6 +87,83 @@ class UserController extends BasicController
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v1/user",
+     *     summary="Obtener información del usuario autenticado",
+     *     description="Obtiene los detalles del usuario actualmente autenticado, incluyendo sus roles y permisos",
+     *     operationId="me",
+     *     tags={"Usuarios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Información del usuario obtenida exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Información del usuario obtenida exitosamente"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="John Doe"),
+     *                 @OA\Property(property="email", type="string", example="johndoe@example.com"),
+     *                 @OA\Property(property="celular", type="string", example="1234567890"),
+     *                 @OA\Property(property="roles", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="name", type="string", example="admin")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="permissions", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="name", type="string", example="eliminar-productos")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Usuario no autenticado"
+     *     )
+     * )
+     */
+    public function me(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user) {
+                return $this->unauthorizedResponse('Usuario no autenticado');
+            }
+
+            // Cargar roles y permisos
+            $user->load(['roles', 'permissions']);
+
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'celular' => $user->celular,
+                'roles' => $user->roles->map(function ($role) {
+                    return [
+                        'id' => $role->id,
+                        'name' => $role->name
+                    ];
+                }),
+                'permissions' => $user->getAllPermissions()->map(function ($permission) {
+                    return [
+                        'id' => $permission->id,
+                        'name' => $permission->name
+                    ];
+                })
+            ];
+
+            return $this->successResponse($userData, 'Información del usuario obtenida exitosamente');
+        } catch (\Exception $e) {
+            return $this->internalServerErrorResponse("Error al obtener información del usuario: " . $e->getMessage());
+        }
+    }
+
 
 
     /**
@@ -157,16 +234,13 @@ class UserController extends BasicController
                 'name' => $user->name,
                 'email' => $user->email,
                 'celular' => $user->celular,
-                'fecha' => $user->fecha, // Asegúrate de que 'fecha' exista en tu modelo User
                 'roles' => $user->getRoleNames(),
             ];
 
             return $this->successResponse($data, 'Usuario encontrado correctamente.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Captura específica para 404 si el usuario no existe
+        } catch (ModelNotFoundException $e) {
             return $this->notFoundResponse('Recurso no encontrado');
         } catch (\Exception $e) {
-            // Captura general para otros errores del servidor
             return $this->internalServerErrorResponse("Ocurrió un problema al obtener el usuario: " . $e->getMessage());
         }
     }
