@@ -67,18 +67,20 @@ class ProductoController extends BasicController
             return [
                 'id' => $producto->id,
                 'link' => $producto->link, // <-- AGREGADO
+                'nombreProducto' => $producto->nombre,
                 'title' => $producto->titulo,
                 'subtitle' => $producto->subtitulo,
                 'tagline' => $producto->lema,
                 'description' => $producto->descripcion,
+                'stockProducto' => $producto->stock,
+                'precioProducto' => $producto->precio,
+                'seccion' => $producto->seccion,
+
                 'specs' => $producto->especificaciones->pluck('valor', 'clave'),
                 'relatedProducts' => $producto->productos_relacionados->pluck('id'),
                 'images' => $producto->imagenes->pluck('url_imagen'),
                 'image' => $producto->imagen_principal,
-                'nombreProducto' => $producto->nombre,
-                'stockProducto' => $producto->stock,
-                'precioProducto' => $producto->precio,
-                'seccion' => $producto->seccion,
+                
             ];
         });
 

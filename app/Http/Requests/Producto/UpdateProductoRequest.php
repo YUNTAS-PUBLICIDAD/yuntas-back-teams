@@ -17,34 +17,42 @@ class UpdateProductoRequest extends FormRequest
     public function rules(): array
     {
         
-        $productoId = $this->route('id') ?? $this->route('producto');
+         $productId = $this->route('producto') ?? $this->route('id'); // Ajusta según tu ruta
 
         Log::info('=== VALIDANDO REQUEST DE ACTUALIZACIÓN DE PRODUCTO ===');
         Log::info('Request data:', $this->all());
         Log::info('Request files:', $this->allFiles());
 
         return [
-            'nombre' => 'sometimes|string|max:255',
-            'link' => "sometimes|string|unique:productos,link,{$productoId}|max:255",
-            'titulo' => 'sometimes|string|max:255',
-            'subtitulo' => 'nullable|string|max:255',
-            'lema' => 'nullable|string|max:255',
-            'descripcion' => 'nullable|string',
-            'imagen_principal' => 'nullable|image',
-            'stock' => 'sometimes|integer|min:0',
-            'precio' => 'sometimes|numeric|min:0|max:99999999.99',
-            'seccion' => 'nullable|string|max:100',
+     
+            'link' =>'sometimes|required|string|unique:productos,link,' . $productId . '|max:255',
+            
+            'nombre' => 'sometimes|required|string|max:255',
+            'titulo' => 'sometimes|required|string|max:255',
+            'subtitulo' => 'sometimes|nullable|string|max:255',
+            'lema' => 'sometimes|nullable|string|max:255',
+            'descripcion' => 'sometimes|nullable|string', 
+            'stock' => 'sometimes|required|integer|min:0',
+            'precio' => 'sometimes|required|numeric|min:0|max:99999999.99',
+            'seccion' => 'sometimes|nullable|string|max:100',
 
-            'especificaciones' => 'sometimes|array',
+            'especificaciones' => 'sometimes|required|array|min:1|max:20',
+            'especificaciones.*.clave' => 'required_with:especificaciones|string|max:100|min:2',
+            'especificaciones.*.valor' => 'required_with:especificaciones|string|max:500|min:1',
 
-            'imagenes' => 'sometimes|array|max:10',
-            'imagenes.*' => 'sometimes|nullable|image|mimes:jpeg,jpg,png,gif,webp|max:10240',
+            'imagen_principal' => 'sometimes|nullable|image|mimes:jpeg,jpg,png,gif,webp|max:10240',
 
-            'imagen_tipos' => 'sometimes|array',
-            'imagen_tipos.*' => 'sometimes|string|in:imagen_hero,imagen_especificaciones,imagen_beneficios',
+            // Productos relacionados 
+            'productos_relacionados' => 'sometimes|nullable|array|max:10',
+            'productos_relacionados.*' => 'integer|exists:productos,id|different:' . $productId,
+            
+            // Imágenes adicionales
+            'imagenes' => 'sometimes|nullable|array|max:10',
+            'imagenes.*' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:10240',
 
-            'relacionados' => 'sometimes|array',
-            'relacionados.*' => 'integer|exists:productos,id'
+            // Array para tipos de imagen
+            'imagen_tipos' => 'sometimes|nullable|array',
+            'imagen_tipos.*' => 'string|in:imagen_hero,imagen_especificaciones,imagen_beneficios',
         ];
     }
 
