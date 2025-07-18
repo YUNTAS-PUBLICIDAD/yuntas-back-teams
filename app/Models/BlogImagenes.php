@@ -8,7 +8,7 @@ use App\Models\Blog;
 
 class BlogImagenes extends Model
 {
-    protected $table = 'blog_imagenes';
+    protected $table = 'blogs_imagenes';
     protected $primaryKey = 'id';
     protected $fillable = [
         'ruta_imagen',
