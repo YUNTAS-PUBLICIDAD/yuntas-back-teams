@@ -12,21 +12,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Crear nueva tabla blogs_imagenes
         Schema::create('blogs_imagenes', function (Blueprint $table) {
             $table->id();
-            $table->text('url_imagen');
-            $table->unsignedBigInteger('id_blog');
-            $table->foreign('id_blog')->references('id')->on('blogs')->onDelete('cascade');
+            $table->text('ruta_imagen');
+            $table->text('text_alt')->nullable();
+            $table->unsignedBigInteger('blog_id');
+            $table->foreign('blog_id')->references('id')->on('blogs')->onDelete('cascade');
             $table->timestamps();
         });
 
         // Crear nueva tabla blogs_parrafos
         Schema::create('blogs_parrafos', function (Blueprint $table) {
             $table->id();
-            $table->text('parrafo_imagen');
-            $table->unsignedBigInteger('id_blog');
-            $table->foreign('id_blog')->references('id')->on('blogs')->onDelete('cascade');
+            $table->text('parrafo');
+            $table->unsignedBigInteger('blog_id');
+            $table->foreign('blog_id')->references('id')->on('blogs')->onDelete('cascade');
             $table->timestamps();
         });
 
@@ -35,15 +35,15 @@ return new class extends Migration
 
         foreach ($registros as $registro) {
             DB::table('blogs_imagenes')->insert([
-                'url_imagen' => $registro->url_imagen,
-                'id_blog' => $registro->id_blog,
+                'ruta_imagen' => $registro->url_imagen,
+                'blog_id' => $registro->id_blog,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
             DB::table('blogs_parrafos')->insert([
-                'parrafo_imagen' => $registro->parrafo_imagen,
-                'id_blog' => $registro->id_blog,
+                'parrafo' => $registro->parrafo_imagen,
+                'blog_id' => $registro->id_blog,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -63,8 +63,8 @@ return new class extends Migration
             $table->id();
             $table->text('url_imagen');
             $table->text('parrafo_imagen');
-            $table->unsignedBigInteger('id_blog');
-            $table->foreign('id_blog')->references('id')->on('blogs')->onDelete('cascade');
+            $table->unsignedBigInteger('blog_id');
+            $table->foreign('blog_id')->references('id')->on('blogs')->onDelete('cascade');
             $table->timestamps();
         });
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 
@@ -14,30 +15,28 @@ class Blog extends Model
     public $timestamps = true;
 
     protected $fillable = [
+        'titulo',
         'producto_id',
         'link',
-        'titulo',
-        'parrafo',
-        'descripcion',
+        'subtitulo1',
+        'subtitulo2',
+        'video_url',
+        'video_titulo',
         'imagen_principal'
     ];
 
     public function producto(){
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
-        public function imagenes()
+
+    public function imagenes(): HasMany
     {
-        return $this->hasMany(ImagenBlog::class, 'id_blog'); 
+        return $this->hasMany(BlogImagenes::class, 'blog_id'); 
     }
 
-    public function video()
+    public function parrafos(): HasMany
     {
-        return $this->hasOne(VideoBlog::class, 'id_blog');
-    }
-
-    public function detalle()
-    {
-        return $this->hasOne(DetalleBlog::class, 'id_blog');
+        return $this->hasMany(BlogParrafos::class, 'blog_id'); 
     }
 
 }
