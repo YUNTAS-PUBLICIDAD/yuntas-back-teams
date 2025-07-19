@@ -26,22 +26,21 @@ class StoreProductoRequest extends FormRequest
         Log::info('=== VALIDANDO REQUEST DE PRODUCTO ===');
         Log::info('Request data:', $this->all());
         Log::info('Request files:', $this->allFiles());
-        
+
         return [
             'link' => 'required|string|unique:productos,link|max:255',
             'nombre' => 'required|string|max:255',
             'titulo' => 'required|string|max:255',
             'subtitulo' => 'nullable|string|max:255',
             'lema' => 'nullable|string|max:255',
-            'descripcion' => 'nullable|string', 
+            'descripcion' => 'nullable|string',
             'stock' => 'required|integer|min:0',
             'precio' => 'required|numeric|min:0|max:99999999.99',
             'seccion' => 'nullable|string|max:100',
 
-             // Especificaciones
-            'especificaciones' => 'required|array|min:1|max:20',
-            'especificaciones.*.clave' => 'required|string|max:100|min:2',
-            'especificaciones.*.valor' => 'required|string|max:500|min:1',
+            // Especificaciones
+            'especificaciones' => 'sometimes|required|array|min:1|max:20',
+            'especificaciones.*' => 'required|string|max:500|min:1',
 
             //Imagen Principal
             'imagen_principal' => 'required|image',
@@ -49,7 +48,7 @@ class StoreProductoRequest extends FormRequest
             // Productos relacionados
             'productos_relacionados' => 'nullable|array|max:10',
             'productos_relacionados.*' => 'integer|exists:productos,id|different:id',
-            
+
             // Validación más flexible para el array de imágenes adicionales
             'imagenes' => 'sometimes|array|max:10',
             'imagenes.*' => 'sometimes|nullable|image|mimes:jpeg,jpg,png,gif,webp|max:10240',
@@ -66,7 +65,7 @@ class StoreProductoRequest extends FormRequest
         Log::error('Errores de validación:', $validator->errors()->toArray());
         Log::error('Request data durante fallo:', $this->all());
         Log::error('Request files durante fallo:', $this->allFiles());
-        
+
         parent::failedValidation($validator);
     }
 }
