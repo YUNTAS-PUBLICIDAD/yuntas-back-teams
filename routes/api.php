@@ -16,20 +16,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 // blogs públicos
-
-// RUTAS TEMPORALES DE DIAGNÓSTICO (ELIMINAR DESPUÉS)
-Route::get('/diagnostico-permisos', [DiagnosticoController::class, 'diagnostico']);
-Route::post('/reparar-permisos', [DiagnosticoController::class, 'reparar']);
-
 Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blogs/{id}', [BlogController::class, "show"]);
-Route::get('/blogs/link/{link}', [BlogController::class, "getByLink"]);
+Route::get('/blogs/link/{link}', [BlogController::class, "showLink"]);
 
 
 Route::middleware('auth:sanctum')->group(function () {
   
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
     Route::middleware('permission:editar-blogs')->put('/blog/{id}', [BlogController::class, "update"]);
+    Route::middleware('permission:editar-blogs')->patch('/blog/{id}', [BlogController::class, "update"]);
     Route::middleware('permission:eliminar-blogs')->delete('/blogs/{id}', [BlogController::class, "destroy"]);
 
 
