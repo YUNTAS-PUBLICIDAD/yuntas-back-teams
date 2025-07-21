@@ -11,6 +11,7 @@ use App\Models\Blog;
 use App\Http\Contains\HttpStatusCode;
 use App\Http\Requests\PostBlog\PostStoreBlog as PostBlogPostStoreBlog;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BlogController extends Controller
 {
@@ -505,12 +506,16 @@ class BlogController extends Controller
 
     public function update(UpdateBlog $request, $id)
     {
+        Log::info('PATCH Blog Request received:', ['request_all' => $request->all(), 'id' => $id]);
         $datosValidados = $request->validated();
+        Log::info('Validated data:', ['datos_validados' => $datosValidados]);
+
         DB::beginTransaction();
         $blog = Blog::findOrFail($id);
 
         try {
             $nuevaRutaImagenPrincipal = $blog->imagen_principal;
+
             if ($request->hasFile('imagen_principal')) {
                 if ($blog->imagen_principal) {
                     $rutaAnterior = str_replace('/storage/', '', $blog->imagen_principal);
@@ -520,34 +525,45 @@ class BlogController extends Controller
                 $nuevaRutaImagenPrincipal = $this->guardarImagen($request->file('imagen_principal'));
             }
 
-            // Actualizar datos principales del blog
-            $blog->update([
-                "titulo" => $datosValidados["titulo"],
-                "producto_id" => $datosValidados["producto_id"],
-                "link" => $datosValidados["link"],
-                "subtitulo1" => $datosValidados["subtitulo1"],
-                "subtitulo2" => $datosValidados["subtitulo2"],
-                "video_url" => $datosValidados["video_url"],
-                "video_titulo" => $datosValidados["video_titulo"],
-                "imagen_principal" => $nuevaRutaImagenPrincipal,
-            ]);
+            // Construir solo los campos que se van a actualizar
+            $camposActualizar = [];
 
-            // Eliminar imágenes anteriores del disco y base de datos
-            $rutasImagenes = [];
-            foreach ($blog->imagenes as $item) {
-                array_push($rutasImagenes, str_replace($item["ruta_imagen"], "storage/", ""));
+            foreach([
+                "titulo",
+                "producto_id",
+                "link",
+                "subtitulo1",
+                "subtitulo2",
+                "video_url",
+                "video_titulo"
+            ] as $campo) {
+                if (array_key_exists($campo, $datosValidados)) {
+                    $camposActualizar[$campo] = $datosValidados[$campo];
+                }
             }
-            Storage::delete($rutasImagenes);
-            $blog->imagenes()->delete();
 
-            // Guardar nuevas imágenes solo si se envían
+            //Si la imagen principal ha cambiado, entonces se actualiza
+            if ($request->hasFile('imagen_principal')) {
+                $camposActualizar['imagen_principal'] = $nuevaRutaImagenPrincipal;
+            }
+
+            Log::info('Fields to update:', ['campos_actualizar' => $camposActualizar]);
+            $blog->update($camposActualizar);
+
+            //Eliminar imágenes antiguas si se envían nuevas
             if (isset($datosValidados['imagenes'])) {
+                $rutasImagenesAntiguas = [];
+                foreach ($blog->imagenes as $imagen) {
+                    array_push($rutasImagenesAntiguas, str_replace('/storage/', '', $imagen['ruta_imagen']));
+                }
+                Storage::disk('public')->delete($rutasImagenesAntiguas);
+                $blog->imagenes()->delete();
+
                 $imagenes = $request->file("imagenes", []);
                 $altTexts = $datosValidados["text_alt"] ?? [];
 
                 foreach ($imagenes as $i => $imagen) {
                     $ruta = $this->guardarImagen($imagen);
-
                     $blog->imagenes()->create([
                         "ruta_imagen" => $ruta,
                         "text_alt" => $altTexts[$i] ?? null
@@ -555,13 +571,14 @@ class BlogController extends Controller
                 }
             }
 
-            // Eliminar y guardar nuevos párrafos
-            $blog->parrafos()->delete(); // Eliminar párrafos existentes
-            $parrafos = $datosValidados["parrafos"];
-            foreach ($parrafos as $texto) {
-                $blog->parrafos()->create([
-                    "parrafo" => $texto
-                ]);
+            //Eliminar párrafos antiguos si se envían nuevos
+            if (isset($datosValidados['parrafos'])) {
+                $blog->parrafos()->delete();
+                foreach ($datosValidados["parrafos"] as $item) {
+                    $blog->parrafos()->create([
+                        "parrafo" => $item
+                    ]);
+                }
             }
 
             DB::commit();
