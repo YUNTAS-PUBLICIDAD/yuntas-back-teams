@@ -34,8 +34,8 @@ class StoreProductoRequest extends FormRequest
             'subtitulo' => 'nullable|string|max:255',
             'lema' => 'nullable|string|max:255',
             'descripcion' => 'nullable|string',
-            'stock' => 'required|integer|min:0',
-            'precio' => 'required|numeric|min:0|max:99999999.99',
+            'stock' => 'nullable|integer|min:0',
+            'precio' => 'nullable|numeric|min:0|max:99999999.99',
             'seccion' => 'nullable|string|max:100',
 
             // Especificaciones

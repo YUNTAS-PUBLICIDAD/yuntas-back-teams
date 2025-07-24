@@ -32,8 +32,8 @@ class UpdateProductoRequest extends FormRequest
             'subtitulo' => 'sometimes|nullable|string|max:255',
             'lema' => 'sometimes|nullable|string|max:255',
             'descripcion' => 'sometimes|nullable|string',
-            'stock' => 'sometimes|required|integer|min:0',
-            'precio' => 'sometimes|required|numeric|min:0|max:99999999.99',
+            'stock' => 'sometimes|nullable|integer|min:0',
+            'precio' => 'sometimes|nullable|numeric|min:0|max:99999999.99',
             'seccion' => 'sometimes|nullable|string|max:100',
 
             'especificaciones' => 'sometimes|required|array|min:1|max:20',
