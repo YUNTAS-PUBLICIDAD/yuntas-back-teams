@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Mail;
 // blogs públicos
 Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blogs/{id}', [BlogController::class, "show"]);
-Route::get('/blogs/link/{link}', [BlogController::class, "showLink"]);
 
 
 Route::middleware('auth:sanctum')->group(function () {
