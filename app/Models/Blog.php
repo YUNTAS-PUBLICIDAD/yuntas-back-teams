@@ -15,13 +15,8 @@ class Blog extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'titulo',
         'producto_id',
-        'link',
-        'subtitulo1',
-        'subtitulo2',
-        'video_url',
-        'video_titulo',
+        'subtitulo',
         'imagen_principal'
     ];
 
