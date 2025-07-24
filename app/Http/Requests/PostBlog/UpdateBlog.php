@@ -24,23 +24,17 @@ class UpdateBlog extends FormRequest
     {
         $isPut = $this->isMethod('put');
         $required = $isPut ? 'required' : 'sometimes';
-        $blogId = $this->route('blog');
 
         return [
-            'titulo' => [$required, 'string', 'max:255'],
             'producto_id' => [$required, 'integer', 'exists:productos,id'],
-            'link' => [$required, 'string', 'max:255', Rule::unique('blogs', 'link')->ignore($blogId)],
-            'subtitulo1' => [$required, 'string', 'max:255'],
-            'subtitulo2' => [$required, 'string', 'max:255'],
-            'video_url' => [$required, 'url'],
-            'video_titulo' => [$required, 'string', 'max:255'],
-
+            'subtitulo' => [$required, 'string', 'max:255'],
+            
             'imagen_principal' => ['sometimes', 'image', 'max:2048'],
             'imagenes' => ['sometimes', 'array'],
             'imagenes.*' => ['sometimes', 'image', 'max:2048'],
 
-            'text_alt' => [$isPut ? 'required' : 'sometimes', 'array'],
-            'text_alt.*' => [$isPut ? 'required' : 'sometimes', 'string', 'max:255'],
+            // 'text_alt' => [$isPut ? 'required' : 'sometimes', 'array'],
+            // 'text_alt.*' => [$isPut ? 'required' : 'sometimes', 'string', 'max:255'],
 
             'parrafos' => [$isPut ? 'required' : 'sometimes', 'array'],
             'parrafos.*' => [$isPut ? 'required' : 'sometimes', 'string', 'max:2047'],
