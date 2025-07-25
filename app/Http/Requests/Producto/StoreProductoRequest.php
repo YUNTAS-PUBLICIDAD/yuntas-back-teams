@@ -31,25 +31,19 @@ class StoreProductoRequest extends FormRequest
             'link' => 'required|string|unique:productos,link|max:255',
             'nombre' => 'required|string|max:255',
             'titulo' => 'required|string|max:255',
-            'subtitulo' => 'nullable|string|max:255',
-            'lema' => 'nullable|string|max:255',
             'descripcion' => 'nullable|string',
-            'stock' => 'nullable|integer|min:0',
-            'precio' => 'nullable|numeric|min:0|max:99999999.99',
             'seccion' => 'nullable|string|max:100',
 
-            // Especificaciones
-            'especificaciones' => 'sometimes|required|array|min:1|max:20',
-            'especificaciones.*' => 'required|string|max:500|min:1',
+            // Especificaciones y beneficios como arrays
+            'especificaciones' => 'nullable|array|max:20',
+            'especificaciones.*' => 'sometimes|string|max:500',
+            'beneficios' => 'nullable|array|max:20',
+            'beneficios.*' => 'sometimes|string|max:500',
 
             //Imagen Principal
-            'imagen_principal' => 'required|image',
+            'imagen_principal' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:10240',
 
-            // Productos relacionados
-            'productos_relacionados' => 'nullable|array|max:10',
-            'productos_relacionados.*' => 'integer|exists:productos,id|different:id',
-
-            // Validación más flexible para el array de imágenes adicionales
+            // Validación para el array de imágenes adicionales
             'imagenes' => 'sometimes|array|max:10',
             'imagenes.*' => 'sometimes|nullable|image|mimes:jpeg,jpg,png,gif,webp|max:10240',
 

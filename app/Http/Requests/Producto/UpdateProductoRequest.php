@@ -29,15 +29,14 @@ class UpdateProductoRequest extends FormRequest
 
             'nombre' => 'sometimes|required|string|max:255',
             'titulo' => 'sometimes|required|string|max:255',
-            'subtitulo' => 'sometimes|nullable|string|max:255',
-            'lema' => 'sometimes|nullable|string|max:255',
             'descripcion' => 'sometimes|nullable|string',
-            'stock' => 'sometimes|nullable|integer|min:0',
-            'precio' => 'sometimes|nullable|numeric|min:0|max:99999999.99',
             'seccion' => 'sometimes|nullable|string|max:100',
 
-            'especificaciones' => 'sometimes|required|array|min:1|max:20',
-            'especificaciones.*' => 'required|string|max:500|min:1',
+            // Especificaciones y beneficios como arrays
+            'especificaciones' => 'sometimes|nullable|array|max:20',
+            'especificaciones.*' => 'sometimes|string|max:500',
+            'beneficios' => 'sometimes|nullable|array|max:20',
+            'beneficios.*' => 'sometimes|string|max:500',
 
             'imagen_principal' => 'sometimes|nullable|image|mimes:jpeg,jpg,png,gif,webp|max:10240',
 
@@ -48,10 +47,6 @@ class UpdateProductoRequest extends FormRequest
             // Array para tipos de imagen
             'imagen_tipos' => 'sometimes|nullable|array',
             'imagen_tipos.*' => 'string|in:imagen_hero,imagen_especificaciones,imagen_beneficios',
-
-            // Productos relacionados 
-            'productos_relacionados' => 'sometimes|nullable|array|max:10',
-            'productos_relacionados.*' => 'integer|exists:productos,id|different:' . $productId,
         ];
     }
 
