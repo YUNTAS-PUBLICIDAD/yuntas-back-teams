@@ -278,7 +278,9 @@ class ClienteController extends BasicController
                 ? HttpStatusCode::OK 
                 : HttpStatusCode::NO_CONTENT;
 
-            return $this->successResponse(null, $message, $statusCode);
+            return $this->successResponse($cliente, $message, $statusCode);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('Cliente no encontrado.', HttpStatusCode::NOT_FOUND);
         } catch (\Exception $e) {
             return $this->errorResponse('Ocurrió un problema al procesar la solicitud. ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
