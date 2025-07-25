@@ -206,13 +206,11 @@ class BlogController extends Controller
             if ($request->hasFile('imagenes')) {
                 $imagenes = $request->file('imagenes');
                 $nombreProducto = $blog->producto ? $blog->producto->nombre : '';
-                $textAlts = $datosValidados['text_alt']; 
-
                 foreach ($imagenes as $i => $imagen) {
                     $ruta = $this->guardarImagen($imagen);
                     $blog->imagenes()->create([
                         "ruta_imagen" => $ruta,
-                        "text_alt" => $textAlts[$i] ?? 'Imagen del blog ' . $nombreProducto
+                        "text_alt" =>'Imagen del blog ' . $nombreProducto
                     ]);
                 }
             }
