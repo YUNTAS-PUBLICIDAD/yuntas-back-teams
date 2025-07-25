@@ -13,14 +13,17 @@ class Producto extends Model
         'nombre',
         'link',
         'titulo',
-        'subtitulo',
-        'stock',
-        'precio',
         'seccion',
-        'lema',
         'descripcion',
         'imagen_principal',
-        'imagenes'
+        'especificaciones',
+        'beneficios'
+    ];
+
+    // Campos que deben ser tratados como JSON
+    protected $casts = [
+        'especificaciones' => 'array',
+        'beneficios' => 'array',
     ];
 
     public $timestamps = true;
@@ -28,11 +31,6 @@ class Producto extends Model
     public function imagenes()
     {
         return $this->hasMany(ProductoImagenes::class, 'producto_id');
-    }
-
-    public function productos_relacionados()
-    {
-        return $this->belongsToMany(Producto::class, 'producto_relacionados', 'id_producto', 'id_relacionado');
     }
 
     public function interesados(): HasMany
@@ -43,9 +41,5 @@ class Producto extends Model
     public function blogs()
     {
         return $this->hasMany(Blog::class, 'producto_id', 'id');
-    }
-    public function especificaciones(): HasMany
-    {
-        return $this->hasMany(Especificacion::class, 'producto_id');
     }
 }
