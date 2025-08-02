@@ -19,7 +19,6 @@ class Producto extends Model
         'especificaciones',
         'beneficios'
     ];
-
     // Campos que deben ser tratados como JSON
     protected $casts = [
         'especificaciones' => 'array',
@@ -41,5 +40,9 @@ class Producto extends Model
     public function blogs()
     {
         return $this->hasMany(Blog::class, 'producto_id', 'id');
+    }
+
+    public function especificaciones(){
+        return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
 }
