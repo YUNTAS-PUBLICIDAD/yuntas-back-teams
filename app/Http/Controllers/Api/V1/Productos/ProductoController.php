@@ -96,7 +96,6 @@ class ProductoController extends BasicController
             return $this->errorResponse('Error al obtener los productos', HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
-
     /**
      * Crear un nuevo producto
      * 
