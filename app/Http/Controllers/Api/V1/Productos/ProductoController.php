@@ -64,10 +64,10 @@ class ProductoController extends BasicController
         try {
             $productos = Producto::with(['imagenes'])
                 ->orderBy('created_at', 'desc')
-                ->get();
+                ->paginate(8);
 
             // Formatear cada producto para el frontend
-            $productos->transform(function ($producto) {
+            $productos->getCollection()->transform(function ($producto) {
                 return [
                     'id' => $producto->id,
                     'link' => $producto->link,
