@@ -67,7 +67,7 @@ class ProductoController extends BasicController
                 ->get();
 
             // Formatear cada producto para el frontend
-            $productos->getCollection()->transform(function ($producto) {
+            $productos->transform(function ($producto) {
                 return [
                     'id' => $producto->id,
                     'link' => $producto->link,
