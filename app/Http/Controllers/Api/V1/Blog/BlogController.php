@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class BlogController extends Controller
 {
+
     protected ApiResponseService $apiResponse;
     protected ImageService $imageService;
 
@@ -265,7 +266,7 @@ class BlogController extends Controller
      *                             example="/images/blog/imagen_1.jpg"
      *                         ),
      *                         @OA\Property(
-     *                             property="texto_alt",
+     *                             property="text_alt",
      *                             type="string",
      *                             description="Texto alternativo para la imagen",
      *                             example="Vista frontal del producto"
@@ -363,7 +364,7 @@ class BlogController extends Controller
                 'imagenes' => $blog->imagenes->map(function ($imagen) {
                     return [
                         'ruta_imagen' => $imagen->ruta_imagen,
-                        'texto_alt' => $imagen->text_alt,
+                        'text_alt' => $imagen->text_alt,
                     ];
                 }),
                 'parrafos' => $blog->parrafos->map(function ($parrafo) {
@@ -619,7 +620,7 @@ class BlogController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/blog/{id}",
+     *     path="/api/blogs/{id}",
      *     tags={"Blogs"},
      *     summary="Actualizar un blog existente",
      *     description="Actualiza un blog existente. Todos los campos son opcionales. Si se envían imágenes o párrafos, reemplazarán completamente los existentes.",
