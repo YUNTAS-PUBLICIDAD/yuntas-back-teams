@@ -32,10 +32,10 @@ class BlogController extends Controller
                     'id' => $blog->id,
                     'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                     'subtitulo' => $blog->subtitulo,
-                    'imagen_principal' => $blog->imagen_principal,
+                    'imagen_principal' => asset($blog->imagen_principal),
                     'imagenes' => $blog->imagenes->map(function ($imagen) {
                         return [
-                            'ruta_imagen' => $imagen->ruta_imagen,
+                            'ruta_imagen' => asset($imagen->ruta_imagen),
                             'text_alt' => $imagen->text_alt,
                         ];
                     }),
