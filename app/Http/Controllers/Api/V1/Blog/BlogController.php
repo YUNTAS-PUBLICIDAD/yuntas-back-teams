@@ -6,20 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PostBlog\PostStoreBlog;
 use App\Http\Requests\PostBlog\UpdateBlog;
 use App\Services\ApiResponseService;
-use Illuminate\Support\Facades\Storage;
+use App\Services\ImageService;
 use App\Models\Blog;
 use App\Http\Contains\HttpStatusCode;
-use App\Http\Requests\PostBlog\PostStoreBlog as PostBlogPostStoreBlog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BlogController extends Controller
 {
     protected ApiResponseService $apiResponse;
+    protected ImageService $imageService;
 
-    public function __construct(ApiResponseService $apiResponse)
+    public function __construct(ApiResponseService $apiResponse, ImageService $imageService)
     {
         $this->apiResponse = $apiResponse;
+        $this->imageService = $imageService;
     }
     public function index()
     {
@@ -175,14 +176,6 @@ class BlogController extends Controller
      * )
      */
 
-    private function guardarImagen($archivo)
-    {
-        $nombre = uniqid() . '_' . time() . '.' . $archivo->getClientOriginalExtension();
-        $archivo->storeAs("imagenes", $nombre, "public");
-        return "/storage/imagenes/" . $nombre;
-    }
-
-
     public function store(PostStoreBlog $request)
     {
         $datosValidados = $request->validated();
@@ -194,7 +187,7 @@ class BlogController extends Controller
             }
 
             $imagenPrincipal = $request->file("imagen_principal");
-            $rutaImagenPrincipal = $this->guardarImagen($imagenPrincipal);
+            $rutaImagenPrincipal = $this->imageService->guardarImagen($imagenPrincipal);
 
             $blog = Blog::create([
                 "producto_id" => $datosValidados["producto_id"],
@@ -207,20 +200,18 @@ class BlogController extends Controller
                 $imagenes = $request->file('imagenes');
                 $nombreProducto = $blog->producto ? $blog->producto->nombre : '';
                 foreach ($imagenes as $i => $imagen) {
-                    $ruta = $this->guardarImagen($imagen);
+                    $ruta = $this->imageService->guardarImagen($imagen);
                     $blog->imagenes()->create([
                         "ruta_imagen" => $ruta,
-                        "text_alt" =>'Imagen del blog ' . $nombreProducto
+                        "text_alt" => 'Imagen del blog ' . $nombreProducto
                     ]);
                 }
             }
-
             foreach ($datosValidados["parrafos"] as $item) {
                 $blog->parrafos()->createMany([
                     ["parrafo" => $item]
                 ]);
             }
-
             DB::commit();
             return $this->apiResponse->successResponse($blog->fresh(), 'Blog creado con éxito.', HttpStatusCode::CREATED);
         } catch (\Exception $e) {
@@ -325,7 +316,6 @@ class BlogController extends Controller
         }
     }
 
-
     public function update(UpdateBlog $request, $id)
     {
         Log::info('PATCH Blog Request received:', ['request_all' => $request->all(), 'id' => $id]);
@@ -336,59 +326,42 @@ class BlogController extends Controller
         $blog = Blog::findOrFail($id);
 
         try {
-            $nuevaRutaImagenPrincipal = $blog->imagen_principal;
-
-            if ($request->hasFile('imagen_principal')) {
-                if ($blog->imagen_principal) {
-                    $rutaAnterior = str_replace('/storage/', '', $blog->imagen_principal);
-                    Storage::disk('public')->delete($rutaAnterior);
-                }
-
-                $nuevaRutaImagenPrincipal = $this->guardarImagen($request->file('imagen_principal'));
-            }
-
-            // Construir solo los campos que se van a actualizar
             $camposActualizar = [];
-
-            foreach (
-                [
-                    "producto_id",
-                    "subtitulo",
-                ] as $campo
-            ) {
+            foreach (["producto_id", "subtitulo"] as $campo) {
                 if (array_key_exists($campo, $datosValidados)) {
                     $camposActualizar[$campo] = $datosValidados[$campo];
                 }
             }
 
-            //Si la imagen principal ha cambiado, entonces se actualiza
             if ($request->hasFile('imagen_principal')) {
+                $nuevaRutaImagenPrincipal = $this->imageService->actualizarImagen(
+                    $request->file('imagen_principal'),
+                    $blog->imagen_principal
+                );
                 $camposActualizar['imagen_principal'] = $nuevaRutaImagenPrincipal;
             }
 
             Log::info('Fields to update:', ['campos_actualizar' => $camposActualizar]);
             $blog->update($camposActualizar);
 
-            //Eliminar imágenes antiguas si se envían nuevas
             if ($request->hasFile('imagenes')) {
-                $rutasImagenesAntiguas = [];
-                foreach ($blog->imagenes as $imagen) {
-                    array_push($rutasImagenesAntiguas, str_replace('/storage/', '', $imagen['ruta_imagen']));
-                }
-                Storage::disk('public')->delete($rutasImagenesAntiguas);
-                $blog->imagenes()->delete();
+                $rutasImagenesAntiguas = $blog->imagenes->pluck('ruta_imagen')->toArray();
 
+                if (!empty($rutasImagenesAntiguas)) {
+                    $this->imageService->eliminarImagenes($rutasImagenesAntiguas);
+                }
+                $blog->imagenes()->delete();
                 $imagenes = $request->file('imagenes');
                 $nombreProducto = $blog->producto ? $blog->producto->nombre : '';
-                foreach ($imagenes as $i => $imagen) {
-                    $ruta = $this->guardarImagen($imagen);
+
+                foreach ($imagenes as $imagen) {
+                    $ruta = $this->imageService->guardarImagen($imagen);
                     $blog->imagenes()->create([
                         "ruta_imagen" => $ruta,
-                        "text_alt" =>'Imagen del blog ' . $nombreProducto
+                        "text_alt" => 'Imagen del blog ' . $nombreProducto
                     ]);
                 }
             }
-            //Eliminar párrafos antiguos si se envían nuevos
             if (isset($datosValidados['parrafos'])) {
                 $blog->parrafos()->delete();
                 foreach ($datosValidados["parrafos"] as $item) {
@@ -397,12 +370,18 @@ class BlogController extends Controller
                     ]);
                 }
             }
-
             DB::commit();
-            return $this->apiResponse->successResponse($blog, 'Blog actualizado exitosamente', HttpStatusCode::OK);
+            return $this->apiResponse->successResponse(
+                $blog,
+                'Blog actualizado exitosamente',
+                HttpStatusCode::OK
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->apiResponse->errorResponse('Error al actualizar el blog: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            return $this->apiResponse->errorResponse(
+                'Error al actualizar el blog: ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -448,20 +427,17 @@ class BlogController extends Controller
 
         try {
             $blog = Blog::findOrFail($id);
-
-            $rutasImagenes = [];
-            foreach ($blog->imagenes as $imagen) {
-                $relativePath = str_replace('storage/', '', $imagen->ruta_imagen);
-                array_push($rutasImagenes, $relativePath);
+            $rutasImagenes = $blog->imagenes->pluck('ruta_imagen')->toArray();
+        
+            if ($blog->imagen_principal) {
+                $rutasImagenes[] = $blog->imagen_principal;
             }
 
             $blog->imagenes()->delete();
             $blog->parrafos()->delete();
-
             if (!empty($rutasImagenes)) {
-                Storage::delete($rutasImagenes);
+                $this->imageService->eliminarImagenes($rutasImagenes);
             }
-
             $blog->delete();
 
             DB::commit();
