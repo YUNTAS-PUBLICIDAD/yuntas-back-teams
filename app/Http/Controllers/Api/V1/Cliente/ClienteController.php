@@ -9,6 +9,8 @@ use App\Http\Contains\HttpStatusCode;
 use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+// use Illuminate\Container\Attributes\Log;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -19,40 +21,36 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class ClienteController extends BasicController
 {
     /**
-     * Display a listing of clientes.
-     * 
      * @OA\Get(
      *     path="/api/v1/clientes",
      *     tags={"Clientes"},
-     *     summary="Obtener lista de todos los clientes",
-     *     description="Retorna una lista de todos los clientes registrados",
-     *     operationId="indexClientes",
+     *     summary="Listar clientes",
+     *     description="Obtiene todos los clientes registrados en el sistema",
+     *     security={{"sanctum":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="Lista de clientes obtenida correctamente",
+     *         description="Clientes listados correctamente",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Clientes listados correctamente."),
-     *             @OA\Property(property="data", type="array", @OA\Items(
+     *             type="array",
+     *             @OA\Items(
      *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", example="john@example.com"),
-     *                 @OA\Property(property="celular", type="string", example="999888777"),
-     *                 @OA\Property(property="created_at", type="string", format="date-time"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time")
-     *             ))
+     *                 @OA\Property(property="nombre", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="juan@example.com"),
+     *                 @OA\Property(property="telefono", type="string", example="+51 987654321")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
+     *         response=404,
+     *         description="No hay clientes para listar"
+     *     ),
+     *     @OA\Response(
      *         response=500,
-     *         description="Error interno del servidor",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Ocurrió un problema al listar los clientes.")
-     *         )
+     *         description="Ocurrió un problema al listar los clientes"
      *     )
      * )
      */
+
     public function index()
     {
         try {
@@ -61,13 +59,15 @@ class ClienteController extends BasicController
             $message = $clientes->isEmpty() ? 'No hay clientes para listar.' : 'Clientes listados correctamente.';
 
             return $this->successResponse(
-            $clientes,
-            $message,
-            HttpStatusCode::OK
+                $clientes,
+                $message,
+                HttpStatusCode::OK
             );
         } catch (\Exception $e) {
-            return $this->errorResponse('Ocurrio un problema al listar los clientes. ' . $e->getMessage(),
-            HttpStatusCode::INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                'Ocurrio un problema al listar los clientes. ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -124,11 +124,13 @@ class ClienteController extends BasicController
             return $this->successResponse(
                 $request->all(),
                 'Cliente registrado exitosamente.',
-                HttpStatusCode::OK);
-            
+                HttpStatusCode::OK
+            );
         } catch (\Exception $e) {
-            return $this->errorResponse('Ocurrio un problema al procesar la solicitud. '. $e->getMessage()
-            , HttpStatusCode::INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                'Ocurrio un problema al procesar la solicitud. ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -189,7 +191,7 @@ class ClienteController extends BasicController
 
             return $this->successResponse(
                 $cliente,
-                $cliente ? 'Cliente encontrado.' : 'Cliente no encontrado.', 
+                $cliente ? 'Cliente encontrado.' : 'Cliente no encontrado.',
                 HttpStatusCode::OK
             );
         } catch (\Exception $e) {
@@ -270,12 +272,12 @@ class ClienteController extends BasicController
             $cliente = Cliente::findOrFail($id);
             $cliente->update($request->validated());
 
-            $message = $cliente->wasChanged() 
-                ? 'Se actualizaron los campos correctamente.' 
+            $message = $cliente->wasChanged()
+                ? 'Se actualizaron los campos correctamente.'
                 : 'No se actualizaron los campos';
 
-            $statusCode = $cliente->wasChanged() 
-                ? HttpStatusCode::OK 
+            $statusCode = $cliente->wasChanged()
+                ? HttpStatusCode::OK
                 : HttpStatusCode::NO_CONTENT;
 
             return $this->successResponse($cliente, $message, $statusCode);
@@ -332,25 +334,36 @@ class ClienteController extends BasicController
     {
         try {
             $cliente = Cliente::findOrFail($id);
-            
+
             if (!$cliente) {
-                return $this->errorResponse('Cliente no encontrado.', 
-                HttpStatusCode::NOT_FOUND);
+                return $this->errorResponse(
+                    'Cliente no encontrado.',
+                    HttpStatusCode::NOT_FOUND
+                );
             }
 
             if (!$cliente->delete()) {
-                return $this->errorResponse('No se pudo eliminar el cliente.', 
-                HttpStatusCode::INTERNAL_SERVER_ERROR);
+                return $this->errorResponse(
+                    'No se pudo eliminar el cliente.',
+                    HttpStatusCode::INTERNAL_SERVER_ERROR
+                );
             }
 
-            return $this->successResponse(null, 'Se eliminó correctamente el cliente.', 
-            HttpStatusCode::OK);
+            return $this->successResponse(
+                null,
+                'Se eliminó correctamente el cliente.',
+                HttpStatusCode::OK
+            );
         } catch (ModelNotFoundException $e) {
-            return $this->errorResponse('Cliente no encontrado.', 
-            HttpStatusCode::NOT_FOUND);
-        } catch(\Exception $e) {
-            return $this->errorResponse('Ocurrió un problema al procesar la solicitud. ' . $e->getMessage(), 
-            HttpStatusCode::INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                'Cliente no encontrado.',
+                HttpStatusCode::NOT_FOUND
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Ocurrió un problema al procesar la solicitud. ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
     }
 }
