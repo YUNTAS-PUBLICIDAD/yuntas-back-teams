@@ -75,13 +75,13 @@ class ProductoController extends BasicController
                     'titulo' => $producto->titulo,
                     'descripcion' => $producto->descripcion,
                     'seccion' => $producto->seccion,
-                    'imagen_principal' => $producto->imagen_principal,
+                    'imagen_principal' => asset($producto->imagen_principal),
                     'especificaciones' => $producto->especificaciones ?? [],
                     'beneficios' => $producto->beneficios ?? [],
                     'imagenes' => $producto->imagenes->map(function ($imagen) {
                         return [
                             'id' => $imagen->id,
-                            'url_imagen' => $imagen->url_imagen,
+                            'url_imagen' => asset($imagen->url_imagen),
                             'texto_alt_SEO' => $imagen->texto_alt_SEO
                         ];
                     }),
