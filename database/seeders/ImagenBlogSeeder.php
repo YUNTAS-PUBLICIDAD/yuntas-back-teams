@@ -16,50 +16,50 @@ class ImagenBlogSeeder extends Seeder
     {
          $blog = [
             [
-                'url_imagen' => 'https://i.imgur.com/oyiDoMN.png',
-                'id_blog' => 1,
+                'ruta_imagen' => 'https://i.imgur.com/oyiDoMN.png',
+                'blog_id' => 1,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
             [
-                'url_imagen' => 'https://i.imgur.com/yOc0ofa.png',
-                'id_blog' => 1,
+                'ruta_imagen' => 'https://i.imgur.com/yOc0ofa.png',
+                'blog_id' => 1,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
             [
-                'url_imagen' => 'https://i.imgur.com/yOc0ofa.png',
-                'id_blog' => 2,
+                'ruta_imagen' => 'https://i.imgur.com/yOc0ofa.png',
+                'blog_id' => 2,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
             [
-                'url_imagen' => 'https://i.imgur.com/yOc0ofa.png',
-                'id_blog' => 2,
+                'ruta_imagen' => 'https://i.imgur.com/yOc0ofa.png',
+                'blog_id' => 2,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
             [
-                'url_imagen' => 'https://i.imgur.com/yOc0ofa.png',
-                'id_blog' => 3,
+                'ruta_imagen' => 'https://i.imgur.com/yOc0ofa.png',
+                'blog_id' => 3,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
             [
-                'url_imagen' => 'https://i.imgur.com/yOc0ofa.png',
-                'id_blog' => 3,
+                'ruta_imagen' => 'https://i.imgur.com/yOc0ofa.png',
+                'blog_id' => 3,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
             [
-                'url_imagen' => 'https://i.imgur.com/yOc0ofa.png',
-                'id_blog' => 4,
+                'ruta_imagen' => 'https://i.imgur.com/yOc0ofa.png',
+                'blog_id' => 4,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
             [
-                'url_imagen' => 'https://i.imgur.com/yOc0ofa.png',
-                'id_blog' => 4,
+                'ruta_imagen' => 'https://i.imgur.com/yOc0ofa.png',
+                'blog_id' => 4,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
