@@ -23,8 +23,7 @@ Route::get('/blogs/{id}', [BlogController::class, "show"]);
 Route::middleware('auth:sanctum')->group(function () {
   
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
-    Route::middleware('permission:editar-blogs')->put('/blog/{id}', [BlogController::class, "update"]);
-    Route::middleware('permission:editar-blogs')->patch('/blog/{id}', [BlogController::class, "update"]);
+    Route::middleware('permission:editar-blogs')->put('/blogs/{id}', [BlogController::class, "update"]);
     Route::middleware('permission:eliminar-blogs')->delete('/blogs/{id}', [BlogController::class, "destroy"]);
 
 
@@ -74,14 +73,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::controller(BlogController::class)->prefix('blogs')->group(function () {
-
-        Route::post('/', 'store');
-
-        Route::middleware(['auth:sanctum', 'role:admin|user', 'permission:crear-productos'])->group(function () {
-           
-        });
-    });
+    
 
     // AUTH (login público)
     Route::controller(AuthController::class)->prefix('auth')->group(function () {
