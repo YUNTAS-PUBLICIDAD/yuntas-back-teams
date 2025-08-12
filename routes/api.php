@@ -24,7 +24,6 @@ Route::middleware('auth:sanctum')->group(function () {
   
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
     Route::middleware('permission:editar-blogs')->put('/blogs/{id}', [BlogController::class, "update"]);
-    Route::middleware('permission:editar-blogs')->patch('/blogs/{id}', [BlogController::class, "update"]);
     Route::middleware('permission:eliminar-blogs')->delete('/blogs/{id}', [BlogController::class, "destroy"]);
 
 
