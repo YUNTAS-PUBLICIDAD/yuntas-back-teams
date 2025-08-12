@@ -378,7 +378,6 @@ class BlogController extends Controller
                     ]);
                 }
             }
-
             DB::commit();
 
             // ⭐ SOLUCIÓN: Recargar el modelo con todas sus relaciones actualizadas
@@ -394,7 +393,9 @@ class BlogController extends Controller
             );
         } catch (\Exception $e) {
             DB::rollBack();
+
             Log::error('Error actualizando blog:', ['error' => $e->getMessage(), 'blog_id' => $id]);
+
             return $this->apiResponse->errorResponse(
                 'Error al actualizar el blog: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
