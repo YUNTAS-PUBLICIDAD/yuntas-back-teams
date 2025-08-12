@@ -32,10 +32,10 @@ class BlogController extends Controller
                     'id' => $blog->id,
                     'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                     'subtitulo' => $blog->subtitulo,
-                    'imagen_principal' => $blog->imagen_principal,
+                    'imagen_principal' => asset($blog->imagen_principal),
                     'imagenes' => $blog->imagenes->map(function ($imagen) {
                         return [
-                            'ruta_imagen' => $imagen->ruta_imagen,
+                            'ruta_imagen' => asset($imagen->ruta_imagen),
                             'text_alt' => $imagen->text_alt,
                         ];
                     }),
@@ -321,7 +321,14 @@ class BlogController extends Controller
         Log::info('PATCH Blog Request received:', ['request_all' => $request->all(), 'id' => $id]);
         $datosValidados = $request->validated();
         Log::info('Validated data:', ['datos_validados' => $datosValidados]);
-
+        // Log para debugging
+        Log::info('Update method called:', [
+            'method' => $request->method(),
+            '_method' => $request->input('_method'),
+            'all_data' => $request->all(),
+            'files' => $request->allFiles(),
+            'id' => $id
+        ]);
         DB::beginTransaction();
         $blog = Blog::findOrFail($id);
 
@@ -362,6 +369,7 @@ class BlogController extends Controller
                     ]);
                 }
             }
+
             if (isset($datosValidados['parrafos'])) {
                 $blog->parrafos()->delete();
                 foreach ($datosValidados["parrafos"] as $item) {
@@ -371,20 +379,29 @@ class BlogController extends Controller
                 }
             }
             DB::commit();
+
+            // ⭐ SOLUCIÓN: Recargar el modelo con todas sus relaciones actualizadas
+            $blogActualizado = Blog::with(['imagenes', 'parrafos', 'producto'])
+                ->findOrFail($id);
+
+            Log::info('Blog actualizado correctamente:', ['blog_id' => $id, 'subtitulo' => $blogActualizado->subtitulo]);
+
             return $this->apiResponse->successResponse(
-                $blog,
+                $blogActualizado, // ✅ Ahora retorna el modelo con datos frescos
                 'Blog actualizado exitosamente',
                 HttpStatusCode::OK
             );
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('Error actualizando blog:', ['error' => $e->getMessage(), 'blog_id' => $id]);
+
             return $this->apiResponse->errorResponse(
                 'Error al actualizar el blog: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
             );
         }
     }
-
     /**
      * Eliminar un blog específico
      * 
@@ -428,7 +445,7 @@ class BlogController extends Controller
         try {
             $blog = Blog::findOrFail($id);
             $rutasImagenes = $blog->imagenes->pluck('ruta_imagen')->toArray();
-        
+
             if ($blog->imagen_principal) {
                 $rutasImagenes[] = $blog->imagen_principal;
             }
