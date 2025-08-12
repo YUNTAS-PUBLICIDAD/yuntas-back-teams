@@ -23,10 +23,11 @@ use Illuminate\Routing\Controller as BaseController;
  *     )
  * )
  * @OA\SecurityScheme(
- *     securityScheme="sanctum",
+ *     securityScheme="bearerAuth",
  *     type="http",
  *     scheme="bearer",
- *     bearerFormat="JWT"
+ *     bearerFormat="JWT",
+ *     description="Introduce el token JWT con el prefijo 'Bearer '"
  * )
 */
 class Controller extends BaseController

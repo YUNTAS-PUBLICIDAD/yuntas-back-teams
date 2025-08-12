@@ -34,7 +34,7 @@ class PostStoreBlog extends FormRequest
             // 'text_alt' => 'required|array',
             // 'text_alt.*' => 'required|string|max:255',
 
-            'parrafos' => 'required|array',
+            'parrafos' => 'nullable|array',
             'parrafos.*' => 'required|string|max:2047',
         ];
     }
