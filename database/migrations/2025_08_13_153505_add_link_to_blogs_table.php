@@ -12,18 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('blogs', function (Blueprint $table) {
-            $table->string('meta_titulo')->nullable()->unique()->after('imagen_principal');
-            $table->string('meta_descripcion')->nullable()->after('meta_titulo');
+            $table->string('link')->nullable()->after('meta_descripcion');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('blogs', function (Blueprint $table) {
-            $table->dropColumn('meta_titulo');
-            $table->dropColumn('meta_descripcion');});
+            $table->dropColumn('link');
+        });
     }
 };

@@ -17,7 +17,8 @@ class Blog extends Model
     protected $fillable = [
         'producto_id',
         'subtitulo',
-        'imagen_principal'
+        'imagen_principal',
+        'link',
     ];
 
     public function producto()
@@ -27,11 +28,11 @@ class Blog extends Model
 
     public function imagenes(): HasMany
     {
-        return $this->hasMany(BlogImagenes::class, 'blog_id'); 
+        return $this->hasMany(BlogImagenes::class, 'blog_id');
     }
 
     public function parrafos(): HasMany
     {
-        return $this->hasMany(BlogParrafos::class, 'blog_id'); 
+        return $this->hasMany(BlogParrafos::class, 'blog_id');
     }
 }

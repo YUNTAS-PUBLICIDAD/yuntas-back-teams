@@ -31,13 +31,17 @@ class PostStoreBlog extends FormRequest
             'imagenes' => 'nullable|array',
             'imagenes.*' => 'required|image|max:2048',
 
-            // 'text_alt' => 'required|array',
-            // 'text_alt.*' => 'required|string|max:255',
+            'alt_imagenes' => 'nullable|array',
+            'alt_imagenes.*' => 'nullable|string|max:255',
 
             'parrafos' => 'nullable|array',
             'parrafos.*' => 'required|string|max:2047',
+
+            // Agregar validación para los campos meta y link (por ahora link)
+            'link' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
         ];
     }
+
 
     protected function failedValidation(Validator $validator)
     {
