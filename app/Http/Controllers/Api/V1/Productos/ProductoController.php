@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Productos;
 
 use App\Models\Producto;
 use App\Http\Requests\Producto\StoreProductoRequest;
+use App\Services\ApiResponseService;
 use App\Http\Requests\Producto\UpdateProductoRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +19,12 @@ use App\Http\Contains\HttpStatusCode;
  */
 class ProductoController extends BasicController
 {
+    protected ApiResponseService $apiResponse;
+
+    public function __construct(ApiResponseService $apiResponse)
+    {
+        $this->apiResponse = $apiResponse;
+    }
     /**
      * Obtener listado de productos
      * 
@@ -66,7 +73,7 @@ class ProductoController extends BasicController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $productos->getCollection()->transform(function ($producto) {
+            $showProductos = $productos->map(function ($producto) {
                 return [
                     'id' => $producto->id,
                     'link' => $producto->link,
@@ -81,20 +88,27 @@ class ProductoController extends BasicController
                         return [
                             'id' => $imagen->id,
                             'url_imagen' => asset($imagen->url_imagen),
-                            'texto_alt_SEO' => $imagen->texto_alt_SEO
+                            'texto_alt_SEO' => $imagen->texto_alt_SEO,
                         ];
                     }),
                     'created_at' => $producto->created_at,
-                    'updated_at' => $producto->updated_at
+                    'updated_at' => $producto->updated_at,
                 ];
             });
 
-            return $this->successResponse($productos, 'Productos obtenidos exitosamente');
+            return $this->apiResponse->successResponse(
+                $showProductos,
+                'Productos obtenidos exitosamente',
+                HttpStatusCode::OK
+            );
         } catch (\Exception $e) {
-            Log::error('Error al obtener productos: ' . $e->getMessage());
-            return $this->errorResponse('Error al obtener los productos', HttpStatusCode::INTERNAL_SERVER_ERROR);
+            return $this->apiResponse->errorResponse(
+                'Error al obtener los productos: ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
     }
+
 
     /**
      * Crear un nuevo producto
