@@ -64,10 +64,9 @@ class ProductoController extends BasicController
         try {
             $productos = Producto::with(['imagenes'])
                 ->orderBy('created_at', 'desc')
-                ->paginate(8);
+                ->get();
 
-            // Formatear cada producto para el frontend
-            $productos->getCollection()->transform(function ($producto) {
+            $productos->transform(function ($producto) {
                 return [
                     'id' => $producto->id,
                     'link' => $producto->link,
@@ -75,13 +74,13 @@ class ProductoController extends BasicController
                     'titulo' => $producto->titulo,
                     'descripcion' => $producto->descripcion,
                     'seccion' => $producto->seccion,
-                    'imagen_principal' => asset($producto->imagen_principal),
+                    'imagen_principal' => $producto->imagen_principal ? asset($producto->imagen_principal) : null,
                     'especificaciones' => $producto->especificaciones ?? [],
                     'beneficios' => $producto->beneficios ?? [],
                     'imagenes' => $producto->imagenes->map(function ($imagen) {
                         return [
                             'id' => $imagen->id,
-                            'url_imagen' => asset($imagen->url_imagen),
+                            'url_imagen' => $imagen->url_imagen ? asset($imagen->url_imagen) : null,
                             'texto_alt_SEO' => $imagen->texto_alt_SEO
                         ];
                     }),
@@ -92,10 +91,11 @@ class ProductoController extends BasicController
 
             return $this->successResponse($productos, 'Productos obtenidos exitosamente');
         } catch (\Exception $e) {
-            Log::error('Error al obtener productos: ' . $e->getMessage());
+            Log::error('Error al obtener productos: ' . $e->getMessage());;
             return $this->errorResponse('Error al obtener los productos', HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
+
     /**
      * Crear un nuevo producto
      * 
@@ -151,7 +151,7 @@ class ProductoController extends BasicController
             Log::info('=== INICIANDO CREACIÓN DE PRODUCTO ===');
             Log::info('Request all data:', $request->all());
             Log::info('Request files:', $request->allFiles());
-            
+
             // Preparar datos del producto (excluyendo especificaciones, beneficios e imagenes)
             $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal']);
 
@@ -176,16 +176,16 @@ class ProductoController extends BasicController
                     try {
                         if ($request->hasFile("imagenes.$index")) {
                             $archivo = $request->file("imagenes.$index");
-                            
+
                             // Validar archivo
                             if (!$archivo->isValid() || $archivo->getSize() == 0) {
                                 Log::info("Saltando archivo inválido en índice {$index}");
                                 continue;
                             }
-                            
+
                             $nombreArchivo = time() . '_' . $index . '_' . $archivo->getClientOriginalName();
                             $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
-                            
+
                             if ($rutaImagen) {
                                 $producto->imagenes()->create([
                                     'url_imagen' => '/storage/' . $rutaImagen,
@@ -368,85 +368,85 @@ class ProductoController extends BasicController
      *     )
      * )
      */
-public function update(UpdateProductoRequest $request, $id)
-{
-    try {
-        $producto = Producto::findOrFail($id);
-    } catch (\Exception $e) {
-        return $this->notFoundResponse('Producto no encontrado');
-    }
-
-    DB::beginTransaction();
-    try {
-        Log::info('=== INICIANDO ACTUALIZACIÓN DE PRODUCTO ===');
-        Log::info('Producto ID: ' . $id);
-        Log::info('Request all data:', $request->all());
-        Log::info('Request files:', $request->allFiles());
-
-        // Preparar datos del producto (excluyendo especificaciones, beneficios e imagenes)
-        $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal']);
-
-        // Manejar imagen_principal
-        if ($request->hasFile('imagen_principal')) {
-            $imagenPrincipal = $request->file('imagen_principal');
-            $nombreArchivo = time() . '_principal_' . $imagenPrincipal->getClientOriginalName();
-            $rutaImagen = $imagenPrincipal->storeAs('productos', $nombreArchivo, 'public');
-            $data['imagen_principal'] = '/storage/' . $rutaImagen;
-            Log::info('Nueva imagen principal guardada: ' . $data['imagen_principal']);
+    public function update(UpdateProductoRequest $request, $id)
+    {
+        try {
+            $producto = Producto::findOrFail($id);
+        } catch (\Exception $e) {
+            return $this->notFoundResponse('Producto no encontrado');
         }
 
-        // Actualizar especificaciones y beneficios como JSON
-        if ($request->has('especificaciones')) {
-            $data['especificaciones'] = $request->especificaciones;
-        }
-        if ($request->has('beneficios')) {
-            $data['beneficios'] = $request->beneficios;
-        }
+        DB::beginTransaction();
+        try {
+            Log::info('=== INICIANDO ACTUALIZACIÓN DE PRODUCTO ===');
+            Log::info('Producto ID: ' . $id);
+            Log::info('Request all data:', $request->all());
+            Log::info('Request files:', $request->allFiles());
 
-        // Actualizar el producto
-        $producto->update($data);
+            // Preparar datos del producto (excluyendo especificaciones, beneficios e imagenes)
+            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal']);
 
-        // Procesar imágenes adicionales
-        if ($request->has('imagenes')) {
-            // Eliminar imágenes anteriores
-            $producto->imagenes()->delete();
-            
-            foreach ($request->imagenes as $index => $imagen) {
-                try {
-                    if ($request->hasFile("imagenes.$index")) {
-                        $archivo = $request->file("imagenes.$index");
-                        
-                        // Validar archivo
-                        if (!$archivo->isValid() || $archivo->getSize() == 0) {
-                            Log::info("Saltando archivo inválido en índice {$index}");
-                            continue;
+            // Manejar imagen_principal
+            if ($request->hasFile('imagen_principal')) {
+                $imagenPrincipal = $request->file('imagen_principal');
+                $nombreArchivo = time() . '_principal_' . $imagenPrincipal->getClientOriginalName();
+                $rutaImagen = $imagenPrincipal->storeAs('productos', $nombreArchivo, 'public');
+                $data['imagen_principal'] = '/storage/' . $rutaImagen;
+                Log::info('Nueva imagen principal guardada: ' . $data['imagen_principal']);
+            }
+
+            // Actualizar especificaciones y beneficios como JSON
+            if ($request->has('especificaciones')) {
+                $data['especificaciones'] = $request->especificaciones;
+            }
+            if ($request->has('beneficios')) {
+                $data['beneficios'] = $request->beneficios;
+            }
+
+            // Actualizar el producto
+            $producto->update($data);
+
+            // Procesar imágenes adicionales
+            if ($request->has('imagenes')) {
+                // Eliminar imágenes anteriores
+                $producto->imagenes()->delete();
+
+                foreach ($request->imagenes as $index => $imagen) {
+                    try {
+                        if ($request->hasFile("imagenes.$index")) {
+                            $archivo = $request->file("imagenes.$index");
+
+                            // Validar archivo
+                            if (!$archivo->isValid() || $archivo->getSize() == 0) {
+                                Log::info("Saltando archivo inválido en índice {$index}");
+                                continue;
+                            }
+
+                            $nombreArchivo = time() . '_' . $index . '_' . $archivo->getClientOriginalName();
+                            $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
+
+                            if ($rutaImagen) {
+                                $producto->imagenes()->create([
+                                    'url_imagen' => '/storage/' . $rutaImagen,
+                                    'texto_alt_SEO' => 'Imagen del producto ' . $producto->nombre
+                                ]);
+                            }
                         }
-                        
-                        $nombreArchivo = time() . '_' . $index . '_' . $archivo->getClientOriginalName();
-                        $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
-                        
-                        if ($rutaImagen) {
-                            $producto->imagenes()->create([
-                                'url_imagen' => '/storage/' . $rutaImagen,
-                                'texto_alt_SEO' => 'Imagen del producto ' . $producto->nombre
-                            ]);
-                        }
+                    } catch (\Exception $imageException) {
+                        Log::error("Error procesando imagen índice {$index}: " . $imageException->getMessage());
                     }
-                } catch (\Exception $imageException) {
-                    Log::error("Error procesando imagen índice {$index}: " . $imageException->getMessage());
                 }
             }
-        }
 
-        DB::commit();
-        Log::info('=== PRODUCTO ACTUALIZADO EXITOSAMENTE ===');
-        return $this->successResponse($producto, 'Producto actualizado exitosamente', HttpStatusCode::OK);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error al actualizar producto: ' . $e->getMessage());
-        return $this->errorResponse('Error al actualizar el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            DB::commit();
+            Log::info('=== PRODUCTO ACTUALIZADO EXITOSAMENTE ===');
+            return $this->successResponse($producto, 'Producto actualizado exitosamente', HttpStatusCode::OK);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar producto: ' . $e->getMessage());
+            return $this->errorResponse('Error al actualizar el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+        }
     }
-}
     /**
      * Eliminar un producto específico
      * 
@@ -486,13 +486,13 @@ public function update(UpdateProductoRequest $request, $id)
     {
         try {
             DB::beginTransaction();
-            
+
             // Buscar el producto
             $producto = Producto::findOrFail($id);
-            
+
             // Eliminar las imágenes asociadas
             $producto->imagenes()->delete();
-            
+
             // Manejar los blogs asociados sin eliminarlos
             // Solo desvincular la relación estableciendo producto_id a null
             $blogs = $producto->blogs;
@@ -500,10 +500,10 @@ public function update(UpdateProductoRequest $request, $id)
                 $blog->producto_id = null;
                 $blog->save();
             }
-            
+
             // Finalmente eliminar el producto
             $producto->delete();
-            
+
             DB::commit();
             return $this->successResponse(null, 'Producto eliminado exitosamente');
         } catch (\Exception $e) {

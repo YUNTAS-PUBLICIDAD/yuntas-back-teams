@@ -18,10 +18,11 @@ use Illuminate\Support\Facades\Mail;
 // blogs públicos
 Route::get('/blogs', [BlogController::class, "index"]);
 Route::get('/blogs/{id}', [BlogController::class, "show"]);
+Route::get('/blogs/link/{link}', [BlogController::class, 'showByLink']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
-  
+
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
     Route::middleware('permission:editar-blogs')->put('/blogs/{id}', [BlogController::class, "update"]);
     Route::middleware('permission:eliminar-blogs')->delete('/blogs/{id}', [BlogController::class, "destroy"]);
@@ -73,7 +74,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    
+
 
     // AUTH (login público)
     Route::controller(AuthController::class)->prefix('auth')->group(function () {
@@ -87,7 +88,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // AUTH (logout autenticado)
         Route::post('/auth/logout', [AuthController::class, 'logout']);
-        
+
         // Ruta para obtener información del usuario autenticado
         Route::get('/user', [UserController::class, 'me']);
 

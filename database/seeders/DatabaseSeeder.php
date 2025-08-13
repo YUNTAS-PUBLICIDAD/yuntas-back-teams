@@ -32,7 +32,6 @@ class DatabaseSeeder extends Seeder
 
             // Blogs
             BlogSeeder::class,
-            DetalleBlogSeeder::class,
             ImagenBlogSeeder::class,
 
             //Reclamos

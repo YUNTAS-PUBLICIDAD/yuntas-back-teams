@@ -108,8 +108,8 @@ return [
              * @link https://zircote.github.io/swagger-php/reference/processors.html
              */
             'default_processors_configuration' => [
-            /** Example */
-            /**
+                /** Example */
+                /**
              * 'operationId.hash' => true,
              * 'pathFilter' => [
              * 'tags' => [
@@ -219,11 +219,21 @@ return [
                     'type' => 'http',
                     'description' => 'Bearer authentication with Sanctum',
                     'scheme' => 'bearer',
-                    'bearerFormat' => 'JWT',
+                    'bearerFormat' => 'Token',
                 ],
             ],
             'security' => [
                 [
+                    'sanctum' => []
+                ],
+            ],
+            'components' => [
+                'securitySchemes' => [
+                    'bearerAuth' => [
+                        'type' => 'http',
+                        'scheme' => 'bearer',
+                        'bearerFormat' => 'Token',
+                    ],
                 ],
             ],
         ],
