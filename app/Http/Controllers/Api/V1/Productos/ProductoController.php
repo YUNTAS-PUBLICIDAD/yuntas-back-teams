@@ -66,8 +66,7 @@ class ProductoController extends BasicController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            // Formatear cada producto para el frontend
-            $productos->getCollection()->transform(function ($producto) {
+            $productos->transform(function ($producto) {
                 return [
                     'id' => $producto->id,
                     'link' => $producto->link,
@@ -75,13 +74,13 @@ class ProductoController extends BasicController
                     'titulo' => $producto->titulo,
                     'descripcion' => $producto->descripcion,
                     'seccion' => $producto->seccion,
-                    'imagen_principal' => asset($producto->imagen_principal),
+                    'imagen_principal' => $producto->imagen_principal ? asset($producto->imagen_principal) : null,
                     'especificaciones' => $producto->especificaciones ?? [],
                     'beneficios' => $producto->beneficios ?? [],
                     'imagenes' => $producto->imagenes->map(function ($imagen) {
                         return [
                             'id' => $imagen->id,
-                            'url_imagen' => asset($imagen->url_imagen),
+                            'url_imagen' => $imagen->url_imagen ? asset($imagen->url_imagen) : null,
                             'texto_alt_SEO' => $imagen->texto_alt_SEO
                         ];
                     }),
@@ -92,10 +91,11 @@ class ProductoController extends BasicController
 
             return $this->successResponse($productos, 'Productos obtenidos exitosamente');
         } catch (\Exception $e) {
-            Log::error('Error al obtener productos: ' . $e->getMessage());
+            Log::error('Error al obtener productos: ' . $e->getMessage());;
             return $this->errorResponse('Error al obtener los productos', HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
+
     /**
      * Crear un nuevo producto
      * 
