@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\ProductoImagenes;
-use App\Http\Controllers\Api\V1\Blog\BlogController;
+use App\Models\ProductoEtiqueta;
 
 class Producto extends Model
 {
@@ -24,6 +24,11 @@ class Producto extends Model
         'especificaciones' => 'array',
         'beneficios' => 'array',
     ];
+
+    public function etiquetas(): HasMany
+    {
+        return $this->hasMany(ProductoEtiqueta::class, 'producto_id');
+    }
 
     public $timestamps = true;
 

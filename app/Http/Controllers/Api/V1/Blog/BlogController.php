@@ -26,7 +26,7 @@ class BlogController extends Controller
     public function index()
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto'])->get();
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])->get();
 
             $showBlog = $blog->map(function ($blog) {
                 return [
@@ -34,8 +34,6 @@ class BlogController extends Controller
                     'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                     'subtitulo' => $blog->subtitulo,
                     'imagen_principal' => asset($blog->imagen_principal),
-                    // 'meta_titulo' => $blog->meta_titulo,
-                    // 'meta_descripcion' => $blog->meta_descripcion,
                     'link' => $blog->link,
                     'imagenes' => $blog->imagenes->map(function ($imagen) {
                         return [
@@ -46,6 +44,13 @@ class BlogController extends Controller
                     'parrafos' => $blog->parrafos->map(function ($parrafo) {
                         return [
                             'parrafo' => $parrafo->parrafo,
+                        ];
+                    }),
+                    'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
+                        return [
+                            'id' => $etiqueta->id,
+                            'meta_titulo' => $etiqueta->meta_titulo,
+                            'meta_descripcion' => $etiqueta->meta_descripcion,
                         ];
                     }),
                     'created_at' => $blog->created_at,
@@ -68,26 +73,31 @@ class BlogController extends Controller
     public function show(int $id)
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto'])
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])
                 ->findOrFail($id);
 
             $showBlog = [
                 'id' => $blog->id,
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
-                'imagen_principal' => $blog->imagen_principal,
-                // 'meta_titulo' => $blog->meta_titulo,
-                // 'meta_descripcion' => $blog->meta_descripcion,
+                'imagen_principal' => asset($blog->imagen_principal),
                 'link' => $blog->link,
                 'imagenes' => $blog->imagenes->map(function ($imagen) {
                     return [
-                        'ruta_imagen' => $imagen->ruta_imagen,
+                        'ruta_imagen' => asset($imagen->ruta_imagen),
                         'text_alt' => $imagen->text_alt,
                     ];
                 }),
                 'parrafos' => $blog->parrafos->map(function ($parrafo) {
                     return [
                         'parrafo' => $parrafo->parrafo,
+                    ];
+                }),
+                'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
+                    return [
+                        'id' => $etiqueta->id,
+                        'meta_titulo' => $etiqueta->meta_titulo,
+                        'meta_descripcion' => $etiqueta->meta_descripcion,
                     ];
                 }),
                 'created_at' => $blog->created_at,
@@ -109,7 +119,7 @@ class BlogController extends Controller
     public function showByLink(string $link)
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto'])
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])
                 ->where('link', $link)
                 ->firstOrFail();
 
@@ -117,19 +127,24 @@ class BlogController extends Controller
                 'id' => $blog->id,
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
-                'imagen_principal' => $blog->imagen_principal,
-                // 'meta_titulo' => $blog->meta_titulo,
-                // 'meta_descripcion' => $blog->meta_descripcion,
+                'imagen_principal' => asset($blog->imagen_principal),
                 'link' => $blog->link,
                 'imagenes' => $blog->imagenes->map(function ($imagen) {
                     return [
-                        'ruta_imagen' => $imagen->ruta_imagen,
+                        'ruta_imagen' => asset($imagen->ruta_imagen),
                         'text_alt' => $imagen->text_alt,
                     ];
                 }),
                 'parrafos' => $blog->parrafos->map(function ($parrafo) {
                     return [
                         'parrafo' => $parrafo->parrafo,
+                    ];
+                }),
+                'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
+                    return [
+                        'id' => $etiqueta->id,
+                        'meta_titulo' => $etiqueta->meta_titulo,
+                        'meta_descripcion' => $etiqueta->meta_descripcion,
                     ];
                 }),
                 'created_at' => $blog->created_at,
@@ -166,8 +181,6 @@ class BlogController extends Controller
                 "producto_id" => $datosValidados["producto_id"],
                 "subtitulo" => $datosValidados["subtitulo"],
                 "imagen_principal" => $rutaImagenPrincipal,
-                // "meta_titulo" => $datosValidados["meta_titulo"] ?? null,
-                // "meta_descripcion" => $datosValidados["meta_descripcion"] ?? null,
                 "link" => $datosValidados["link"] ?? null,
             ]);
 
@@ -194,6 +207,16 @@ class BlogController extends Controller
                 ]);
             }
 
+            // Guardar etiquetas
+            if (isset($datosValidados['etiquetas'])) {
+                foreach ($datosValidados['etiquetas'] as $etiquetaData) {
+                    $blog->etiquetas()->create([
+                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+                        'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+                    ]);
+                }
+            }
+
             DB::commit();
             return $this->apiResponse->successResponse($blog->fresh(), 'Blog creado con éxito.', HttpStatusCode::CREATED);
         } catch (\Exception $e) {
@@ -216,7 +239,7 @@ class BlogController extends Controller
 
         try {
             $camposActualizar = [];
-            foreach (["producto_id", "subtitulo", "meta_titulo", "meta_descripcion", "link"] as $campo) {
+            foreach (["producto_id", "subtitulo", "link"] as $campo) {
                 if (array_key_exists($campo, $datosValidados)) {
                     $camposActualizar[$campo] = $datosValidados[$campo];
                 }
@@ -271,9 +294,19 @@ class BlogController extends Controller
                 }
             }
 
+            if (isset($datosValidados['etiquetas'])) {
+                $blog->etiquetas()->delete(); // Eliminar etiquetas anteriores
+                foreach ($datosValidados['etiquetas'] as $etiquetaData) {
+                    $blog->etiquetas()->create([
+                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+                        'meta_descripcion' => $etiqueta['meta_descripcion'] ?? null,
+                    ]);
+                }
+            }
+
             DB::commit();
 
-            $blogActualizado = Blog::with(['imagenes', 'parrafos', 'producto'])->findOrFail($id);
+            $blogActualizado = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])->findOrFail($id);
 
             Log::info('Blog actualizado correctamente:', ['blog_id' => $id, 'subtitulo' => $blogActualizado->subtitulo]);
 
@@ -311,6 +344,7 @@ class BlogController extends Controller
             if (!empty($rutasImagenes)) {
                 $this->imageService->eliminarImagenes($rutasImagenes);
             }
+            $blog->etiquetas()->delete(); // Eliminar etiquetas asociadas
             $blog->delete();
 
             DB::commit();
