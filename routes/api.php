@@ -49,7 +49,7 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(AuthController::class)->prefix('auth')->group(function () {
         Route::post('/login', 'login');
-        Route::post('/logout', 'logout')->middleware(['auth:sanctum', 'role:ADMIN|USER']);
+        Route::post('/logout', 'logout')->middleware(['auth:sanctum']);
     });
 
     Route::controller(UserController::class)->prefix('users')->group(function () {
@@ -135,3 +135,5 @@ Route::get('/exportProducto', [ExportController::class, 'exportProducto']);
 Route::get('/exportBlog', [ExportController::class, 'exportBlog']);
 Route::get('/exportCliente', [ExportController::class, 'exportCliente']);
 Route::get('/exportReclamo', [ExportController::class, 'exportReclamo']);
+
+

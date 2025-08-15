@@ -22,21 +22,21 @@ class DatabaseSeeder extends Seeder
             AssignRoleToUserSeeder::class,
 
             // Productos
-            ProductoSeeder::class,
-            ImagenProductoSeeder::class,
-            ProductoRelacionadoSeeder::class,
-            EspecificacionSeeder::class,
+            // ProductoSeeder::class,
+            // ImagenProductoSeeder::class,
+            // ProductoRelacionadoSeeder::class,
+            // EspecificacionSeeder::class,
 
 
-            InteresadoSeeder::class,
+            // InteresadoSeeder::class,
 
             // Blogs
-            BlogSeeder::class,
-            ImagenBlogSeeder::class,
+            // BlogSeeder::class,
+            // ImagenBlogSeeder::class,
 
-            //Reclamos
-            DatosPersonalSeeder::class,
-            ReclamoSeeder::class,
+            // //Reclamos
+            // DatosPersonalSeeder::class,
+            // ReclamoSeeder::class,
         ]);
     }
 }
