@@ -17,8 +17,6 @@ return new class extends Migration
             $table->dropColumn('subtitulo2');
             $table->dropColumn('video_url');
             $table->dropColumn('video_titulo');
-            $table->dropColumn('meta_titulo');
-            $table->dropColumn('meta_descripcion');
             $table->renameColumn('subtitulo1', 'subtitulo');
         });
     }
@@ -31,8 +29,6 @@ return new class extends Migration
         $table->string('subtitulo2')->nullable();
         $table->string('video_url')->nullable();
         $table->string('video_titulo')->nullable();
-        $table->string('meta_titulo')->nullable();
-        $table->string('meta_descripcion')->nullable();
         $table->renameColumn('subtitulo', 'subtitulo1');
     });
     }

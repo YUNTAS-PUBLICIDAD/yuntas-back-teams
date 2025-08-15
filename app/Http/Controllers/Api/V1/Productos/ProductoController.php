@@ -77,7 +77,7 @@ class ProductoController extends BasicController
     public function index()
     {
         try {
-            $productos = Producto::with(['imagenes', 'etiquetas'])
+            $productos = Producto::with(['imagenes', 'etiquetas', 'especificaciones'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
