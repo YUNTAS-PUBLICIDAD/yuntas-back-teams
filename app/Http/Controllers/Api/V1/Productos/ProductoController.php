@@ -299,42 +299,10 @@ class ProductoController extends BasicController
      */
     public function show($id)
     {
-        $producto = Producto::with(['imagenes', 'etiqueta'])->findOrFail($id);
+        try{
+            $producto = Producto::with(['imagenes', 'etiqueta'])->findOrFail($id);
 
-        $formattedProducto = [
-            'id' => $producto->id,
-            'link' => $producto->link,
-            'nombre' => $producto->nombre,
-            'titulo' => $producto->titulo,
-            'descripcion' => $producto->descripcion,
-            'seccion' => $producto->seccion,
-            'imagen_principal' => asset($producto->imagen_principal),
-            'especificaciones' => $producto->especificaciones ?? [],
-            'beneficios' => $producto->beneficios ?? [],
-            'imagenes' => $producto->imagenes->map(function ($imagen) {
-                return [
-                    'id' => $imagen->id,
-                    'url_imagen' => asset($imagen->url_imagen),
-                    'texto_alt_SEO' => $imagen->texto_alt_SEO,
-                ];
-            }),
-            'etiqueta' => $producto->etiqueta ? [
-                'meta_titulo' => $producto->etiqueta->meta_titulo,
-                'meta_descripcion' => $producto->etiqueta->meta_descripcion,
-            ] : null,
-            'created_at' => $producto->created_at,
-            'updated_at' => $producto->updated_at,
-        ];
-
-        return $this->successResponse($formattedProducto, 'Producto obtenido exitosamente');
-    }
-
-    public function showByLink($link)
-    {
-        try {
-            $producto = Producto::with(['imagenes', 'etiqueta'])->where('link', $link)->firstOrFail();
-
-            $formattedProducto = [
+            $showProducto = [
                 'id' => $producto->id,
                 'link' => $producto->link,
                 'nombre' => $producto->nombre,
@@ -359,10 +327,62 @@ class ProductoController extends BasicController
                 'updated_at' => $producto->updated_at,
             ];
 
-            return $this->successResponse($formattedProducto, 'Producto encontrado exitosamente');
+            return $this->apiResponse->successResponse(
+                $showProducto,
+                'Producto obtenido exitosamente',
+                HttpStatusCode::OK
+            );
+        }
+        catch (\Exception $e) {
+            return $this->apiResponse->errorResponse(
+                'Error al obtener el producto: ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        
+    }
+
+    public function showByLink($link)
+    {
+        try {
+            $producto = Producto::with(['imagenes', 'etiqueta'])->where('link', $link)->firstOrFail();
+
+            $showProducto = [
+                'id' => $producto->id,
+                'link' => $producto->link,
+                'nombre' => $producto->nombre,
+                'titulo' => $producto->titulo,
+                'descripcion' => $producto->descripcion,
+                'seccion' => $producto->seccion,
+                'imagen_principal' => asset($producto->imagen_principal),
+                'especificaciones' => $producto->especificaciones ?? [],
+                'beneficios' => $producto->beneficios ?? [],
+                'imagenes' => $producto->imagenes->map(function ($imagen) {
+                    return [
+                        'id' => $imagen->id,
+                        'url_imagen' => asset($imagen->url_imagen),
+                        'texto_alt_SEO' => $imagen->texto_alt_SEO,
+                    ];
+                }),
+                'etiqueta' => $producto->etiqueta ? [
+                    'meta_titulo' => $producto->etiqueta->meta_titulo,
+                    'meta_descripcion' => $producto->etiqueta->meta_descripcion,
+                ] : null,
+                'created_at' => $producto->created_at,
+                'updated_at' => $producto->updated_at,
+            ];
+
+            return $this->apiResponse->successResponse(
+                $showProducto,
+                'Producto obtenido exitosamente',
+                HttpStatusCode::OK
+            );
         } catch (\Exception $e) {
-            Log::error('Error al buscar producto por link: ' . $e->getMessage());
-            return $this->notFoundResponse('Producto no encontrado');
+            return $this->apiResponse->errorResponse(
+                'Error al obtener el producto: ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
         }
     }
 

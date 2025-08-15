@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Blog;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Requests\PostBlog\PostStoreBlog;
 use App\Http\Requests\PostBlog\UpdateBlog;
 use App\Services\ApiResponseService;
@@ -12,7 +13,7 @@ use App\Http\Contains\HttpStatusCode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class BlogController extends Controller
+class BlogController extends BasicController
 {
 
     protected ApiResponseService $apiResponse;
@@ -67,6 +68,7 @@ class BlogController extends Controller
             );
         }
     }
+
     public function show(int $id)
     {
         try {
@@ -111,6 +113,7 @@ class BlogController extends Controller
             );
         }
     }
+
     public function showByLink(string $link)
     {
         try {
