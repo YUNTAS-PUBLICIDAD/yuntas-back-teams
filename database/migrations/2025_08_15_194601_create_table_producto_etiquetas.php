@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('productos', function (Blueprint $table) {
-            $table->dropColumn('meta_data');
-        });
+
 
         Schema::create('producto_etiquetas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId("producto_id")->constrained("productos")->onDelete("cascade");
+            $table->foreignId("producto_id")->unique()->constrained("productos")->onDelete("cascade");
             $table->string('meta_titulo', 255)->nullable();
             $table->text('meta_descripcion')->nullable();
             $table->timestamps();
