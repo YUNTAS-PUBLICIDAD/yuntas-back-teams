@@ -299,7 +299,7 @@ class ProductoController extends BasicController
      */
     public function show($id)
     {
-        $producto = Producto::with(['imagenes', 'etiquetas'])->findOrFail($id);
+        $producto = Producto::with(['imagenes', 'etiqueta'])->findOrFail($id);
 
         $formattedProducto = [
             'id' => $producto->id,
@@ -318,13 +318,10 @@ class ProductoController extends BasicController
                     'texto_alt_SEO' => $imagen->texto_alt_SEO,
                 ];
             }),
-            'etiquetas' => $producto->etiquetas->map(function ($etiqueta) {
-                return [
-                    'id' => $etiqueta->id,
-                    'meta_titulo' => $etiqueta->meta_titulo,
-                    'meta_descripcion' => $etiqueta->meta_descripcion,
-                ];
-            }),
+            'etiqueta' => $producto->etiqueta ? [
+                'meta_titulo' => $producto->etiqueta->meta_titulo,
+                'meta_descripcion' => $producto->etiqueta->meta_descripcion,
+            ] : null,
             'created_at' => $producto->created_at,
             'updated_at' => $producto->updated_at,
         ];
@@ -335,7 +332,7 @@ class ProductoController extends BasicController
     public function showByLink($link)
     {
         try {
-            $producto = Producto::with(['imagenes', 'etiquetas'])->where('link', $link)->firstOrFail();
+            $producto = Producto::with(['imagenes', 'etiqueta'])->where('link', $link)->firstOrFail();
 
             $formattedProducto = [
                 'id' => $producto->id,
@@ -354,13 +351,10 @@ class ProductoController extends BasicController
                         'texto_alt_SEO' => $imagen->texto_alt_SEO,
                     ];
                 }),
-                'etiquetas' => $producto->etiquetas->map(function ($etiqueta) {
-                    return [
-                        'id' => $etiqueta->id,
-                        'meta_titulo' => $etiqueta->meta_titulo,
-                        'meta_descripcion' => $etiqueta->meta_descripcion,
-                    ];
-                }),
+                'etiqueta' => $producto->etiqueta ? [
+                    'meta_titulo' => $producto->etiqueta->meta_titulo,
+                    'meta_descripcion' => $producto->etiqueta->meta_descripcion,
+                ] : null,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
             ];

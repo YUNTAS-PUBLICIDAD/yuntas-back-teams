@@ -26,7 +26,7 @@ class BlogController extends Controller
     public function index()
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])->get();
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->get();
 
             $showBlog = $blog->map(function ($blog) {
                 return [
@@ -46,13 +46,10 @@ class BlogController extends Controller
                             'parrafo' => $parrafo->parrafo,
                         ];
                     }),
-                    'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
-                        return [
-                            'id' => $etiqueta->id,
-                            'meta_titulo' => $etiqueta->meta_titulo,
-                            'meta_descripcion' => $etiqueta->meta_descripcion,
-                        ];
-                    }),
+                    'etiqueta' => $blog->etiqueta ? [
+                        'meta_titulo' => $blog->etiqueta->meta_titulo,
+                        'meta_descripcion' => $blog->etiqueta->meta_descripcion,
+                    ] : null,
                     'created_at' => $blog->created_at,
                     'updated_at' => $blog->updated_at
                 ];
@@ -117,7 +114,7 @@ class BlogController extends Controller
     public function showByLink(string $link)
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])
                 ->where('link', $link)
                 ->firstOrFail();
 
@@ -138,13 +135,10 @@ class BlogController extends Controller
                         'parrafo' => $parrafo->parrafo,
                     ];
                 }),
-                'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
-                    return [
-                        'id' => $etiqueta->id,
-                        'meta_titulo' => $etiqueta->meta_titulo,
-                        'meta_descripcion' => $etiqueta->meta_descripcion,
-                    ];
-                }),
+                'etiqueta' => $blog->etiqueta ? [
+                    'meta_titulo' => $blog->etiqueta->meta_titulo,
+                    'meta_descripcion' => $blog->etiqueta->meta_descripcion,
+                ] : null,
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
             ];
