@@ -47,11 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::prefix('v1')->group(function () {
 
-    Route::controller(AuthController::class)->prefix('auth')->group(function () {
-        Route::post('/login', 'login');
-        Route::post('/logout', 'logout')->middleware(['auth:sanctum', 'role:ADMIN|USER']);
-    });
-
     Route::controller(UserController::class)->prefix('users')->group(function () {
         Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
             Route::get('/', 'index');
