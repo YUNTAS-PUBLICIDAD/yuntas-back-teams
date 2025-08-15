@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Contains\HttpStatusCode;
-use App\Services\ApiResponseService; // Importar ApiResponseService
+use App\Services\ApiResponseService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -12,9 +12,21 @@ class BasicController extends Controller
 {
     protected $apiResponseService;
 
-    public function __construct(ApiResponseService $apiResponseService)
+    // Quitar la inyección del constructor y usar lazy loading
+    public function __construct()
     {
-        $this->apiResponseService = $apiResponseService;
+        // Constructor vacío - la inyección se hace bajo demanda
+    }
+
+    /**
+     * Obtener ApiResponseService de forma lazy
+     */
+    protected function getApiResponseService(): ApiResponseService
+    {
+        if (!$this->apiResponseService) {
+            $this->apiResponseService = app(ApiResponseService::class);
+        }
+        return $this->apiResponseService;
     }
 
     /**
@@ -23,7 +35,7 @@ class BasicController extends Controller
     protected function successResponse(mixed $data, string $message = 'Operación exitosa', HttpStatusCode 
     $status = HttpStatusCode::OK): JsonResponse
     {
-        return $this->apiResponseService->successResponse($data, $message, $status);
+        return $this->getApiResponseService()->successResponse($data, $message, $status);
     }
 
     /**
@@ -31,7 +43,7 @@ class BasicController extends Controller
      */
     protected function noContentResponse(string $message = 'Operación exitosa'): JsonResponse
     {
-        return $this->apiResponseService->noContentResponse($message);
+        return $this->getApiResponseService()->noContentResponse($message);
     }
 
     /**
@@ -39,7 +51,7 @@ class BasicController extends Controller
      */
     protected function successNoContentResponse(string $message = 'Operación exitosa'): JsonResponse
     {
-        return $this->apiResponseService->successNoContentResponse($message);
+        return $this->getApiResponseService()->successNoContentResponse($message);
     }
 
     /**
@@ -48,7 +60,7 @@ class BasicController extends Controller
     protected function errorResponse(string $message, HttpStatusCode $status = 
     HttpStatusCode::BAD_REQUEST, mixed $errors = null): JsonResponse
     {
-        return $this->apiResponseService->errorResponse($message, $status, $errors);
+        return $this->getApiResponseService()->errorResponse($message, $status, $errors);
     }
 
     /**
@@ -56,7 +68,7 @@ class BasicController extends Controller
      */
     protected function unauthorizedResponse(string $message = 'No autorizado'): JsonResponse
     {
-        return $this->apiResponseService->unauthorizedResponse($message);
+        return $this->getApiResponseService()->unauthorizedResponse($message);
     }
 
     /**
@@ -64,7 +76,7 @@ class BasicController extends Controller
      */
     protected function forbiddenResponse(string $message = 'Acceso denegado'): JsonResponse
     {
-        return $this->apiResponseService->forbiddenResponse($message);
+        return $this->getApiResponseService()->forbiddenResponse($message);
     }
 
     /**
@@ -72,7 +84,7 @@ class BasicController extends Controller
      */
     protected function notFoundResponse(string $message = 'Recurso no encontrado'): JsonResponse
     {
-        return $this->apiResponseService->notFoundResponse($message);
+        return $this->getApiResponseService()->notFoundResponse($message);
     }
 
     /**
@@ -80,7 +92,7 @@ class BasicController extends Controller
      */
     protected function methodNotAllowedResponse(string $message = 'Método no permitido'): JsonResponse
     {
-        return $this->apiResponseService->methodNotAllowedResponse($message);
+        return $this->getApiResponseService()->methodNotAllowedResponse($message);
     }
 
     /**
@@ -89,7 +101,7 @@ class BasicController extends Controller
     protected function unprocessableContentResponse(string $message = 'Solicitud no procesable', 
     mixed $errors = null): JsonResponse
     {
-        return $this->apiResponseService->unprocessableContentResponse($message, $errors);
+        return $this->getApiResponseService()->unprocessableContentResponse($message, $errors);
     }
 
     /**
@@ -97,7 +109,7 @@ class BasicController extends Controller
      */
     protected function tooManyRequestsResponse(string $message = 'Demasiadas solicitudes'): JsonResponse
     {
-        return $this->apiResponseService->tooManyRequestsResponse($message);
+        return $this->getApiResponseService()->tooManyRequestsResponse($message);
     }
 
     /**
@@ -105,6 +117,6 @@ class BasicController extends Controller
      */
     protected function internalServerErrorResponse(string $message = 'Error interno del servidor'): JsonResponse
     {
-        return $this->apiResponseService->internalServerErrorResponse($message);
+        return $this->getApiResponseService()->internalServerErrorResponse($message);
     }
 }

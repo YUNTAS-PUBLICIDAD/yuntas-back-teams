@@ -24,7 +24,7 @@ class AuthController extends BasicController
      *             required={"email","password"},
      *             @OA\Property(property="email", type="string", format="email", example="admin@gmail.com"),
      *             @OA\Property(property="password", type="string", format="password", example="admin"),
-    *              @OA\Property(property="device_name", type="string", example="navegador", nullable=true)
+     *              @OA\Property(property="device_name", type="string", example="navegador", nullable=true)
      *         )
      *     ),
      *     @OA\Response(
@@ -48,18 +48,18 @@ class AuthController extends BasicController
             if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
                 return $this->unauthorizedResponse('Las credenciales proporcionadas no son correctas.');
             }
-            
+
             // Obtener usuario autenticado
             $user = User::where('email', $request->email)->firstOrFail();
-            
+
             // Definir nombre del dispositivo
             $deviceName = $request->device_name ?? ($request->userAgent() ?? 'API Token');
-            
+
             // Si se solicita sesión única, eliminar otros tokens
             // if ($request->has('single_session') && $request->single_session) {
             //     $user->tokens()->delete();
             // }
-            
+
             // Crear token de acceso
             $token = $user->createToken($deviceName)->plainTextToken;
 
@@ -67,7 +67,6 @@ class AuthController extends BasicController
                 'token' => $token,
                 'user' => $user,
             ], 'Inicio de sesión exitoso', HttpStatusCode::OK);
-            
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Hubo un problema al procesar la solicitud: ' . $e->getMessage(),
@@ -91,39 +90,49 @@ class AuthController extends BasicController
      *     )
      * )
      */
+
+
     public function logout(Request $request)
     {
         try {
-            // Eliminar el token actual
-            $request->user()->currentAccessToken()->delete();
+            $tokenString = $request->bearerToken();
 
-            return $this->successResponse(null, 'Cierre de sesión exitoso', HttpStatusCode::OK);
+            if (!$tokenString) {
+                return $this->unauthorizedResponse('Token no proporcionado');
+            }
+
+            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($tokenString);
+
+            if ($token) {
+                $token->delete();
+                return $this->successResponse(null, 'Cierre de sesión exitoso');
+            } else {
+                return $this->notFoundResponse('Token inválido o ya eliminado');
+            }
         } catch (\Exception $e) {
-            return $this->errorResponse(
-                'Hubo un problema al procesar la solicitud. Por favor, intente nuevamente.',
-                HttpStatusCode::INTERNAL_SERVER_ERROR
-            );
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ], 500);
         }
     }
 
     public function verify(Request $request)
-{
-    try {
-        // El middleware 'auth:sanctum' ya validó el token
-        // Si llegamos aquí, el token es válido
-        $user = $request->user();
-        
-        return $this->successResponse([
-            'authenticated' => true,
-            'user' => $user,
-        ], 'Token válido', HttpStatusCode::OK);
-        
-    } catch (\Exception $e) {
-        return $this->errorResponse(
-            'Error al verificar el token: ' . $e->getMessage(),
-            HttpStatusCode::INTERNAL_SERVER_ERROR
-        );
-    }
-}
+    {
+        try {
+            // El middleware 'auth:sanctum' ya validó el token
+            // Si llegamos aquí, el token es válido
+            $user = $request->user();
 
+            return $this->successResponse([
+                'authenticated' => true,
+                'user' => $user,
+            ], 'Token válido', HttpStatusCode::OK);
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Error al verificar el token: ' . $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

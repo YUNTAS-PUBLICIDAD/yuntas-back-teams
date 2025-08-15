@@ -17,7 +17,7 @@ class EmailController extends Controller
 {
     /**
      * @OA\Post(
-     *     path="/api/send-email",
+     *     path="/api/v1/email",
      *     summary="Enviar un correo electrónico",
      *     description="Envía un correo personalizado a una dirección especificada usando los campos validados",
      *     operationId="sendEmail",
