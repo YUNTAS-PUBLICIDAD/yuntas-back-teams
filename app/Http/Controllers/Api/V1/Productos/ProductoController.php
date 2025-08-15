@@ -101,7 +101,6 @@ class ProductoController extends BasicController
                     }),
                     'etiquetas' => $producto->etiquetas->map(function ($etiqueta) {
                         return [
-                            'id' => $etiqueta->id,
                             'meta_titulo' => $etiqueta->meta_titulo,
                             'meta_descripcion' => $etiqueta->meta_descripcion,
                         ];
