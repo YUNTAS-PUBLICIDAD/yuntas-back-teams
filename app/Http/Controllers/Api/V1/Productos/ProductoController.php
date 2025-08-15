@@ -77,7 +77,7 @@ class ProductoController extends BasicController
     public function index()
     {
         try {
-            $productos = Producto::with(['imagenes', 'etiquetas'])
+            $productos = Producto::with(['imagenes', 'etiqueta'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -99,12 +99,11 @@ class ProductoController extends BasicController
                             'texto_alt_SEO' => $imagen->texto_alt_SEO,
                         ];
                     }),
-                    'etiquetas' => $producto->etiquetas->map(function ($etiqueta) {
-                        return [
-                            'meta_titulo' => $etiqueta->meta_titulo,
-                            'meta_descripcion' => $etiqueta->meta_descripcion,
-                        ];
-                    }),
+                    'etiqueta' => $producto->etiqueta ? [
+                        'meta_titulo' => $producto->etiqueta->meta_titulo,
+                        'meta_descripcion' => $producto->etiqueta->meta_descripcion,
+                    ] : null,
+
                     'created_at' => $producto->created_at,
                     'updated_at' => $producto->updated_at,
                 ];

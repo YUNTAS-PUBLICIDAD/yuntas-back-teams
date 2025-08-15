@@ -26,7 +26,7 @@ class Producto extends Model
         'beneficios' => 'array',
     ];
 
-    public function etiquetas(): HasOne
+    public function etiqueta(): HasOne
     {
         return $this->hasOne(ProductoEtiqueta::class, 'producto_id');
     }

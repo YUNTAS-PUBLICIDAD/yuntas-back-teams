@@ -73,7 +73,7 @@ class BlogController extends Controller
     public function show(int $id)
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])
                 ->findOrFail($id);
 
             $showBlog = [
@@ -93,13 +93,11 @@ class BlogController extends Controller
                         'parrafo' => $parrafo->parrafo,
                     ];
                 }),
-                'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
-                    return [
-                        'id' => $etiqueta->id,
-                        'meta_titulo' => $etiqueta->meta_titulo,
-                        'meta_descripcion' => $etiqueta->meta_descripcion,
-                    ];
-                }),
+                'etiqueta' => $blog->etiqueta ? [
+                    'meta_titulo' => $blog->etiqueta->meta_titulo,
+                    'meta_descripcion' => $blog->etiqueta->meta_descripcion,
+                ] : null,
+
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
             ];
