@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\ProductoImagenes;
 use App\Models\ProductoEtiqueta;
 
@@ -25,9 +26,9 @@ class Producto extends Model
         'beneficios' => 'array',
     ];
 
-    public function etiquetas(): HasMany
+    public function etiqueta(): HasOne
     {
-        return $this->hasMany(ProductoEtiqueta::class, 'producto_id');
+        return $this->hasOne(ProductoEtiqueta::class, 'producto_id');
     }
 
     public $timestamps = true;

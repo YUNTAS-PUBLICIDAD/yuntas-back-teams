@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('blog_etiquetas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId("blog_id")->constrained("blogs")->onDelete("cascade");
+            $table->foreignId("blog_id")->unique()->constrained("blogs")->onDelete("cascade");
             $table->string('meta_titulo', 255)->nullable();
             $table->text('meta_descripcion')->nullable();
             $table->timestamps();

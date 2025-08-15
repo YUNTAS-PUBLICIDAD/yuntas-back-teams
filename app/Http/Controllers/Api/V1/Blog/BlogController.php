@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Blog;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Requests\PostBlog\PostStoreBlog;
 use App\Http\Requests\PostBlog\UpdateBlog;
 use App\Services\ApiResponseService;
@@ -12,7 +13,7 @@ use App\Http\Contains\HttpStatusCode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class BlogController extends Controller
+class BlogController extends BasicController
 {
 
     protected ApiResponseService $apiResponse;
@@ -26,7 +27,7 @@ class BlogController extends Controller
     public function index()
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])->get();
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->get();
 
             $showBlog = $blog->map(function ($blog) {
                 return [
@@ -46,13 +47,10 @@ class BlogController extends Controller
                             'parrafo' => $parrafo->parrafo,
                         ];
                     }),
-                    'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
-                        return [
-                            'id' => $etiqueta->id,
-                            'meta_titulo' => $etiqueta->meta_titulo,
-                            'meta_descripcion' => $etiqueta->meta_descripcion,
-                        ];
-                    }),
+                    'etiqueta' => $blog->etiqueta ? [
+                        'meta_titulo' => $blog->etiqueta->meta_titulo,
+                        'meta_descripcion' => $blog->etiqueta->meta_descripcion,
+                    ] : null,
                     'created_at' => $blog->created_at,
                     'updated_at' => $blog->updated_at
                 ];
@@ -70,10 +68,11 @@ class BlogController extends Controller
             );
         }
     }
+
     public function show(int $id)
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])
                 ->findOrFail($id);
 
             $showBlog = [
@@ -93,13 +92,11 @@ class BlogController extends Controller
                         'parrafo' => $parrafo->parrafo,
                     ];
                 }),
-                'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
-                    return [
-                        'id' => $etiqueta->id,
-                        'meta_titulo' => $etiqueta->meta_titulo,
-                        'meta_descripcion' => $etiqueta->meta_descripcion,
-                    ];
-                }),
+                'etiqueta' => $blog->etiqueta ? [
+                    'meta_titulo' => $blog->etiqueta->meta_titulo,
+                    'meta_descripcion' => $blog->etiqueta->meta_descripcion,
+                ] : null,
+
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
             ];
@@ -116,10 +113,11 @@ class BlogController extends Controller
             );
         }
     }
+
     public function showByLink(string $link)
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])
+            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])
                 ->where('link', $link)
                 ->firstOrFail();
 
@@ -140,13 +138,10 @@ class BlogController extends Controller
                         'parrafo' => $parrafo->parrafo,
                     ];
                 }),
-                'etiquetas' => $blog->etiquetas->map(function ($etiqueta) {
-                    return [
-                        'id' => $etiqueta->id,
-                        'meta_titulo' => $etiqueta->meta_titulo,
-                        'meta_descripcion' => $etiqueta->meta_descripcion,
-                    ];
-                }),
+                'etiqueta' => $blog->etiqueta ? [
+                    'meta_titulo' => $blog->etiqueta->meta_titulo,
+                    'meta_descripcion' => $blog->etiqueta->meta_descripcion,
+                ] : null,
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
             ];
