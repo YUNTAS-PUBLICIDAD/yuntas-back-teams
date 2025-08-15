@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\BlogEtiqueta;
 
 
 class Blog extends Model
@@ -24,6 +25,11 @@ class Blog extends Model
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
+    }
+
+    public function etiquetas(): HasMany
+    {
+        return $this->hasMany(BlogEtiqueta::class, 'blog_id');
     }
 
     public function imagenes(): HasMany

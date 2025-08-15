@@ -42,18 +42,26 @@ class ProductoController extends BasicController
      *             @OA\Property(property="data", type="array",
      *                 @OA\Items(
      *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="title", type="string", example="Producto Premium"),
-     *                     @OA\Property(property="subtitle", type="string", example="La mejor calidad"),
-     *                     @OA\Property(property="tagline", type="string", example="Innovación y calidad"),
-     *                     @OA\Property(property="description", type="string"),
-     *                     @OA\Property(property="specs", type="object"),
-     *                     @OA\Property(property="relatedProducts", type="array", @OA\Items(type="integer")),
-     *                     @OA\Property(property="images", type="array", @OA\Items(type="string")),
-     *                     @OA\Property(property="image", type="string"),
-     *                     @OA\Property(property="nombreProducto", type="string"),
-     *                     @OA\Property(property="stockProducto", type="integer"),
-     *                     @OA\Property(property="precioProducto", type="number", format="float"),
-     *                     @OA\Property(property="seccion", type="string")
+     *                     @OA\Property(property="nombre", type="string", example="Producto Premium"),
+     *                     @OA\Property(property="link", type="string", example="producto-premium"),
+     *                     @OA\Property(property="titulo", type="string", example="La mejor calidad"),
+     *                     @OA\Property(property="descripcion", type="string"),
+     *                     @OA\Property(property="seccion", type="string"),
+     *                     @OA\Property(property="imagen_principal", type="string", example="https://placehold.co/100x150/blue/white?text=Producto"),
+     *                     @OA\Property(property="especificaciones", type="object", example={"peso": "1kg", "dimensiones": "10x10x10cm"}),
+     *                     @OA\Property(property="beneficios", type="array", @OA\Items(type="string"), example={"Beneficio 1", "Beneficio 2"}),
+     *                     @OA\Property(property="imagenes", type="array", @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="url_imagen", type="string", example="https://placehold.co/100x150/blue/white?text=Imagen1"),
+     *                         @OA\Property(property="texto_alt_SEO", type="string", example="Texto alternativo SEO")
+     *                     )),
+     *                     @OA\Property(property="etiquetas", type="array", @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="meta_titulo", type="string", example="Meta Título"),
+     *                         @OA\Property(property="meta_descripcion", type="string", example="Meta Descripción")
+     *                     )),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
      *                 )
      *             ),
      *             @OA\Property(property="message", type="string", example="Productos obtenidos exitosamente")
@@ -69,7 +77,7 @@ class ProductoController extends BasicController
     public function index()
     {
         try {
-            $productos = Producto::with(['imagenes'])
+            $productos = Producto::with(['imagenes', 'etiquetas'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -89,6 +97,12 @@ class ProductoController extends BasicController
                             'id' => $imagen->id,
                             'url_imagen' => asset($imagen->url_imagen),
                             'texto_alt_SEO' => $imagen->texto_alt_SEO,
+                        ];
+                    }),
+                    'etiquetas' => $producto->etiquetas->map(function ($etiqueta) {
+                        return [
+                            'meta_titulo' => $etiqueta->meta_titulo,
+                            'meta_descripcion' => $etiqueta->meta_descripcion,
                         ];
                     }),
                     'created_at' => $producto->created_at,
@@ -122,21 +136,22 @@ class ProductoController extends BasicController
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"nombre", "titulo", "descripcion", "imagen_principal", "stock", "precio", "seccion"},
+     *             required={"nombre", "titulo", "descripcion", "imagen_principal", "seccion"},
      *             @OA\Property(property="nombre", type="string", example="Producto XYZ"),
+     *             @OA\Property(property="link", type="string", example="producto-xyz"),
      *             @OA\Property(property="titulo", type="string", example="Producto Premium XYZ"),
-     *             @OA\Property(property="subtitulo", type="string", example="La mejor calidad"),
-     *             @OA\Property(property="lema", type="string", example="Innovación y calidad"),
      *             @OA\Property(property="descripcion", type="string", example="Descripción detallada del producto"),
      *             @OA\Property(property="imagen_principal", type="string", example="https://placehold.co/100x150/blue/white?text=XYZ"),
-     *             @OA\Property(property="stock", type="integer", example=100),
-     *             @OA\Property(property="precio", type="number", format="float", example=199.99),
      *             @OA\Property(property="seccion", type="string", example="electrónica"),
      *             @OA\Property(property="especificaciones", type="object",
      *                 example={"color": "rojo", "material": "aluminio"}
      *             ),
+     *             @OA\Property(property="beneficios", type="array", @OA\Items(type="string"), example={"Beneficio 1", "Beneficio 2"}),
      *             @OA\Property(property="imagenes", type="array", @OA\Items(type="string"), example={"https://placehold.co/100x150/blue/white?text=Product_X", "https://placehold.co/100x150/blue/white?text=Product_Y"}),
-     *             @OA\Property(property="relacionados", type="array", @OA\Items(type="integer"), example={1,2,3})
+     *             @OA\Property(property="etiquetas", type="array", @OA\Items(type="object",
+     *                 @OA\Property(property="meta_titulo", type="string", example="Meta Título"),
+     *                 @OA\Property(property="meta_descripcion", type="string", example="Meta Descripción")
+     *             ))
      *         )
      *     ),
      *     @OA\Response(
@@ -166,8 +181,8 @@ class ProductoController extends BasicController
             Log::info('Request all data:', $request->all());
             Log::info('Request files:', $request->allFiles());
 
-            // Preparar datos del producto (excluyendo especificaciones, beneficios e imagenes)
-            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal']);
+            // Preparar datos del producto (excluyendo especificaciones, beneficios, imagenes y etiquetas)
+            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiquetas']);
 
             // Manejar imagen_principal
             if ($request->hasFile('imagen_principal')) {
@@ -210,6 +225,16 @@ class ProductoController extends BasicController
                     } catch (\Exception $imageException) {
                         Log::error("Error procesando imagen índice {$index}: " . $imageException->getMessage());
                     }
+                }
+            }
+
+            // Procesar etiquetas
+            if ($request->has('etiquetas')) {
+                foreach ($request->etiquetas as $etiquetaData) {
+                    $producto->etiquetas()->create([
+                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+                        'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+                    ]);
                 }
             }
 
@@ -275,22 +300,34 @@ class ProductoController extends BasicController
      */
     public function show($id)
     {
-        $producto = Producto::with(['especificaciones', 'imagenes', 'productos_relacionados'])->findOrFail($id);
+        $producto = Producto::with(['imagenes', 'etiquetas'])->findOrFail($id);
 
         $formattedProducto = [
             'id' => $producto->id,
-            'title' => $producto->titulo,
-            'subtitle' => $producto->subtitulo,
-            'tagline' => $producto->lema,
-            'description' => $producto->descripcion,
-            'specs' => $producto->especificaciones->pluck('valor', 'clave'),
-            'relatedProducts' => $producto->productos_relacionados->pluck('id'),
-            'images' => $producto->imagenes->pluck('url_imagen'),
-            'image' => $producto->imagen_principal,
-            'nombreProducto' => $producto->nombre,
-            'stockProducto' => $producto->stock,
-            'precioProducto' => $producto->precio,
+            'link' => $producto->link,
+            'nombre' => $producto->nombre,
+            'titulo' => $producto->titulo,
+            'descripcion' => $producto->descripcion,
             'seccion' => $producto->seccion,
+            'imagen_principal' => asset($producto->imagen_principal),
+            'especificaciones' => $producto->especificaciones ?? [],
+            'beneficios' => $producto->beneficios ?? [],
+            'imagenes' => $producto->imagenes->map(function ($imagen) {
+                return [
+                    'id' => $imagen->id,
+                    'url_imagen' => asset($imagen->url_imagen),
+                    'texto_alt_SEO' => $imagen->texto_alt_SEO,
+                ];
+            }),
+            'etiquetas' => $producto->etiquetas->map(function ($etiqueta) {
+                return [
+                    'id' => $etiqueta->id,
+                    'meta_titulo' => $etiqueta->meta_titulo,
+                    'meta_descripcion' => $etiqueta->meta_descripcion,
+                ];
+            }),
+            'created_at' => $producto->created_at,
+            'updated_at' => $producto->updated_at,
         ];
 
         return $this->successResponse($formattedProducto, 'Producto obtenido exitosamente');
@@ -299,7 +336,7 @@ class ProductoController extends BasicController
     public function showByLink($link)
     {
         try {
-            $producto = Producto::with(['imagenes'])->where('link', $link)->firstOrFail();
+            $producto = Producto::with(['imagenes', 'etiquetas'])->where('link', $link)->firstOrFail();
 
             $formattedProducto = [
                 'id' => $producto->id,
@@ -308,10 +345,23 @@ class ProductoController extends BasicController
                 'titulo' => $producto->titulo,
                 'descripcion' => $producto->descripcion,
                 'seccion' => $producto->seccion,
-                'imagen_principal' => $producto->imagen_principal,
+                'imagen_principal' => asset($producto->imagen_principal),
                 'especificaciones' => $producto->especificaciones ?? [],
                 'beneficios' => $producto->beneficios ?? [],
-                'imagenes' => $producto->imagenes ?? [],
+                'imagenes' => $producto->imagenes->map(function ($imagen) {
+                    return [
+                        'id' => $imagen->id,
+                        'url_imagen' => asset($imagen->url_imagen),
+                        'texto_alt_SEO' => $imagen->texto_alt_SEO,
+                    ];
+                }),
+                'etiquetas' => $producto->etiquetas->map(function ($etiqueta) {
+                    return [
+                        'id' => $etiqueta->id,
+                        'meta_titulo' => $etiqueta->meta_titulo,
+                        'meta_descripcion' => $etiqueta->meta_descripcion,
+                    ];
+                }),
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
             ];
@@ -344,19 +394,20 @@ class ProductoController extends BasicController
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="nombre", type="string", example="Producto XYZ Actualizado"),
+     *             @OA\Property(property="link", type="string", example="producto-xyz-actualizado"),
      *             @OA\Property(property="titulo", type="string", example="Producto Premium XYZ V2"),
-     *             @OA\Property(property="subtitulo", type="string", example="La mejor calidad actualizada"),
-     *             @OA\Property(property="lema", type="string", example="Innovación y calidad mejorada"),
      *             @OA\Property(property="descripcion", type="string", example="Descripción actualizada del producto"),
      *             @OA\Property(property="imagen_principal", type="string", example="https://ejemplo.com/imagen_nueva.jpg"),
-     *             @OA\Property(property="stock", type="integer", example=150),
-     *             @OA\Property(property="precio", type="number", format="float", example=249.99),
      *             @OA\Property(property="seccion", type="string", example="electrónica premium"),
      *             @OA\Property(property="especificaciones", type="object",
      *                 example={"color": "negro", "material": "titanio"}
      *             ),
+     *             @OA\Property(property="beneficios", type="array", @OA\Items(type="string"), example={"Beneficio 1", "Beneficio 2"}),
      *             @OA\Property(property="imagenes", type="array", @OA\Items(type="string")),
-     *             @OA\Property(property="relacionados", type="array", @OA\Items(type="integer"))
+     *             @OA\Property(property="etiquetas", type="array", @OA\Items(type="object",
+     *                 @OA\Property(property="meta_titulo", type="string", example="Meta Título Actualizado"),
+     *                 @OA\Property(property="meta_descripcion", type="string", example="Meta Descripción Actualizada")
+     *             ))
      *         )
      *     ),
      *     @OA\Response(
@@ -397,8 +448,8 @@ class ProductoController extends BasicController
             Log::info('Request all data:', $request->all());
             Log::info('Request files:', $request->allFiles());
 
-            // Preparar datos del producto (excluyendo especificaciones, beneficios e imagenes)
-            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal']);
+            // Preparar datos del producto (excluyendo especificaciones, beneficios, imagenes y etiquetas)
+            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiquetas']);
 
             // Manejar imagen_principal
             if ($request->hasFile('imagen_principal')) {
@@ -449,6 +500,17 @@ class ProductoController extends BasicController
                     } catch (\Exception $imageException) {
                         Log::error("Error procesando imagen índice {$index}: " . $imageException->getMessage());
                     }
+                }
+            }
+
+            // Procesar etiquetas
+            if ($request->has('etiquetas')) {
+                $producto->etiquetas()->delete(); // Eliminar etiquetas anteriores
+                foreach ($request->etiquetas as $etiquetaData) {
+                    $producto->etiquetas()->create([
+                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+                        'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+                    ]);
                 }
             }
 
@@ -514,6 +576,9 @@ class ProductoController extends BasicController
                 $blog->producto_id = null;
                 $blog->save();
             }
+
+            // Eliminar las etiquetas asociadas
+            $producto->etiquetas()->delete();
 
             // Finalmente eliminar el producto
             $producto->delete();
