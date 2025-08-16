@@ -15,7 +15,7 @@ use Illuminate\Routing\Controller as BaseController;
  *     ),
  *     @OA\Server(
  *         url=L5_SWAGGER_CONST_HOST,
- *         description="API Server"
+ *         description="API Server - Local"
  *     ),
  *     @OA\Server(
  *         url="https://apiyuntas.yuntaspublicidad.com/",
@@ -24,12 +24,12 @@ use Illuminate\Routing\Controller as BaseController;
  * )
  * @OA\SecurityScheme(
  *     securityScheme="bearerAuth",
- *     type="http",
- *     scheme="bearer",
- *     bearerFormat="JWT",
- *     description="Introduce el token JWT con el prefijo 'Bearer '"
+ *     type="apiKey",
+ *     in="header",
+ *     name="Authorization",
+ *     description="Enter only the JWT token (without Bearer prefix)"
  * )
-*/
+ */
 class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
