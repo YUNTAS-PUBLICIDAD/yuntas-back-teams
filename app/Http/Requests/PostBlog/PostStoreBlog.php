@@ -33,6 +33,7 @@ class PostStoreBlog extends FormRequest
 
             'alt_imagenes' => 'nullable|array',
             'alt_imagenes.*' => 'nullable|string|max:255',
+            'text_alt_principal' => 'nullable|string|max:255',
 
             'parrafos' => 'nullable|array',
             'parrafos.*' => 'required|string|max:2047',
