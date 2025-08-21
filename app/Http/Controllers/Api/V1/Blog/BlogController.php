@@ -80,6 +80,7 @@ class BlogController extends BasicController
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
                 'imagen_principal' => asset($blog->imagen_principal),
+                'text_alt_principal' => $blog->text_alt_principal, // ✅ AGREGA ESTO
                 'link' => $blog->link,
                 'imagenes' => $blog->imagenes->map(function ($imagen) {
                     return [
@@ -126,6 +127,7 @@ class BlogController extends BasicController
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
                 'imagen_principal' => asset($blog->imagen_principal),
+                'text_alt_principal' => $blog->text_alt_principal, // ✅ AGREGA ESTO
                 'link' => $blog->link,
                 'imagenes' => $blog->imagenes->map(function ($imagen) {
                     return [
@@ -165,7 +167,8 @@ class BlogController extends BasicController
 
         // Log de datos validados
         Log::info('📥 Datos validados recibidos en el store:', $datosValidados);
-
+        // Log específico para text_alt_principal
+        Log::info('🖼️ ALT de imagen principal recibido:', ['text_alt_principal' => $datosValidados['text_alt_principal'] ?? 'NO RECIBIDO']);
         DB::beginTransaction();
 
         try {
@@ -180,6 +183,7 @@ class BlogController extends BasicController
                 "producto_id" => $datosValidados["producto_id"],
                 "subtitulo" => $datosValidados["subtitulo"],
                 "imagen_principal" => $rutaImagenPrincipal,
+                "text_alt_principal" => $datosValidados["text_alt_principal"],
                 "link" => $datosValidados["link"] ?? null,
             ]);
 
@@ -262,6 +266,10 @@ class BlogController extends BasicController
                     $blog->imagen_principal
                 );
                 $camposActualizar['imagen_principal'] = $nuevaRutaImagenPrincipal;
+
+                if (isset($datosValidados['text_alt_principal'])) {
+                    $camposActualizar['text_alt_principal'] = $datosValidados['text_alt_principal'];
+                }
             }
 
             $blog->update($camposActualizar);
@@ -305,13 +313,37 @@ class BlogController extends BasicController
                 }
             }
 
+            // ✅ PROCESAMIENTO CORREGIDO DE ETIQUETAS
             if (isset($datosValidados['etiqueta'])) {
                 $blog->etiqueta()->delete(); // Eliminar etiquetas anteriores
-                foreach ($datosValidados['etiqueta'] as $etiquetaData) {
-                    $blog->etiqueta()->create([
-                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-                        'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
-                    ]);
+
+                // Decodificar JSON si viene como string
+                $etiquetaData = is_string($datosValidados['etiqueta'])
+                    ? json_decode($datosValidados['etiqueta'], true)
+                    : $datosValidados['etiqueta'];
+
+                Log::info('Procesando etiqueta:', ['etiqueta_data' => $etiquetaData]);
+
+                if (is_array($etiquetaData)) {
+                    // Si es un array asociativo directo (como viene del frontend)
+                    if (isset($etiquetaData['meta_titulo']) || isset($etiquetaData['meta_descripcion'])) {
+                        $blog->etiqueta()->create([
+                            'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+                            'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+                        ]);
+                        Log::info('Etiqueta creada correctamente');
+                    }
+                    // Si es un array de arrays (formato anterior)
+                    else {
+                        foreach ($etiquetaData as $item) {
+                            if (is_array($item)) {
+                                $blog->etiqueta()->create([
+                                    'meta_titulo' => $item['meta_titulo'] ?? null,
+                                    'meta_descripcion' => $item['meta_descripcion'] ?? null,
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
 
