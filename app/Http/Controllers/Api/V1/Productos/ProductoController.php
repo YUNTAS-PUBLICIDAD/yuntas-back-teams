@@ -181,7 +181,7 @@ class ProductoController extends BasicController
             Log::info('Request files:', $request->allFiles());
 
             // Preparar datos del producto (excluyendo especificaciones, beneficios, imagenes y etiquetas)
-            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiquetas']);
+            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiqueta']);
 
             // Manejar imagen_principal
             if ($request->hasFile('imagen_principal')) {
@@ -228,13 +228,19 @@ class ProductoController extends BasicController
             }
 
             // Procesar etiquetas
-            if ($request->has('etiquetas')) {
-                foreach ($request->etiquetas as $etiquetaData) {
-                    $producto->etiquetas()->create([
-                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-                        'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
-                    ]);
-                }
+            // if ($request->has('etiquetas')) {
+            //     foreach ($request->etiquetas as $etiquetaData) {
+            //         $producto->etiquetas()->create([
+            //             'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+            //             'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+            //         ]);
+            //     }
+            // }
+            if ($request->has('etiqueta')) {
+                $producto->etiqueta()->create([
+                    'meta_titulo'      => $request->etiqueta['meta_titulo'] ?? null,
+                    'meta_descripcion' => $request->etiqueta['meta_descripcion'] ?? null,
+                ]);
             }
 
             DB::commit();
@@ -462,7 +468,7 @@ class ProductoController extends BasicController
             Log::info('Request files:', $request->allFiles());
 
             // Preparar datos del producto (excluyendo especificaciones, beneficios, imagenes y etiquetas)
-            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiquetas']);
+            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiqueta']);
 
             // Manejar imagen_principal
             if ($request->hasFile('imagen_principal')) {
@@ -517,14 +523,23 @@ class ProductoController extends BasicController
             }
 
             // Procesar etiquetas
-            if ($request->has('etiquetas')) {
-                $producto->etiquetas()->delete(); // Eliminar etiquetas anteriores
-                foreach ($request->etiquetas as $etiquetaData) {
-                    $producto->etiquetas()->create([
-                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-                        'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
-                    ]);
-                }
+            // if ($request->has('etiquetas')) {
+            //     $producto->etiquetas()->delete(); // Eliminar etiquetas anteriores
+            //     foreach ($request->etiquetas as $etiquetaData) {
+            //         $producto->etiquetas()->create([
+            //             'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+            //             'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+            //         ]);
+            //     }
+            // }
+            if ($request->has('etiqueta')) {
+                $producto->etiqueta()->updateOrCreate(
+                    ['producto_id' => $producto->id],
+                    [
+                        'meta_titulo'      => $request->etiqueta['meta_titulo'] ?? null,
+                        'meta_descripcion' => $request->etiqueta['meta_descripcion'] ?? null,
+                    ]
+                );
             }
 
             DB::commit();

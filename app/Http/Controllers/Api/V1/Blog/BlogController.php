@@ -80,6 +80,7 @@ class BlogController extends BasicController
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
                 'imagen_principal' => asset($blog->imagen_principal),
+                'text_alt_principal' => $blog->text_alt_principal, // ✅ AGREGA ESTO
                 'link' => $blog->link,
                 'imagenes' => $blog->imagenes->map(function ($imagen) {
                     return [
@@ -126,6 +127,7 @@ class BlogController extends BasicController
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
                 'imagen_principal' => asset($blog->imagen_principal),
+                'text_alt_principal' => $blog->text_alt_principal, // ✅ AGREGA ESTO
                 'link' => $blog->link,
                 'imagenes' => $blog->imagenes->map(function ($imagen) {
                     return [
@@ -162,6 +164,11 @@ class BlogController extends BasicController
     public function store(PostStoreBlog $request)
     {
         $datosValidados = $request->validated();
+
+        // Log de datos validados
+        Log::info('📥 Datos validados recibidos en el store:', $datosValidados);
+        // Log específico para text_alt_principal
+        Log::info('🖼️ ALT de imagen principal recibido:', ['text_alt_principal' => $datosValidados['text_alt_principal'] ?? 'NO RECIBIDO']);
         DB::beginTransaction();
 
         try {
@@ -176,13 +183,15 @@ class BlogController extends BasicController
                 "producto_id" => $datosValidados["producto_id"],
                 "subtitulo" => $datosValidados["subtitulo"],
                 "imagen_principal" => $rutaImagenPrincipal,
+                "text_alt_principal" => $datosValidados["text_alt_principal"],
                 "link" => $datosValidados["link"] ?? null,
             ]);
 
-            // Guardar imágenes solo si se envían
+            Log::info("📝 Blog creado con ID: {$blog->id}");
+
+            // Guardar imágenes secundarias si se envían
             if ($request->hasFile('imagenes')) {
                 $imagenes = $request->file('imagenes');
-                // Validar que alt_imagenes sea array y exista
                 $altImagenes = $datosValidados['alt_imagenes'] ?? [];
 
                 foreach ($imagenes as $i => $imagen) {
@@ -192,6 +201,7 @@ class BlogController extends BasicController
                         "ruta_imagen" => $ruta,
                         "text_alt" => $alt,
                     ]);
+                    Log::info("✅ Imagen secundaria guardada: {$ruta} (ALT: {$alt})");
                 }
             }
 
@@ -200,22 +210,32 @@ class BlogController extends BasicController
                 $blog->parrafos()->create([
                     "parrafo" => $item
                 ]);
+                Log::info("✅ Párrafo guardado: {$item}");
             }
 
             // Guardar etiquetas
-            if (isset($datosValidados['etiquetas'])) {
-                foreach ($datosValidados['etiquetas'] as $etiquetaData) {
-                    $blog->etiquetas()->create([
-                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-                        'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+            if ($request->has('etiqueta')) {
+                $etiqueta = json_decode($request->get('etiqueta'), true);
+
+                if (is_array($etiqueta)) {
+                    $blog->etiqueta()->create([
+                        'meta_titulo' => $etiqueta['meta_titulo'] ?? null,
+                        'meta_descripcion' => $etiqueta['meta_descripcion'] ?? null,
                     ]);
                 }
             }
 
             DB::commit();
-            return $this->apiResponse->successResponse($blog->fresh(), 'Blog creado con éxito.', HttpStatusCode::CREATED);
+
+            Log::info('🎉 Blog creado exitosamente');
+            return $this->apiResponse->successResponse(
+                $blog->fresh(),
+                'Blog creado con éxito.',
+                HttpStatusCode::CREATED
+            );
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('❌ Error al crear blog: ' . $e->getMessage());
             return $this->apiResponse->errorResponse(
                 'Error al crear el blog: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
@@ -246,6 +266,10 @@ class BlogController extends BasicController
                     $blog->imagen_principal
                 );
                 $camposActualizar['imagen_principal'] = $nuevaRutaImagenPrincipal;
+
+                if (isset($datosValidados['text_alt_principal'])) {
+                    $camposActualizar['text_alt_principal'] = $datosValidados['text_alt_principal'];
+                }
             }
 
             $blog->update($camposActualizar);
@@ -289,19 +313,43 @@ class BlogController extends BasicController
                 }
             }
 
-            if (isset($datosValidados['etiquetas'])) {
-                $blog->etiquetas()->delete(); // Eliminar etiquetas anteriores
-                foreach ($datosValidados['etiquetas'] as $etiquetaData) {
-                    $blog->etiquetas()->create([
-                        'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-                        'meta_descripcion' => $etiqueta['meta_descripcion'] ?? null,
-                    ]);
+            // ✅ PROCESAMIENTO CORREGIDO DE ETIQUETAS
+            if (isset($datosValidados['etiqueta'])) {
+                $blog->etiqueta()->delete(); // Eliminar etiquetas anteriores
+
+                // Decodificar JSON si viene como string
+                $etiquetaData = is_string($datosValidados['etiqueta'])
+                    ? json_decode($datosValidados['etiqueta'], true)
+                    : $datosValidados['etiqueta'];
+
+                Log::info('Procesando etiqueta:', ['etiqueta_data' => $etiquetaData]);
+
+                if (is_array($etiquetaData)) {
+                    // Si es un array asociativo directo (como viene del frontend)
+                    if (isset($etiquetaData['meta_titulo']) || isset($etiquetaData['meta_descripcion'])) {
+                        $blog->etiqueta()->create([
+                            'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
+                            'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
+                        ]);
+                        Log::info('Etiqueta creada correctamente');
+                    }
+                    // Si es un array de arrays (formato anterior)
+                    else {
+                        foreach ($etiquetaData as $item) {
+                            if (is_array($item)) {
+                                $blog->etiqueta()->create([
+                                    'meta_titulo' => $item['meta_titulo'] ?? null,
+                                    'meta_descripcion' => $item['meta_descripcion'] ?? null,
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
 
             DB::commit();
 
-            $blogActualizado = Blog::with(['imagenes', 'parrafos', 'producto', 'etiquetas'])->findOrFail($id);
+            $blogActualizado = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->findOrFail($id);
 
             Log::info('Blog actualizado correctamente:', ['blog_id' => $id, 'subtitulo' => $blogActualizado->subtitulo]);
 
@@ -339,7 +387,7 @@ class BlogController extends BasicController
             if (!empty($rutasImagenes)) {
                 $this->imageService->eliminarImagenes($rutasImagenes);
             }
-            $blog->etiquetas()->delete(); // Eliminar etiquetas asociadas
+            $blog->etiqueta()->delete(); // Eliminar etiquetas asociadas
             $blog->delete();
 
             DB::commit();
