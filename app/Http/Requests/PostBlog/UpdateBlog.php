@@ -38,6 +38,8 @@ class UpdateBlog extends FormRequest
             // ✅ Validación para etiquetas como string JSON
             'etiqueta' => 'nullable|string|json',
             'link' => 'nullable|string|max:255',
+            'url_video' => ['nullable', 'url', 'max:255'],
+
         ];
     }
 

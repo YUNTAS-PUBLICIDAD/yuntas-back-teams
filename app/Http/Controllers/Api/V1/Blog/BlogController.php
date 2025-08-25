@@ -51,6 +51,7 @@ class BlogController extends BasicController
                         'meta_titulo' => $blog->etiqueta->meta_titulo,
                         'meta_descripcion' => $blog->etiqueta->meta_descripcion,
                     ] : null,
+                    'url_video' => $blog->url_video,
                     'created_at' => $blog->created_at,
                     'updated_at' => $blog->updated_at
                 ];
@@ -97,7 +98,7 @@ class BlogController extends BasicController
                     'meta_titulo' => $blog->etiqueta->meta_titulo,
                     'meta_descripcion' => $blog->etiqueta->meta_descripcion,
                 ] : null,
-
+                'url_video' => $blog->url_video,
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
             ];
@@ -144,6 +145,7 @@ class BlogController extends BasicController
                     'meta_titulo' => $blog->etiqueta->meta_titulo,
                     'meta_descripcion' => $blog->etiqueta->meta_descripcion,
                 ] : null,
+                'url_video' => $blog->url_video,
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
             ];
@@ -185,6 +187,7 @@ class BlogController extends BasicController
                 "imagen_principal" => $rutaImagenPrincipal,
                 "text_alt_principal" => $datosValidados["text_alt_principal"],
                 "link" => $datosValidados["link"] ?? null,
+                "url_video" => $datosValidados["url_video"] ?? null,
             ]);
 
             Log::info("📝 Blog creado con ID: {$blog->id}");
@@ -254,7 +257,7 @@ class BlogController extends BasicController
 
         try {
             $camposActualizar = [];
-            foreach (["producto_id", "subtitulo", "link"] as $campo) {
+            foreach (["producto_id", "subtitulo", "link", "url_video"] as $campo) {
                 if (array_key_exists($campo, $datosValidados)) {
                     $camposActualizar[$campo] = $datosValidados[$campo];
                 }

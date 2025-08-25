@@ -606,7 +606,7 @@ class ProductoController extends BasicController
             }
 
             // Eliminar las etiquetas asociadas
-            $producto->etiquetas()->delete();
+            $producto->etiqueta()->delete();
 
             // Finalmente eliminar el producto
             $producto->delete();
