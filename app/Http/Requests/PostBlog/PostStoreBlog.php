@@ -38,6 +38,8 @@ class PostStoreBlog extends FormRequest
             'parrafos' => 'nullable|array',
             'parrafos.*' => 'required|string|max:2047',
 
+            'url_video' => ['nullable', 'url', 'max:255'],
+
             // Agregar validación para los campos meta y link (por ahora link)
             'link' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
         ];

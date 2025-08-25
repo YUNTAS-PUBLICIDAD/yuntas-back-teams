@@ -20,6 +20,7 @@ class Blog extends Model
         'producto_id',
         'subtitulo',
         'imagen_principal',
+        'url_video',
         'text_alt_principal',
         'link',
     ];
