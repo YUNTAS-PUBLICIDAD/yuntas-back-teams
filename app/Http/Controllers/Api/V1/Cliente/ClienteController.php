@@ -8,9 +8,11 @@ use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Contains\HttpStatusCode;
 use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
+use App\Mail\ClientRegistrationMail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 // use Illuminate\Container\Attributes\Log;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * @OA\Tag(
@@ -73,7 +75,7 @@ class ClienteController extends BasicController
 
     /**
      * Store a newly created cliente in storage.
-     * 
+     *
      * @OA\Post(
      *     path="/api/v1/clientes",
      *     tags={"Clientes"},
@@ -126,6 +128,8 @@ class ClienteController extends BasicController
                 'Cliente registrado exitosamente.',
                 HttpStatusCode::OK
             );
+
+            Mail::to($request->email)->send(new ClientRegistrationMail($request->only('name', 'email', 'celular')));
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Ocurrio un problema al procesar la solicitud. ' . $e->getMessage(),
@@ -136,7 +140,7 @@ class ClienteController extends BasicController
 
     /**
      * Display the specified resource.
-     * 
+     *
      * @OA\Get(
      *     path="/api/v1/clientes/{id}",
      *     tags={"Clientes"},
@@ -201,7 +205,7 @@ class ClienteController extends BasicController
 
     /**
      * Update the specified cliente in storage.
-     * 
+     *
      * @OA\Put(
      *     path="/api/v1/clientes/{id}",
      *     tags={"Clientes"},
@@ -290,7 +294,7 @@ class ClienteController extends BasicController
 
     /**
      * Remove the specified cliente from storage.
-     * 
+     *
      * @OA\Delete(
      *     path="/api/v1/clientes/{id}",
      *     tags={"Clientes"},
