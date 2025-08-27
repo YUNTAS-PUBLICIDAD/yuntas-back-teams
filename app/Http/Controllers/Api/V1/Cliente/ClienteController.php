@@ -121,20 +121,77 @@ class ClienteController extends BasicController
     public function store(StoreClienteRequest $request)
     {
         try {
-            Cliente::create($request->all());
+            // Crear el cliente
+            $cliente = Cliente::create($request->all());
 
-            return $this->successResponse(
-                $request->all(),
-                'Cliente registrado exitosamente.',
-                HttpStatusCode::OK
-            );
+            // Enviar email
+            Mail::to($request->email)->send(new ClientRegistrationMail(
+                $request->only('name', 'email', 'celular')
+            ));
 
-            Mail::to($request->email)->send(new ClientRegistrationMail($request->only('name', 'email', 'celular')));
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente registrado exitosamente.',
+                'data' => $cliente
+            ], 201);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Capturar errores de base de datos
+            $errorCode = $e->errorInfo[1];
+
+            if ($errorCode === 1062) {
+                $errorMessage = $e->getMessage();
+
+                // Detectar email duplicado
+                if (strpos($errorMessage, 'clientes_email_unique') !== false) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Los datos proporcionados no son válidos.',
+                        'errors' => [
+                            'email' => ['El correo ya está registrado.']
+                        ]
+                    ], 422);
+                }
+
+                // Detectar celular duplicado
+                if (strpos($errorMessage, 'clientes_celular_unique') !== false) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Los datos proporcionados no son válidos.',
+                        'errors' => [
+                            'celular' => ['El número de celular ya está registrado.']
+                        ]
+                    ], 422);
+                }
+
+                // Otros errores de duplicado
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya existe un registro con estos datos.',
+                ], 422);
+            }
+
+            // Otros errores de base de datos
+            Log::error('Database error in cliente creation: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'error_code' => $errorCode,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en la base de datos. Por favor intenta nuevamente.',
+            ], 500);
         } catch (\Exception $e) {
-            return $this->errorResponse(
-                'Ocurrio un problema al procesar la solicitud. ' . $e->getMessage(),
-                HttpStatusCode::INTERNAL_SERVER_ERROR
-            );
+            Log::error('Error creating cliente: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un problema al procesar la solicitud.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Error interno del servidor'
+            ], 500);
         }
     }
 
