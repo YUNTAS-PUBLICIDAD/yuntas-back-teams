@@ -35,6 +35,7 @@ class BlogController extends BasicController
                     'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                     'subtitulo' => $blog->subtitulo,
                     'imagen_principal' => asset($blog->imagen_principal),
+                    'text_alt_principal' => $blog->text_alt_principal,
                     'link' => $blog->link,
                     'imagenes' => $blog->imagenes->map(function ($imagen) {
                         return [
