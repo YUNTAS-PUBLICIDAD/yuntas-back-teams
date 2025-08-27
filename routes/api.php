@@ -84,14 +84,7 @@ Route::prefix('v1')->group(function () {
     Route::controller(EmailController::class)->prefix('email')->group(function () {
         Route::post('/', 'sendEmail');
     });
-    // CLIENTES
-    Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
-        Route::get('/', 'index')->middleware('permission:ver-clientes');
-        Route::get('/{id}', 'show')->middleware('permission:ver-clientes');
-        Route::post('/', 'store');
-        Route::put('/{id}', 'update')->middleware('permission:editar-clientes');
-        Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-clientes');
-    });
+
     Route::middleware('auth:sanctum')->group(function () {
         // AUTH (logout autenticado)
         Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -109,7 +102,14 @@ Route::prefix('v1')->group(function () {
         });
 
 
-
+        // CLIENTES
+        Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
+            Route::get('/', 'index')->middleware('permission:ver-clientes');
+            Route::get('/{id}', 'show')->middleware('permission:ver-clientes');
+            Route::post('/', 'store');
+            Route::put('/{id}', 'update')->middleware('permission:editar-clientes');
+            Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-clientes');
+        });
         // RECLAMOS
         Route::prefix('reclamos')->controller(ReclamosController::class)->group(function () {
             Route::get('/', 'index')->middleware('permission:ver-reclamos');
