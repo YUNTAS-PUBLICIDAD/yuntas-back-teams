@@ -28,8 +28,8 @@ class UpdateBlog extends FormRequest
         return [
             'producto_id' => $isUpdate ? 'sometimes|integer|exists:productos,id' : 'required|integer|exists:productos,id',
             'subtitulo' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
-            'imagen_principal' => $isUpdate ? 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' : 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'imagen_principal' => $isUpdate ? 'nullable|image|max:2048' : 'required|image|max:2048',
+            'imagenes.*' => 'nullable|image|max:2048',
             'parrafos' => $isUpdate ? 'sometimes|array|min:1' : 'required|array|min:1',
             'parrafos.*' => $isUpdate ? 'sometimes|string' : 'required|string',
             'text_alt_principal' => 'nullable|string|max:255',
