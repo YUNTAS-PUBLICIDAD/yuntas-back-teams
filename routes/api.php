@@ -74,12 +74,15 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-
-
+    // Cliente (Registro popup público)
+    Route::post('/clientes', [ClienteController::class, 'store']);
+    // Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
+    //     Route::post('/', 'store');
+    // });
     // AUTH (login público)
-    Route::controller(AuthController::class)->prefix('auth')->group(function () {
-        Route::post('/login', 'login');
-    });
+    // Route::controller(AuthController::class)->prefix('auth')->group(function () {
+    //     Route::post('/login', 'login');
+    // });
 
     Route::controller(EmailController::class)->prefix('email')->group(function () {
         Route::post('/', 'sendEmail');
@@ -106,7 +109,6 @@ Route::prefix('v1')->group(function () {
         Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
             Route::get('/', 'index')->middleware('permission:ver-clientes');
             Route::get('/{id}', 'show')->middleware('permission:ver-clientes');
-            Route::post('/', 'store');
             Route::put('/{id}', 'update')->middleware('permission:editar-clientes');
             Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-clientes');
         });

@@ -56,18 +56,35 @@ class ClienteController extends BasicController
     public function index()
     {
         try {
-            $clientes = Cliente::all();
+            // Obtener parámetros de paginación
+            $page = request()->get('page', 1);
+            $perPage = 10;
+
+            // Obtener clientes con paginación
+            $clientes = Cliente::paginate($perPage, ['*'], 'page', $page);
 
             $message = $clientes->isEmpty() ? 'No hay clientes para listar.' : 'Clientes listados correctamente.';
 
+            // Estructura de respuesta para el frontend
+            $response = [
+                'data' => $clientes->items(), // Los clientes de la página actual
+                'total' => $clientes->total(), // Total de registros
+                'current_page' => $clientes->currentPage(),
+                'last_page' => $clientes->lastPage(),
+                'per_page' => $clientes->perPage()
+            ];
+
             return $this->successResponse(
-                $clientes,
+                $response,
                 $message,
                 HttpStatusCode::OK
             );
         } catch (\Exception $e) {
+            Log::error('Error en índice de clientes: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return $this->errorResponse(
-                'Ocurrio un problema al listar los clientes. ' . $e->getMessage(),
+                'Ocurrió un problema al listar los clientes. ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
             );
         }
