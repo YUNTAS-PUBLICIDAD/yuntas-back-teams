@@ -20,19 +20,19 @@ class StoreClienteRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/' // Solo letras y espacios
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/', // Solo letras y espacios
             ],
-            'email' => 'required|email|unique:clientes,email|max:100',
+            'email' => 'required|email|max:100',
             'celular' => [
                 'required',
                 'string',
                 'regex:/^[0-9]{9}$/',
                 'min:9',
                 'max:9',
-                'unique:clientes,celular'
             ],
         ];
     }
+
 
     public function messages(): array
     {
