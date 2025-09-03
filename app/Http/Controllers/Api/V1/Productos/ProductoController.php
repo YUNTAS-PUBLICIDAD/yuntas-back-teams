@@ -78,9 +78,12 @@ class ProductoController extends BasicController
     public function index()
     {
         try {
+            $perPage = request('perPage', 5);
+            $page = request('page', 1);
+
             $productos = Producto::with(['imagenes', 'etiqueta'])
                 ->orderBy('created_at', 'desc')
-                ->get();
+                ->paginate($perPage, ['*'], 'page', $page);
 
             /* $showProductos = $productos->map(function ($producto) {
                 return [
