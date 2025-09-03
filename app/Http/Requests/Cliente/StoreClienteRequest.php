@@ -5,6 +5,7 @@ namespace App\Http\Requests\Cliente;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\Rule;
 
 class StoreClienteRequest extends FormRequest
 {
@@ -22,17 +23,31 @@ class StoreClienteRequest extends FormRequest
                 'max:100',
                 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/', // Solo letras y espacios
             ],
-            'email' => 'required|email|max:100',
+            'email' => [
+                'required',
+                'email',
+                'max:100',
+                Rule::unique('clientes')->where(function ($query) {
+                    return $query->where('producto_id', $this->producto_id);
+                }),
+            ],
             'celular' => [
                 'required',
                 'string',
                 'regex:/^[0-9]{9}$/',
                 'min:9',
                 'max:9',
+                Rule::unique('clientes')->where(function ($query) {
+                    return $query->where('producto_id', $this->producto_id);
+                }),
             ],
+            'producto_id' => [
+                'required',
+                'integer',
+                'exists:productos,id'
+            ]
         ];
     }
-
 
     public function messages(): array
     {
@@ -49,6 +64,10 @@ class StoreClienteRequest extends FormRequest
             'celular.min' => 'El celular debe tener exactamente 9 dígitos.',
             'celular.max' => 'El celular debe tener exactamente 9 dígitos.',
             'celular.unique' => 'El número de celular ya está registrado.',
+            'email.unique' => 'Este correo ya está registrado para este producto.',
+            'celular.unique' => 'Este número de celular ya está registrado para este producto.',
+            'producto_id.required' => 'El producto es obligatorio.',
+            'producto_id.exists' => 'El producto seleccionado no es válido.',
         ];
     }
 
