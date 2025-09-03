@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Contains\HttpStatusCode;
+use App\Http\Resources\ProductoResource;
 
 /**
  * @OA\Tag(
@@ -27,7 +28,7 @@ class ProductoController extends BasicController
     }
     /**
      * Obtener listado de productos
-     * 
+     *
      * @OA\Get(
      *     path="/api/v1/productos",
      *     summary="Muestra un listado de todos los productos",
@@ -81,7 +82,7 @@ class ProductoController extends BasicController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $showProductos = $productos->map(function ($producto) {
+            /* $showProductos = $productos->map(function ($producto) {
                 return [
                     'id' => $producto->id,
                     'link' => $producto->link,
@@ -107,10 +108,11 @@ class ProductoController extends BasicController
                     'created_at' => $producto->created_at,
                     'updated_at' => $producto->updated_at,
                 ];
-            });
+            }); */
 
             return $this->apiResponse->successResponse(
-                $showProductos,
+                //$showProductos,
+                ProductoResource::collection($productos),
                 'Productos obtenidos exitosamente',
                 HttpStatusCode::OK
             );
@@ -125,7 +127,7 @@ class ProductoController extends BasicController
 
     /**
      * Crear un nuevo producto
-     * 
+     *
      * @OA\Post(
      *     path="/api/v1/productos",
      *     summary="Crea un nuevo producto",
@@ -255,7 +257,7 @@ class ProductoController extends BasicController
 
     /**
      * Mostrar un producto específico
-     * 
+     *
      * @OA\Get(
      *     path="/api/v1/productos/{id}",
      *     summary="Muestra un producto específico",
@@ -308,7 +310,7 @@ class ProductoController extends BasicController
         try{
             $producto = Producto::with(['imagenes', 'etiqueta'])->findOrFail($id);
 
-            $showProducto = [
+            /* $showProducto = [
                 'id' => $producto->id,
                 'link' => $producto->link,
                 'nombre' => $producto->nombre,
@@ -331,10 +333,11 @@ class ProductoController extends BasicController
                 ] : null,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
-            ];
+            ]; */
 
             return $this->apiResponse->successResponse(
-                $showProducto,
+                //$showProducto,
+                new ProductoResource($producto),
                 'Producto obtenido exitosamente',
                 HttpStatusCode::OK
             );
@@ -346,7 +349,7 @@ class ProductoController extends BasicController
             );
         }
 
-        
+
     }
 
     public function showByLink($link)
@@ -354,7 +357,7 @@ class ProductoController extends BasicController
         try {
             $producto = Producto::with(['imagenes', 'etiqueta'])->where('link', $link)->firstOrFail();
 
-            $showProducto = [
+            /* $showProducto = [
                 'id' => $producto->id,
                 'link' => $producto->link,
                 'nombre' => $producto->nombre,
@@ -377,10 +380,11 @@ class ProductoController extends BasicController
                 ] : null,
                 'created_at' => $producto->created_at,
                 'updated_at' => $producto->updated_at,
-            ];
+            ]; */
 
             return $this->apiResponse->successResponse(
-                $showProducto,
+                //$showProducto,
+                new ProductoResource($producto),
                 'Producto obtenido exitosamente',
                 HttpStatusCode::OK
             );
@@ -395,7 +399,7 @@ class ProductoController extends BasicController
 
     /**
      * Actualizar un producto específico
-     * 
+     *
      * @OA\Put(
      *     path="/api/v1/productos/{id}",
      *     summary="Actualiza un producto específico",
@@ -553,7 +557,7 @@ class ProductoController extends BasicController
     }
     /**
      * Eliminar un producto específico
-     * 
+     *
      * @OA\Delete(
      *     path="/api/v1/productos/{id}",
      *     summary="Elimina un producto específico",
