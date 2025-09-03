@@ -28,7 +28,9 @@ class BlogController extends BasicController
     public function index()
     {
         try {
-            $blogs = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->get();
+            $perPage = request('perPage', 5);
+            $page = request('page', 1);
+            $blogs = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->paginate($perPage, ['*'], 'page', $page);
 
             /* $showBlog = $blog->map(function ($blog) {
                 return [
