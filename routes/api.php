@@ -75,12 +75,15 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-
-
+    // Cliente (Registro popup público)
+    Route::post('/clientes', [ClienteController::class, 'store']);
+    // Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
+    //     Route::post('/', 'store');
+    // });
     // AUTH (login público)
-    Route::controller(AuthController::class)->prefix('auth')->group(function () {
-        Route::post('/login', 'login');
-    });
+    // Route::controller(AuthController::class)->prefix('auth')->group(function () {
+    //     Route::post('/login', 'login');
+    // });
 
     Route::controller(EmailController::class)->prefix('email')->group(function () {
         Route::post('/', 'sendEmail');
@@ -102,15 +105,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/role', 'assignRoleToUser')->middleware('permission:asignar-roles-usuarios');
         });
 
+
         // CLIENTES
         Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
             Route::get('/', 'index')->middleware('permission:ver-clientes');
             Route::get('/{id}', 'show')->middleware('permission:ver-clientes');
-            Route::post('/', 'store')->middleware('permission:crear-clientes');
             Route::put('/{id}', 'update')->middleware('permission:editar-clientes');
             Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-clientes');
         });
-
         // RECLAMOS
         Route::prefix('reclamos')->controller(ReclamosController::class)->group(function () {
             Route::get('/', 'index')->middleware('permission:ver-reclamos');
@@ -143,5 +145,3 @@ Route::get('/exportProducto', [ExportController::class, 'exportProducto']);
 Route::get('/exportBlog', [ExportController::class, 'exportBlog']);
 Route::get('/exportCliente', [ExportController::class, 'exportCliente']);
 Route::get('/exportReclamo', [ExportController::class, 'exportReclamo']);
-
-

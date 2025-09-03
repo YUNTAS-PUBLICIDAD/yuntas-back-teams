@@ -35,7 +35,7 @@ class UpdateBlog extends FormRequest
             'text_alt_principal' => 'nullable|string|max:255',
             'alt_imagenes' => 'nullable|array',
             'alt_imagenes.*' => 'nullable|string|max:255',
-            // ✅ Validación para etiquetas como string JSON
+            // Validación para etiquetas como string JSON
             'etiqueta' => 'nullable|string|json',
             'link' => 'nullable|string|max:255',
             'url_video' => ['nullable', 'url', 'max:255'],
