@@ -27,7 +27,7 @@ class PostStoreBlog extends FormRequest
             'producto_id' => 'required|integer|exists:productos,id',
             'subtitulo' => 'required|string|max:255',
 
-            'imagen_principal' => 'required|file|image|max:2048',
+            'imagen_principal' => 'required|file|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'imagenes' => 'nullable|array',
             'imagenes.*' => 'required|image|max:2048',
 
