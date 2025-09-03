@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Reclamos;
 use App\Http\Contains\HttpStatusCode;
 use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Requests\PostReclamo\PostReclamo;
+use App\Http\Resources\ReclamosResource;
 use App\Models\DatosPersonal;
 use App\Models\Reclamo;
 use Illuminate\Support\Facades\DB;
@@ -58,13 +59,15 @@ class ReclamosController extends BasicController
     public function index()
     {
         try {
-            $personal = DatosPersonal::with("reclamos")->get();
+            $perPage = request('perPage', 5);
+            $page = request('page', 1);
+            $personal = DatosPersonal::with("reclamos")->paginate($perPage, ['*'], 'page', $page);
 
-            $reclamos = $personal->map(function ($datos) {
+            /* $reclamos = $personal->map(function ($datos) {
                 return [
                     'id' => $datos->id,
                     'datos' => $datos->datos,
-                    'tipo_doc' => $datos->tipo_doc, 
+                    'tipo_doc' => $datos->tipo_doc,
                     'numero_doc' => $datos->numero_doc,
                     'correo' => $datos->correo,
                     'telefono' => $datos->telefono,
@@ -73,9 +76,9 @@ class ReclamosController extends BasicController
                     'detalle_reclamo' => $datos->reclamos->pluck('detalle_reclamo'),
                     'monto_reclamo' => $datos->reclamos->pluck('monto_reclamo'),
                 ];
-            });
+            }); */
 
-            return $this->successResponse($reclamos, 'Reclamos obtenidos exitosamente', HttpStatusCode::OK);
+            return $this->successResponse(ReclamosResource::collection($personal), 'Reclamos obtenidos exitosamente', HttpStatusCode::OK);
 
         } catch(\Exception $e) {
             return $this->errorResponse('Error al mostrar los reclamos: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
@@ -84,7 +87,7 @@ class ReclamosController extends BasicController
 
     /**
      * Crear un nuevo reclamo
-     * 
+     *
      * @OA\Post(
      *     path="/api/v1/reclamos",
      *     summary="Crea un nuevo reclamo",
@@ -131,7 +134,7 @@ class ReclamosController extends BasicController
     {
         try {
             DB::beginTransaction();
-            
+
             $personal = DatosPersonal::create($request->except('reclamos'));
 
             if ($request->has('reclamos') && is_array($request->input('reclamos'))) {
@@ -140,11 +143,11 @@ class ReclamosController extends BasicController
                         'fecha_compra' => $item['fecha_compra'],
                         'producto' => $item['producto'],
                         'detalle_reclamo' => $item['detalle_reclamo'],
-                        'monto_reclamo' => $item['monto_reclamo'], 
-                        'id_data' => $personal->id, 
+                        'monto_reclamo' => $item['monto_reclamo'],
+                        'id_data' => $personal->id,
                     ];
                 })->toArray();
-            
+
                 Reclamo::insert($datos);
             }
 
@@ -159,7 +162,7 @@ class ReclamosController extends BasicController
 
     /**
      * Mostrar un reclamo específico
-     * 
+     *
      * @OA\Get(
      *     path="/api/v1/reclamos/{id}",
      *     summary="Muestra un reclamo específico",
@@ -207,19 +210,19 @@ class ReclamosController extends BasicController
         try {
             $personal = DatosPersonal::with('reclamos')->findOrFail($id);
 
-            $reclamos = [
+            /* $reclamos = [
                 'id' => $personal->id,
                 'datos' => $personal->datos,
-                'tipo_doc' => $personal->tipo_doc, 
+                'tipo_doc' => $personal->tipo_doc,
                 'numero_doc' => $personal->numero_doc,
                 'correo' => $personal->correo,
                 'telefono' => $personal->telefono,
                 'fecha_compra' => $personal->reclamos->pluck('fecha_compra'),
                 'detalle_reclamo' => $personal->reclamos->pluck('detalle_reclamo'),
                 'monto_reclamo' => $personal->reclamos->pluck('monto_reclamo'),
-            ];
+            ]; */
 
-            return $this->successResponse($reclamos, 'Reclamo encontrado exitosamente', HttpStatusCode::OK);
+            return $this->successResponse(new ReclamosResource($personal), 'Reclamo encontrado exitosamente', HttpStatusCode::OK);
 
         } catch (\Exception $e) {
             return $this->errorResponse('Error al buscar el reclamo: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
@@ -228,7 +231,7 @@ class ReclamosController extends BasicController
 
     /**
      * Actualizar un reclamo específico
-     * 
+     *
      * @OA\Put(
      *     path="/api/v1/reclamos/{id}",
      *     summary="Actualiza un reclamo específico",
@@ -275,7 +278,7 @@ class ReclamosController extends BasicController
     public function update(PostReclamo $request, $id)
     {
         try {
-            DB::beginTransaction(); 
+            DB::beginTransaction();
 
             $personal = DatosPersonal::findOrFail($id);
 
@@ -294,7 +297,7 @@ class ReclamosController extends BasicController
                         'fecha_compra' => $item['fecha_compra'],
                         'producto' => $item['producto'],
                         'detalle_reclamo' => $item['detalle_reclamo'],
-                        'monto_reclamo' => $item['monto_reclamo'], 
+                        'monto_reclamo' => $item['monto_reclamo'],
                     ]);
                 });
 
@@ -311,7 +314,7 @@ class ReclamosController extends BasicController
 
     /**
      * Eliminar un reclamo específico
-     * 
+     *
      * @OA\Delete(
      *     path="/api/v1/reclamos/{id}",
      *     summary="Elimina un reclamo específico",
