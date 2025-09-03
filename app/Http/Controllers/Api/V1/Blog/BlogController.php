@@ -10,6 +10,7 @@ use App\Services\ApiResponseService;
 use App\Services\ImageService;
 use App\Models\Blog;
 use App\Http\Contains\HttpStatusCode;
+use App\Http\Resources\BlogResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -27,9 +28,11 @@ class BlogController extends BasicController
     public function index()
     {
         try {
-            $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->get();
+            $perPage = request('perPage', 5);
+            $page = request('page', 1);
+            $blogs = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->paginate($perPage, ['*'], 'page', $page);
 
-            $showBlog = $blog->map(function ($blog) {
+            /* $showBlog = $blog->map(function ($blog) {
                 return [
                     'id' => $blog->id,
                     'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
@@ -56,10 +59,11 @@ class BlogController extends BasicController
                     'created_at' => $blog->created_at,
                     'updated_at' => $blog->updated_at
                 ];
-            });
+            }); */
 
             return $this->apiResponse->successResponse(
-                $showBlog,
+                //$showBlog,
+                BlogResource::collection($blogs),
                 'Blogs obtenidos exitosamente',
                 HttpStatusCode::OK
             );
@@ -77,7 +81,7 @@ class BlogController extends BasicController
             $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])
                 ->findOrFail($id);
 
-            $showBlog = [
+            /* $showBlog = [
                 'id' => $blog->id,
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
@@ -102,10 +106,11 @@ class BlogController extends BasicController
                 'url_video' => $blog->url_video,
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
-            ];
+            ]; */
 
             return $this->apiResponse->successResponse(
-                $showBlog,
+                //$showBlog,
+                new BlogResource($blog),
                 'Blog obtenido exitosamente',
                 HttpStatusCode::OK
             );
@@ -124,7 +129,7 @@ class BlogController extends BasicController
                 ->where('link', $link)
                 ->firstOrFail();
 
-            $showBlog = [
+            /* $showBlog = [
                 'id' => $blog->id,
                 'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
                 'subtitulo' => $blog->subtitulo,
@@ -149,10 +154,11 @@ class BlogController extends BasicController
                 'url_video' => $blog->url_video,
                 'created_at' => $blog->created_at,
                 'updated_at' => $blog->updated_at
-            ];
+            ]; */
 
             return $this->apiResponse->successResponse(
-                $showBlog,
+                //$showBlog,
+                new BlogResource($blog),
                 'Blog obtenido exitosamente por link',
                 HttpStatusCode::OK
             );
