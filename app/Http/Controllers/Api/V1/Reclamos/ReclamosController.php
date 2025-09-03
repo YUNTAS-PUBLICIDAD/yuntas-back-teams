@@ -59,7 +59,9 @@ class ReclamosController extends BasicController
     public function index()
     {
         try {
-            $personal = DatosPersonal::with("reclamos")->get();
+            $perPage = request('perPage', 5);
+            $page = request('page', 1);
+            $personal = DatosPersonal::with("reclamos")->paginate($perPage, ['*'], 'page', $page);
 
             /* $reclamos = $personal->map(function ($datos) {
                 return [
