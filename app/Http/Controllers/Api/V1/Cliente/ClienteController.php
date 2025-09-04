@@ -143,7 +143,7 @@ class ClienteController extends BasicController
 
             // Enviar email
             Mail::to($request->email)->send(new ClientRegistrationMail(
-                $request->only('name', 'email', 'celular')
+                $request->only('name')
             ));
 
             return response()->json([

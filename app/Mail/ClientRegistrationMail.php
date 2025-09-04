@@ -23,7 +23,7 @@ class ClientRegistrationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '¡Registro Exitoso de Cliente en Yuntas!',
+            subject: $this->data['name'] . ', empecemos a crear juntos ✨',
         );
     }
 
