@@ -48,7 +48,12 @@ class Producto extends Model
         return $this->hasMany(Blog::class, 'producto_id', 'id');
     }
 
-    public function especificaciones(){
+    public function especificaciones()
+    {
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
+    }
+    public function clientes()
+    {
+        return $this->hasMany(Cliente::class, 'producto_id');
     }
 }

@@ -49,7 +49,7 @@ class StoreProductoRequest extends FormRequest
 
             // Array para identificar tipos de imagen
             'imagen_tipos' => 'nullable|array',
-            'imagen_tipos.*' => 'sometimes|string|in:imagen_hero,imagen_especificaciones,imagen_beneficios',
+            'imagen_tipos.*' => 'sometimes|string|in:imagen_hero,imagen_especificaciones,imagen_beneficios,imagen_popups',
         ];
     }
 

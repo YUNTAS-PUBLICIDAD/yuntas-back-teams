@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -167,12 +168,14 @@
                 padding: 10px 20px;
                 font-size: 14px;
             }
-            .button-container{
+
+            .button-container {
                 left: 5%;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header class="header">
@@ -206,4 +209,5 @@
         </footer>
     </div>
 </body>
+
 </html>

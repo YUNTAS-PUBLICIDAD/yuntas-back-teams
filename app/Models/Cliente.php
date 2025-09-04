@@ -16,6 +16,7 @@ class Cliente extends Model
         'name',
         'email',
         'celular',
+        'producto_id',
     ];
 
     public $timestamps = true;
@@ -23,5 +24,9 @@ class Cliente extends Model
     public function interesados(): HasMany
     {
         return $this->hasMany(Interesado::class, 'cliente_id', 'id');
+    }
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class, 'producto_id');
     }
 }
