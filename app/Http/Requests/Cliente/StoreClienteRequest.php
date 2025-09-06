@@ -43,6 +43,7 @@ class StoreClienteRequest extends FormRequest
             ],
             'producto_id' => [
                 'nullable',
+                'required',
                 'integer',
                 'exists:productos,id'
             ]

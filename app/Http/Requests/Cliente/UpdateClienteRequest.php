@@ -25,6 +25,8 @@ class UpdateClienteRequest extends FormRequest
     {
         return [
             'producto_id.exists' => 'El producto seleccionado no existe.',
+            'producto_id' => 'sometimes|exists:productos,id',
+
         ];
     }
 }
