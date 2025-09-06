@@ -42,7 +42,7 @@ class StoreClienteRequest extends FormRequest
                 }),
             ],
             'producto_id' => [
-                'required',
+                'nullable',
                 'integer',
                 'exists:productos,id'
             ]
