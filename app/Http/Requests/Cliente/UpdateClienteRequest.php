@@ -16,7 +16,7 @@ class UpdateClienteRequest extends FormRequest
     {
         $id = $this->route('id');
         $productoId = $this->input('producto_id');
-
+        // Validaciones
         return [
             'name' => ['required', 'string', 'max:100'],
             'email' => [
