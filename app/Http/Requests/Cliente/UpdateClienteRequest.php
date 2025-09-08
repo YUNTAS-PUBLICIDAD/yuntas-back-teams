@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cliente;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateClienteRequest extends FormRequest
 {
@@ -11,16 +12,42 @@ class UpdateClienteRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
+        $id = $this->route('id');
+        $productoId = $this->input('producto_id');
+
         return [
-            'name' => 'sometimes|string|max:100',
-            'email' => 'sometimes|email|unique:clientes,email,' . $this->route('id') . '|max:100',
-            'celular' => 'sometimes|string|min:9|max:9|unique:clientes,celular,' . $this->route('id'),
-            'producto_id' => 'sometimes|nullable|exists:productos,id',
+            'name' => ['required', 'string', 'max:100'],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('clientes')
+                    ->ignore($id)
+                    ->where(function ($query) use ($productoId) {
+                        if ($productoId) {
+                            return $query->where('producto_id', $productoId);
+                        } else {
+                            return $query->whereNull('producto_id');
+                        }
+                    }),
+            ],
+            'celular' => [
+                'required',
+                'regex:/^[0-9]{9}$/',
+                Rule::unique('clientes')
+                    ->ignore($id)
+                    ->where(function ($query) use ($productoId) {
+                        if ($productoId) {
+                            return $query->where('producto_id', $productoId);
+                        } else {
+                            return $query->whereNull('producto_id');
+                        }
+                    }),
+            ],
+            'producto_id' => ['nullable', 'exists:productos,id'],
         ];
     }
-
     public function messages(): array
     {
         return [

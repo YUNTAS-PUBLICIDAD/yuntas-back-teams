@@ -31,39 +31,14 @@ class BlogController extends BasicController
             $perPage = request('perPage', 5);
             $page = request('page', 1);
             $blogs = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->paginate($perPage, ['*'], 'page', $page);
-
-            /* $showBlog = $blog->map(function ($blog) {
-                return [
-                    'id' => $blog->id,
-                    'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
-                    'subtitulo' => $blog->subtitulo,
-                    'imagen_principal' => asset($blog->imagen_principal),
-                    'text_alt_principal' => $blog->text_alt_principal,
-                    'link' => $blog->link,
-                    'imagenes' => $blog->imagenes->map(function ($imagen) {
-                        return [
-                            'ruta_imagen' => asset($imagen->ruta_imagen),
-                            'text_alt' => $imagen->text_alt,
-                        ];
-                    }),
-                    'parrafos' => $blog->parrafos->map(function ($parrafo) {
-                        return [
-                            'parrafo' => $parrafo->parrafo,
-                        ];
-                    }),
-                    'etiqueta' => $blog->etiqueta ? [
-                        'meta_titulo' => $blog->etiqueta->meta_titulo,
-                        'meta_descripcion' => $blog->etiqueta->meta_descripcion,
-                    ] : null,
-                    'url_video' => $blog->url_video,
-                    'created_at' => $blog->created_at,
-                    'updated_at' => $blog->updated_at
-                ];
-            }); */
-
             return $this->apiResponse->successResponse(
-                //$showBlog,
-                BlogResource::collection($blogs),
+                [
+                    'data' => BlogResource::collection($blogs->items()),
+                    'current_page' => $blogs->currentPage(),
+                    'last_page' => $blogs->lastPage(),
+                    'per_page' => $blogs->perPage(),
+                    'total' => $blogs->total(),
+                ],
                 'Blogs obtenidos exitosamente',
                 HttpStatusCode::OK
             );
