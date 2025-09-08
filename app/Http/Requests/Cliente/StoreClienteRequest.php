@@ -16,30 +16,39 @@ class StoreClienteRequest extends FormRequest
 
     public function rules(): array
     {
+        $productoId = $this->input('producto_id');
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/', // Solo letras y espacios
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/',
             ],
             'email' => [
                 'required',
                 'email',
                 'max:100',
-                Rule::unique('clientes')->where(function ($query) {
-                    return $query->where('producto_id', $this->producto_id);
-                }),
+                Rule::unique('clientes')
+                    ->where(function ($query) use ($productoId) {
+                        if ($productoId) {
+                            return $query->where('producto_id', $productoId);
+                        } else {
+                            return $query->whereNull('producto_id');
+                        }
+                    }),
             ],
             'celular' => [
                 'required',
-                'string',
                 'regex:/^[0-9]{9}$/',
-                'min:9',
-                'max:9',
-                Rule::unique('clientes')->where(function ($query) {
-                    return $query->where('producto_id', $this->producto_id);
-                }),
+                Rule::unique('clientes')
+                    ->where(function ($query) use ($productoId) {
+                        if ($productoId) {
+                            return $query->where('producto_id', $productoId);
+                        } else {
+                            return $query->whereNull('producto_id');
+                        }
+                    }),
             ],
             'producto_id' => [
                 'nullable',
@@ -52,23 +61,29 @@ class StoreClienteRequest extends FormRequest
 
     public function messages(): array
     {
+        $productoId = $this->input('producto_id');
+        $contexto = $productoId ? 'para este producto' : 'en el registro general';
+
         return [
             'name.required' => 'El nombre es obligatorio.',
             'name.max' => 'El nombre no puede exceder 100 caracteres.',
             'name.regex' => 'El nombre solo puede contener letras y espacios.',
-            'email.required' => 'El correo es obligatorio.',
-            'email.email' => 'El formato del correo es inválido.',
-            'email.max' => 'El correo no puede exceder 100 caracteres.',
-            'email.unique' => 'El correo ya está registrado.',
-            'celular.required' => 'El celular es obligatorio.',
-            'celular.regex' => 'El celular solo puede contener números.',
-            'celular.min' => 'El celular debe tener exactamente 9 dígitos.',
-            'celular.max' => 'El celular debe tener exactamente 9 dígitos.',
-            'celular.unique' => 'El número de celular ya está registrado.',
-            'email.unique' => 'Este correo ya está registrado para este producto.',
-            'celular.unique' => 'Este número de celular ya está registrado para este producto.',
-            'producto_id.required' => 'El producto es obligatorio.',
-            'producto_id.exists' => 'El producto seleccionado no es válido.',
+
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El formato del correo electrónico no es válido.',
+            'email.max' => 'El correo electrónico no puede exceder 100 caracteres.',
+            'email.unique' => $productoId
+                ? 'Este correo electrónico ya está registrado para este producto.'
+                : 'Este correo electrónico ya está registrado.',
+
+            'celular.required' => 'El número de celular es obligatorio.',
+            'celular.regex' => 'El celular debe contener exactamente 9 dígitos.',
+            'celular.unique' => $productoId
+                ? 'Este número de celular ya está registrado para este producto.'
+                : 'Este número de celular ya está registrado.',
+
+            'producto_id.integer' => 'El ID del producto debe ser un número válido.',
+            'producto_id.exists' => 'El producto seleccionado no existe.',
         ];
     }
 
@@ -82,10 +97,17 @@ class StoreClienteRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
+        $productoId = $this->input('producto_id');
+        $contexto = $productoId ? 'producto específico' : 'registro general';
+
         throw new HttpResponseException(response()->json([
             'success' => false,
-            'message' => 'Los datos proporcionados no son válidos.',
-            'errors' => $validator->errors()
+            'message' => "Error de validación en {$contexto}. Verifica los datos proporcionados.",
+            'errors' => $validator->errors(),
+            'context' => [
+                'type' => $productoId ? 'producto_especifico' : 'general',
+                'producto_id' => $productoId
+            ]
         ], 422));
     }
 }
