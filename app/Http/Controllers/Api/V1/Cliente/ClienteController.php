@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Contains\HttpStatusCode;
 use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
+use App\Http\Resources\ClienteResource;
 use App\Mail\ClientRegistrationMail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 // use Illuminate\Container\Attributes\Log;
@@ -62,24 +63,10 @@ class ClienteController extends BasicController
             // Obtener clientes con relación cargada
             $clientes = Cliente::with('producto')->paginate($perPage, ['*'], 'page', $page);
 
-            // Mapear los datos para incluir 'nombre_producto'
-            $data = collect($clientes->items())->map(function ($cliente) {
-                return [
-                    'id' => $cliente->id,
-                    'name' => $cliente->name,
-                    'email' => $cliente->email,
-                    'celular' => $cliente->celular,
-                    'producto_id' => $cliente->producto_id,
-                    'nombre_producto' => $cliente->producto ? $cliente->producto->nombre : null,
-                    'created_at' => $cliente->created_at,
-                    'updated_at' => $cliente->updated_at,
-                ];
-            });
-
             $message = $clientes->isEmpty() ? 'No hay clientes para listar.' : 'Clientes listados correctamente.';
 
             $response = [
-                'data' => $data,
+                'data' => ClienteResource::collection($clientes->items()),
                 'total' => $clientes->total(),
                 'current_page' => $clientes->currentPage(),
                 'last_page' => $clientes->lastPage(),
