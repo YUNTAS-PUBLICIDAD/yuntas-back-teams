@@ -63,22 +63,15 @@ class ReclamosController extends BasicController
             $page = request('page', 1);
             $personal = DatosPersonal::with("reclamos")->paginate($perPage, ['*'], 'page', $page);
 
-            /* $reclamos = $personal->map(function ($datos) {
-                return [
-                    'id' => $datos->id,
-                    'datos' => $datos->datos,
-                    'tipo_doc' => $datos->tipo_doc,
-                    'numero_doc' => $datos->numero_doc,
-                    'correo' => $datos->correo,
-                    'telefono' => $datos->telefono,
-                    'fecha_compra' => $datos->reclamos->pluck('fecha_compra'),
-                    'producto' => $datos->reclamos->pluck('producto'),
-                    'detalle_reclamo' => $datos->reclamos->pluck('detalle_reclamo'),
-                    'monto_reclamo' => $datos->reclamos->pluck('monto_reclamo'),
-                ];
-            }); */
+            $response = [
+                'data' => ReclamosResource::collection($personal->items()),
+                'total' => $personal->total(),
+                'current_page' => $personal->currentPage(),
+                'last_page' => $personal->lastPage(),
+                'per_page' => $personal->perPage()
+            ];
 
-            return $this->successResponse(ReclamosResource::collection($personal), 'Reclamos obtenidos exitosamente', HttpStatusCode::OK);
+            return $this->successResponse($response, 'Reclamos obtenidos exitosamente', HttpStatusCode::OK);
 
         } catch(\Exception $e) {
             return $this->errorResponse('Error al mostrar los reclamos: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);

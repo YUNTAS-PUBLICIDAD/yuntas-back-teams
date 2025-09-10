@@ -56,35 +56,7 @@ class BlogController extends BasicController
             $blog = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])
                 ->findOrFail($id);
 
-            /* $showBlog = [
-                'id' => $blog->id,
-                'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
-                'subtitulo' => $blog->subtitulo,
-                'imagen_principal' => asset($blog->imagen_principal),
-                'text_alt_principal' => $blog->text_alt_principal, // ✅ AGREGA ESTO
-                'link' => $blog->link,
-                'imagenes' => $blog->imagenes->map(function ($imagen) {
-                    return [
-                        'ruta_imagen' => asset($imagen->ruta_imagen),
-                        'text_alt' => $imagen->text_alt,
-                    ];
-                }),
-                'parrafos' => $blog->parrafos->map(function ($parrafo) {
-                    return [
-                        'parrafo' => $parrafo->parrafo,
-                    ];
-                }),
-                'etiqueta' => $blog->etiqueta ? [
-                    'meta_titulo' => $blog->etiqueta->meta_titulo,
-                    'meta_descripcion' => $blog->etiqueta->meta_descripcion,
-                ] : null,
-                'url_video' => $blog->url_video,
-                'created_at' => $blog->created_at,
-                'updated_at' => $blog->updated_at
-            ]; */
-
             return $this->apiResponse->successResponse(
-                //$showBlog,
                 new BlogResource($blog),
                 'Blog obtenido exitosamente',
                 HttpStatusCode::OK
@@ -104,35 +76,7 @@ class BlogController extends BasicController
                 ->where('link', $link)
                 ->firstOrFail();
 
-            /* $showBlog = [
-                'id' => $blog->id,
-                'nombre_producto' => $blog->producto ? $blog->producto->nombre : null,
-                'subtitulo' => $blog->subtitulo,
-                'imagen_principal' => asset($blog->imagen_principal),
-                'text_alt_principal' => $blog->text_alt_principal, // ✅ AGREGA ESTO
-                'link' => $blog->link,
-                'imagenes' => $blog->imagenes->map(function ($imagen) {
-                    return [
-                        'ruta_imagen' => asset($imagen->ruta_imagen),
-                        'text_alt' => $imagen->text_alt,
-                    ];
-                }),
-                'parrafos' => $blog->parrafos->map(function ($parrafo) {
-                    return [
-                        'parrafo' => $parrafo->parrafo,
-                    ];
-                }),
-                'etiqueta' => $blog->etiqueta ? [
-                    'meta_titulo' => $blog->etiqueta->meta_titulo,
-                    'meta_descripcion' => $blog->etiqueta->meta_descripcion,
-                ] : null,
-                'url_video' => $blog->url_video,
-                'created_at' => $blog->created_at,
-                'updated_at' => $blog->updated_at
-            ]; */
-
             return $this->apiResponse->successResponse(
-                //$showBlog,
                 new BlogResource($blog),
                 'Blog obtenido exitosamente por link',
                 HttpStatusCode::OK
