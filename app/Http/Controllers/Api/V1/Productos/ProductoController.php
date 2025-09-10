@@ -103,6 +103,22 @@ class ProductoController extends BasicController
             );
         }
     }
+    public function listAll()
+    {
+        try {
+            $productos = Producto::all(); // Trae todos
+            return response()->json([
+                'success' => true,
+                'data' => $productos
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener productos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 
     // public function index(Request $request)
