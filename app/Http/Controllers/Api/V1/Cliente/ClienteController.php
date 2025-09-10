@@ -58,7 +58,7 @@ class ClienteController extends BasicController
     {
         try {
             $page = request()->get('page', 1);
-            $perPage = 10;
+            $perPage = 6;
 
             // Obtener clientes con relación cargada
             $clientes = Cliente::with('producto')->paginate($perPage, ['*'], 'page', $page);
