@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Api\V1\BasicController;
 use App\Http\Contains\HttpStatusCode;
 use App\Http\Resources\ProductoResource;
+use Illuminate\Http\Request;
 
 /**
  * @OA\Tag(
@@ -78,47 +79,23 @@ class ProductoController extends BasicController
     public function index()
     {
         try {
-            $perPage = request('perPage', 5);
+            $perPage = request('perPage', 6);
             $page = request('page', 1);
 
+            $totalCount = Producto::count();
+            Log::info('Total productos en BD: ' . $totalCount);
+
             $productos = Producto::with(['imagenes', 'etiqueta'])
-                ->orderBy('created_at', 'desc')
                 ->paginate($perPage, ['*'], 'page', $page);
-
-            /* $showProductos = $productos->map(function ($producto) {
-                return [
-                    'id' => $producto->id,
-                    'link' => $producto->link,
-                    'nombre' => $producto->nombre,
-                    'titulo' => $producto->titulo,
-                    'descripcion' => $producto->descripcion,
-                    'seccion' => $producto->seccion,
-                    'imagen_principal' => asset($producto->imagen_principal),
-                    'especificaciones' => $producto->especificaciones ?? [],
-                    'beneficios' => $producto->beneficios ?? [],
-                    'imagenes' => $producto->imagenes->map(function ($imagen) {
-                        return [
-                            'id' => $imagen->id,
-                            'url_imagen' => asset($imagen->url_imagen),
-                            'texto_alt_SEO' => $imagen->texto_alt_SEO,
-                        ];
-                    }),
-                    'etiqueta' => $producto->etiqueta ? [
-                        'meta_titulo' => $producto->etiqueta->meta_titulo,
-                        'meta_descripcion' => $producto->etiqueta->meta_descripcion,
-                    ] : null,
-
-                    'created_at' => $producto->created_at,
-                    'updated_at' => $producto->updated_at,
-                ];
-            }); */
-
-            return $this->apiResponse->successResponse(
-                //$showProductos,
-                ProductoResource::collection($productos),
-                'Productos obtenidos exitosamente',
-                HttpStatusCode::OK
-            );
+            Log::info('Productos obtenidos en la página ' . $page . ': ' . $productos->count());
+            Log::info('Parámetros recibidos -> page: ' . $page . ', perPage: ' . $perPage);
+            return response()->json([
+                'data' => ProductoResource::collection($productos->items()),
+                'current_page' => $productos->currentPage(),
+                'last_page' => $productos->lastPage(),
+                'per_page' => $productos->perPage(),
+                'total' => $productos->total(),
+            ]);
         } catch (\Exception $e) {
             return $this->apiResponse->errorResponse(
                 'Error al obtener los productos: ' . $e->getMessage(),
@@ -126,6 +103,24 @@ class ProductoController extends BasicController
             );
         }
     }
+
+
+    // public function index(Request $request)
+    // {
+    //     $perPage = $request->query('per_page', 6);
+    //     $page = $request->query('page', 1);
+
+    //     $productos = Producto::with(['imagenes', 'etiqueta'])
+    //         ->paginate((int) $perPage, ['*'], 'page', $page);
+
+    //     return response()->json([
+    //         'data' => ProductoResource::collection($productos->items()),
+    //         'current_page' => $productos->currentPage(),
+    //         'last_page' => $productos->lastPage(),
+    //         'per_page' => $productos->perPage(),
+    //         'total' => $productos->total(),
+    //     ]);
+    // }
 
 
     /**
@@ -310,7 +305,7 @@ class ProductoController extends BasicController
      */
     public function show($id)
     {
-        try{
+        try {
             $producto = Producto::with(['imagenes', 'etiqueta'])->findOrFail($id);
 
             /* $showProducto = [
@@ -344,15 +339,12 @@ class ProductoController extends BasicController
                 'Producto obtenido exitosamente',
                 HttpStatusCode::OK
             );
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return $this->apiResponse->errorResponse(
                 'Error al obtener el producto: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
             );
         }
-
-
     }
 
     public function showByLink($link)
