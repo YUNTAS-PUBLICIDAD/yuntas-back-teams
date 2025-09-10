@@ -65,6 +65,7 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(ProductoController::class)->prefix('productos')->group(function () {
         Route::get('/', 'index');
+        Route::get('/all', 'listAll');
         Route::get('/{id}', 'show');
         Route::get('/link/{link}', 'showByLink');
 
