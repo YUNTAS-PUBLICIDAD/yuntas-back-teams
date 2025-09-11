@@ -10,7 +10,9 @@ use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
 use App\Http\Resources\ClienteResource;
 use App\Mail\ClientRegistrationMail;
+use App\Models\Producto;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Http;
 // use Illuminate\Container\Attributes\Log;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -141,6 +143,18 @@ class ClienteController extends BasicController
             Mail::to($request->email)->send(new ClientRegistrationMail(
                 $request->only('name')
             ));
+
+            // Envio de mensaje de WhatsApp temporal
+            $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
+
+            $producto = Producto::findOrFail($request->producto_id);
+            $comentario = "Aqui tienes información sobre: " . $producto->nombre;
+
+            // Se está agregando el código del país aqui, pero se debería cambiar en el front
+            Http::post($whatsappServiceUrl . '/send-message-accept', [
+                'telefono' => "+51 " . $request->celular,
+                'comentario' => $comentario,
+            ]);
 
             return response()->json([
                 'success' => true,
