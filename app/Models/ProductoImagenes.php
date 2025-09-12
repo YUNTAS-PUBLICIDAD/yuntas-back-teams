@@ -11,7 +11,8 @@ class ProductoImagenes extends Model
     protected $table = "producto_imagenes";
     protected $fillable = [
         'url_imagen',
-        'texto_alt_SEO'
+        'texto_alt_SEO',
+        'tipo'
     ];
     public $timestamps = true;
     public function producto(): BelongsTo
