@@ -197,7 +197,7 @@ class ProductoController extends BasicController
             Log::info('Request files:', $request->allFiles());
 
             // Preparar datos del producto (excluyendo especificaciones, beneficios, imagenes y etiquetas)
-            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiqueta']);
+            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiqueta', 'imagen_tipos']);
 
             // Manejar imagen_principal
             if ($request->hasFile('imagen_principal')) {
@@ -214,8 +214,23 @@ class ProductoController extends BasicController
             // Crear el producto
             $producto = Producto::create($data);
 
-            // Procesar imágenes adicionales
+            // Procesar imágenes adicionales con orden específico
             if ($request->has('imagenes')) {
+                // Obtener los tipos de imagen enviados
+                $tiposImagen = $request->get('imagen_tipos', []);
+                Log::info('Tipos de imagen recibidos:', $tiposImagen);
+
+                // Mapeo de tipos a índices esperados para mantener orden
+                $tipoAIndice = [
+                    'imagen_hero' => 0,
+                    'imagen_especificaciones' => 1,
+                    'imagen_beneficios' => 2,
+                    'imagen_popups' => 3
+                ];
+
+                // Crear array ordenado de imágenes
+                $imagenesOrdenadas = [];
+
                 foreach ($request->imagenes as $index => $imagen) {
                     try {
                         if ($request->hasFile("imagenes.$index")) {
@@ -227,31 +242,39 @@ class ProductoController extends BasicController
                                 continue;
                             }
 
-                            $nombreArchivo = time() . '_' . $index . '_' . $archivo->getClientOriginalName();
+                            // Determinar el tipo de imagen y su posición final
+                            $tipoImagen = $tiposImagen[$index] ?? 'adicional';
+                            $posicionFinal = $tipoAIndice[$tipoImagen] ?? $index;
+
+                            $nombreArchivo = time() . '_' . $tipoImagen . '_' . $archivo->getClientOriginalName();
                             $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
 
                             if ($rutaImagen) {
-                                $producto->imagenes()->create([
+                                $imagenesOrdenadas[$posicionFinal] = [
                                     'url_imagen' => '/storage/' . $rutaImagen,
-                                    'texto_alt_SEO' => 'Imagen del producto ' . $producto->nombre
-                                ]);
+                                    'texto_alt_SEO' => 'Imagen ' . $tipoImagen . ' del producto ' . $producto->nombre,
+                                    'tipo' => $tipoImagen
+                                ];
                             }
                         }
                     } catch (\Exception $imageException) {
                         Log::error("Error procesando imagen índice {$index}: " . $imageException->getMessage());
                     }
                 }
+
+                // Crear imágenes en el orden correcto
+                ksort($imagenesOrdenadas); // Ordenar por índice
+                foreach ($imagenesOrdenadas as $imagenData) {
+                    $producto->imagenes()->create([
+                        'url_imagen' => $imagenData['url_imagen'],
+                        'texto_alt_SEO' => $imagenData['texto_alt_SEO'],
+                        'tipo' => $imagenData['tipo']
+                    ]);
+                    Log::info("Imagen creada: " . $imagenData['tipo'] . " - " . $imagenData['url_imagen']);
+                }
             }
 
             // Procesar etiquetas
-            // if ($request->has('etiquetas')) {
-            //     foreach ($request->etiquetas as $etiquetaData) {
-            //         $producto->etiquetas()->create([
-            //             'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-            //             'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
-            //         ]);
-            //     }
-            // }
             if ($request->has('etiqueta')) {
                 $producto->etiqueta()->create([
                     'meta_titulo'      => $request->etiqueta['meta_titulo'] ?? null,
@@ -261,10 +284,15 @@ class ProductoController extends BasicController
 
             DB::commit();
             Log::info('=== PRODUCTO CREADO EXITOSAMENTE ===');
+
+            // Cargar relaciones para la respuesta
+            $producto->load(['imagenes', 'etiqueta']);
+
             return $this->successResponse($producto, 'Producto creado exitosamente', HttpStatusCode::CREATED);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear producto: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return $this->errorResponse('Error al crear el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
@@ -483,7 +511,7 @@ class ProductoController extends BasicController
             Log::info('Request files:', $request->allFiles());
 
             // Preparar datos del producto (excluyendo especificaciones, beneficios, imagenes y etiquetas)
-            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiqueta']);
+            $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiqueta', 'imagen_tipos']);
 
             // Manejar imagen_principal
             if ($request->hasFile('imagen_principal')) {
@@ -494,7 +522,7 @@ class ProductoController extends BasicController
                 Log::info('Nueva imagen principal guardada: ' . $data['imagen_principal']);
             }
 
-            // Actualizar especificaciones y beneficios como JSON
+            // Actualizar especificaciones, beneficios como JSON
             if ($request->has('especificaciones')) {
                 $data['especificaciones'] = $request->especificaciones;
             }
@@ -505,48 +533,83 @@ class ProductoController extends BasicController
             // Actualizar el producto
             $producto->update($data);
 
-            // Procesar imágenes adicionales
-            if ($request->has('imagenes')) {
-                // Eliminar imágenes anteriores
-                $producto->imagenes()->delete();
+            // NUEVA LÓGICA PARA MANEJAR IMÁGENES ADICIONALES
+            if ($request->has('imagenes') || $request->has('imagen_tipos')) {
+                Log::info('Procesando actualización de imágenes adicionales');
 
-                foreach ($request->imagenes as $index => $imagen) {
-                    try {
-                        if ($request->hasFile("imagenes.$index")) {
-                            $archivo = $request->file("imagenes.$index");
+                // Obtener imágenes existentes ordenadas por ID
+                $imagenesExistentes = $producto->imagenes()->orderBy('id')->get()->toArray();
+                Log::info('Imágenes existentes:', $imagenesExistentes);
 
-                            // Validar archivo
-                            if (!$archivo->isValid() || $archivo->getSize() == 0) {
-                                Log::info("Saltando archivo inválido en índice {$index}");
-                                continue;
+                // Obtener los tipos de imagen enviados
+                $tiposImagen = $request->get('imagen_tipos', []);
+                Log::info('Tipos de imagen recibidos:', $tiposImagen);
+
+                // Mapeo de tipos a índices esperados
+                $tipoAIndice = [
+                    'imagen_hero' => 0,
+                    'imagen_especificaciones' => 1,
+                    'imagen_beneficios' => 2,
+                    'imagen_popups' => 3
+                ];
+
+                // Procesar cada imagen enviada
+                if ($request->has('imagenes')) {
+                    foreach ($request->imagenes as $index => $imagen) {
+                        try {
+                            if ($request->hasFile("imagenes.$index")) {
+                                $archivo = $request->file("imagenes.$index");
+
+                                // Validar archivo
+                                if (!$archivo->isValid() || $archivo->getSize() == 0) {
+                                    Log::info("Saltando archivo inválido en índice {$index}");
+                                    continue;
+                                }
+
+                                // Determinar el tipo de imagen
+                                $tipoImagen = $tiposImagen[$index] ?? 'adicional';
+                                $indiceEsperado = $tipoAIndice[$tipoImagen] ?? $index;
+
+                                Log::info("Procesando imagen índice {$index}, tipo: {$tipoImagen}, índice esperado: {$indiceEsperado}");
+
+                                // Guardar nueva imagen
+                                $nombreArchivo = time() . '_' . $tipoImagen . '_' . $archivo->getClientOriginalName();
+                                $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
+
+                                if ($rutaImagen) {
+                                    // Buscar si existe una imagen en esa posición
+                                    $imagenExistente = null;
+                                    if (isset($imagenesExistentes[$indiceEsperado])) {
+                                        $imagenExistente = $producto->imagenes()->find($imagenesExistentes[$indiceEsperado]['id']);
+                                    }
+
+                                    if ($imagenExistente) {
+                                        // Actualizar imagen existente
+                                        Log::info("Actualizando imagen existente ID: {$imagenExistente->id}");
+                                        $imagenExistente->update([
+                                            'url_imagen' => '/storage/' . $rutaImagen,
+                                            'texto_alt_SEO' => 'Imagen ' . $tipoImagen . ' del producto ' . $producto->nombre,
+                                            'tipo' => $tipoImagen
+                                        ]);
+                                    } else {
+                                        // Crear nueva imagen
+                                        Log::info("Creando nueva imagen para posición: {$indiceEsperado}");
+                                        $producto->imagenes()->create([
+                                            'url_imagen' => '/storage/' . $rutaImagen,
+                                            'texto_alt_SEO' => 'Imagen ' . $tipoImagen . ' del producto ' . $producto->nombre,
+                                            'tipo' => $tipoImagen
+                                        ]);
+                                    }
+                                }
                             }
-
-                            $nombreArchivo = time() . '_' . $index . '_' . $archivo->getClientOriginalName();
-                            $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
-
-                            if ($rutaImagen) {
-                                $producto->imagenes()->create([
-                                    'url_imagen' => '/storage/' . $rutaImagen,
-                                    'texto_alt_SEO' => 'Imagen del producto ' . $producto->nombre
-                                ]);
-                            }
+                        } catch (\Exception $imageException) {
+                            Log::error("Error procesando imagen índice {$index}: " . $imageException->getMessage());
                         }
-                    } catch (\Exception $imageException) {
-                        Log::error("Error procesando imagen índice {$index}: " . $imageException->getMessage());
                     }
                 }
             }
 
             // Procesar etiquetas
-            // if ($request->has('etiquetas')) {
-            //     $producto->etiquetas()->delete(); // Eliminar etiquetas anteriores
-            //     foreach ($request->etiquetas as $etiquetaData) {
-            //         $producto->etiquetas()->create([
-            //             'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-            //             'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
-            //         ]);
-            //     }
-            // }
             if ($request->has('etiqueta')) {
                 $producto->etiqueta()->updateOrCreate(
                     ['producto_id' => $producto->id],
@@ -559,10 +622,15 @@ class ProductoController extends BasicController
 
             DB::commit();
             Log::info('=== PRODUCTO ACTUALIZADO EXITOSAMENTE ===');
+
+            // Recargar el producto con sus relaciones
+            $producto->load(['imagenes', 'etiqueta']);
+
             return $this->successResponse($producto, 'Producto actualizado exitosamente', HttpStatusCode::OK);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al actualizar producto: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return $this->errorResponse('Error al actualizar el producto: ' . $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }

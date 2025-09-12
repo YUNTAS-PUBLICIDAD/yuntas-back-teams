@@ -179,22 +179,21 @@ class BlogController extends BasicController
         Log::info('Validated data:', ['datos_validados' => $datosValidados]);
 
         DB::beginTransaction();
-        $blog = Blog::findOrFail($id);
+        $blog = Blog::with('imagenes')->findOrFail($id);
 
         try {
-            $camposActualizar = [];
-            foreach (["producto_id", "subtitulo", "link", "url_video"] as $campo) {
-                if (array_key_exists($campo, $datosValidados)) {
-                    $camposActualizar[$campo] = $datosValidados[$campo];
-                }
-            }
+            // Campos principales
+            $camposActualizar = collect(["producto_id", "subtitulo", "link", "url_video"])
+                ->filter(fn($campo) => array_key_exists($campo, $datosValidados))
+                ->mapWithKeys(fn($campo) => [$campo => $datosValidados[$campo]])
+                ->toArray();
 
+            // Imagen principal
             if ($request->hasFile('imagen_principal')) {
-                $nuevaRutaImagenPrincipal = $this->imageService->actualizarImagen(
+                $camposActualizar['imagen_principal'] = $this->imageService->actualizarImagen(
                     $request->file('imagen_principal'),
                     $blog->imagen_principal
                 );
-                $camposActualizar['imagen_principal'] = $nuevaRutaImagenPrincipal;
 
                 if (isset($datosValidados['text_alt_principal'])) {
                     $camposActualizar['text_alt_principal'] = $datosValidados['text_alt_principal'];
@@ -203,74 +202,75 @@ class BlogController extends BasicController
 
             $blog->update($camposActualizar);
 
-            if ($request->hasFile('imagenes')) {
-                // Borrar imágenes y eliminar archivos antiguos
-                $rutasImagenesAntiguas = $blog->imagenes->pluck('ruta_imagen')->toArray();
-                if (!empty($rutasImagenesAntiguas)) {
-                    $this->imageService->eliminarImagenes($rutasImagenesAntiguas);
-                }
-                $blog->imagenes()->delete();
+            // ✅ IMÁGENES SECUNDARIAS (0-2)
+            $imagenesNuevas = $request->file('imagenes') ?? [];
+            $altImagenes = $datosValidados['alt_imagenes'] ?? [];
+            $imagenesExistentes = $blog->imagenes->sortBy('id')->values(); // ordenadas por id
 
-                $imagenes = $request->file('imagenes');
-                $altImagenes = $datosValidados['alt_imagenes'] ?? [];
-                $nombreProducto = $blog->producto ? $blog->producto->nombre : '';
+            for ($i = 0; $i < 3; $i++) {
+                $nuevaImagen = $imagenesNuevas[$i] ?? null;
+                $nuevoAlt = $altImagenes[$i] ?? null;
+                $imagenExistente = $imagenesExistentes->get($i);
 
-                foreach ($imagenes as $i => $imagen) {
-                    $ruta = $this->imageService->guardarImagen($imagen);
-                    $alt = $altImagenes[$i] ?? 'Imagen del blog ' . $nombreProducto;
-                    $blog->imagenes()->create([
-                        "ruta_imagen" => $ruta,
-                        "text_alt" => $alt,
-                    ]);
-                }
-            } else if (isset($datosValidados['alt_imagenes'])) {
-                // Si solo llegan alt para imágenes existentes, actualizamos solo el texto alt
-                $imagenes = $blog->imagenes;
-                foreach ($imagenes as $index => $imagen) {
-                    if (isset($datosValidados['alt_imagenes'][$index])) {
-                        $imagen->update(['text_alt' => $datosValidados['alt_imagenes'][$index]]);
+                if ($nuevaImagen) {
+                    $nuevaRuta = $imagenExistente
+                        ? $this->imageService->actualizarImagen($nuevaImagen, $imagenExistente->ruta_imagen)
+                        : $this->imageService->guardarImagen($nuevaImagen);
+
+                    $data = [
+                        'ruta_imagen' => $nuevaRuta,
+                        'text_alt' => $nuevoAlt ?? 'Imagen del blog ' . ($blog->producto->nombre ?? ''),
+                    ];
+
+                    if ($imagenExistente) {
+                        $imagenExistente->update($data);
+                    } else {
+                        $blog->imagenes()->create($data);
                     }
+
+                    Log::info("✅ Imagen secundaria procesada en posición {$i}", $data);
+                } elseif ($nuevoAlt !== null && $imagenExistente) {
+                    $imagenExistente->update(['text_alt' => $nuevoAlt]);
+                    Log::info("✅ ALT actualizado en posición {$i}: {$nuevoAlt}");
                 }
             }
 
+            // 🧹 Eliminar imágenes sobrantes
+            if ($imagenesExistentes->count() > 3) {
+                $excedentes = $imagenesExistentes->slice(3);
+                foreach ($excedentes as $imagen) {
+                    $this->imageService->eliminarImagenes([$imagen->ruta_imagen]);
+                    $imagen->delete();
+                }
+            }
+
+            // ✅ PÁRRAFOS
             if (isset($datosValidados['parrafos'])) {
                 $blog->parrafos()->delete();
-                foreach ($datosValidados["parrafos"] as $item) {
-                    $blog->parrafos()->create([
-                        "parrafo" => $item
-                    ]);
+                foreach ($datosValidados['parrafos'] as $parrafo) {
+                    $blog->parrafos()->create(['parrafo' => $parrafo]);
                 }
             }
 
-            // ✅ PROCESAMIENTO CORREGIDO DE ETIQUETAS
+            // ✅ ETIQUETAS
             if (isset($datosValidados['etiqueta'])) {
-                $blog->etiqueta()->delete(); // Eliminar etiquetas anteriores
+                $blog->etiqueta()->delete();
 
-                // Decodificar JSON si viene como string
                 $etiquetaData = is_string($datosValidados['etiqueta'])
                     ? json_decode($datosValidados['etiqueta'], true)
                     : $datosValidados['etiqueta'];
 
-                Log::info('Procesando etiqueta:', ['etiqueta_data' => $etiquetaData]);
-
                 if (is_array($etiquetaData)) {
-                    // Si es un array asociativo directo (como viene del frontend)
-                    if (isset($etiquetaData['meta_titulo']) || isset($etiquetaData['meta_descripcion'])) {
-                        $blog->etiqueta()->create([
-                            'meta_titulo' => $etiquetaData['meta_titulo'] ?? null,
-                            'meta_descripcion' => $etiquetaData['meta_descripcion'] ?? null,
-                        ]);
-                        Log::info('Etiqueta creada correctamente');
-                    }
-                    // Si es un array de arrays (formato anterior)
-                    else {
-                        foreach ($etiquetaData as $item) {
-                            if (is_array($item)) {
-                                $blog->etiqueta()->create([
-                                    'meta_titulo' => $item['meta_titulo'] ?? null,
-                                    'meta_descripcion' => $item['meta_descripcion'] ?? null,
-                                ]);
-                            }
+                    $etiquetas = isset($etiquetaData['meta_titulo']) || isset($etiquetaData['meta_descripcion'])
+                        ? [$etiquetaData]
+                        : $etiquetaData;
+
+                    foreach ($etiquetas as $etiqueta) {
+                        if (is_array($etiqueta)) {
+                            $blog->etiqueta()->create([
+                                'meta_titulo' => $etiqueta['meta_titulo'] ?? null,
+                                'meta_descripcion' => $etiqueta['meta_descripcion'] ?? null,
+                            ]);
                         }
                     }
                 }
@@ -279,18 +279,16 @@ class BlogController extends BasicController
             DB::commit();
 
             $blogActualizado = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->findOrFail($id);
-
-            Log::info('Blog actualizado correctamente:', ['blog_id' => $id, 'subtitulo' => $blogActualizado->subtitulo]);
+            Log::info('✅ Blog actualizado correctamente', ['blog_id' => $id]);
 
             return $this->apiResponse->successResponse(
-                $blogActualizado,
+                new BlogResource($blogActualizado),
                 'Blog actualizado exitosamente',
                 HttpStatusCode::OK
             );
         } catch (\Exception $e) {
             DB::rollBack();
-
-            Log::error('Error actualizando blog:', ['error' => $e->getMessage(), 'blog_id' => $id]);
+            Log::error('❌ Error actualizando blog', ['error' => $e->getMessage(), 'blog_id' => $id]);
 
             return $this->apiResponse->errorResponse(
                 'Error al actualizar el blog: ' . $e->getMessage(),
