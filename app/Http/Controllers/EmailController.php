@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CorreoPersonalizado;
 use App\Http\Requests\EmailRequest;
+use App\Mail\ProductInfoMail;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -77,6 +80,46 @@ class EmailController extends Controller
             return response()->json(['message' => 'Correo enviado exitosamente'], 200);
         } catch (Exception $e) {
             return response()->json(['error' => 'Error al enviar el correo: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function sendEmailByProductLink(Request $request)
+    {
+        $views = [
+            'paneles-led-electronicos'          => 'emails.prueba.prueba1',
+            'letreros-acrilicos'                => 'emails.prueba.prueba2',
+        ];
+
+        $link = $request->link;
+
+        if (!isset($views[$link])) {
+            abort(404, "No hay plantilla de email para el producto {$link}");
+        }
+
+        try {
+            $view = $views[$link];
+
+            Mail::to($request->email)->send(
+                new ProductInfoMail($request->only('name'), $view)
+            );
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Correo enviado correctamente'
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Error al enviar correo de producto', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'email' => $request->email,
+                'link'  => $link,
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Hubo un problema al enviar el correo. Intente más tarde.'
+            ], 500);
         }
     }
 }
