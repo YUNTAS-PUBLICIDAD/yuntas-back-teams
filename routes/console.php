@@ -1,10 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use App\Console\Commands\EnviarPrimeraPublicidad;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
-
-Schedule::command(EnviarPrimeraPublicidad::class)->timezone('America/Lima')->cron('*/2 * * * *');
+Schedule::command(EnviarPrimeraPublicidad::class)->timezone('America/Lima')->cron('*/1 * * * *');
