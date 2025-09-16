@@ -1,6 +1,6 @@
 <?php
 
-use App\Console\Commands\EnviarPrimeraPublicidad;
+use App\Console\Commands\SendFirstPromotionalEmail;
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command(EnviarPrimeraPublicidad::class)->timezone('America/Lima')->cron('*/1 * * * *');
+Schedule::command(SendFirstPromotionalEmail::class)->timezone('America/Lima')->cron('*/1 * * * *');
