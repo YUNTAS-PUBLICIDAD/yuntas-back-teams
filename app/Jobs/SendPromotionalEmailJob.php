@@ -29,7 +29,7 @@ class SendPromotionalEmailJob implements ShouldQueue
         try {
             $mail = new ProductInfoMail(['name' => $this->name], $this->view);
             Mail::to($this->email_destinario)->send($mail);
-            Log::info('Correo enviado exitosamente a' . $this->email_destinario);
+            Log::info('Correo enviado exitosamente a ' . $this->email_destinario);
         } catch (\Exception $e) {
             Log::error('Error al enviar correo promocional a ' . $this->email_destinario . ': ' . $e->getMessage());
         }
