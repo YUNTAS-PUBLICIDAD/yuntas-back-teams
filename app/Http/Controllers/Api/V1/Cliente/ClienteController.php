@@ -11,6 +11,7 @@ use App\Http\Requests\Cliente\UpdateClienteRequest;
 use App\Http\Resources\ClienteResource;
 use App\Mail\ClientRegistrationMail;
 use App\Models\Producto;
+use App\Services\ProductEmailService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Http;
 // use Illuminate\Container\Attributes\Log;
@@ -133,16 +134,17 @@ class ClienteController extends BasicController
      *     )
      * )
      */
-    public function store(StoreClienteRequest $request)
+    public function store(StoreClienteRequest $request, ProductEmailService $emailService)
     {
         try {
             // Crear el cliente
             $cliente = Cliente::create($request->all());
 
             // Enviar email
-            Mail::to($request->email)->send(new ClientRegistrationMail(
+            /* Mail::to($request->email)->send(new ClientRegistrationMail(
                 $request->only('name')
-            ));
+            )); */
+            $emailService->sendByProductLink($cliente->email, $cliente->name, $cliente->producto->link);
 
             // Envio de mensaje de WhatsApp temporal
             $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
