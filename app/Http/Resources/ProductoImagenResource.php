@@ -12,6 +12,7 @@ class ProductoImagenResource extends JsonResource
         return [
             'id' => $this->id,
             'url_imagen' => asset($this->url_imagen),
+            'title' => $this->title,
             'texto_alt_SEO' => $this->texto_alt_SEO,
         ];
     }
