@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Jobs\SendPromotionalEmailJob;
 use App\Models\Cliente;
-use App\Models\Producto;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
