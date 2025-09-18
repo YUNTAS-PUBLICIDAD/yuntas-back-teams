@@ -267,6 +267,7 @@ class ProductoController extends BasicController
                 foreach ($imagenesOrdenadas as $imagenData) {
                     $producto->imagenes()->create([
                         'url_imagen' => $imagenData['url_imagen'],
+                        'title' => 'el back lo sufre',
                         'texto_alt_SEO' => $imagenData['texto_alt_SEO'],
                         'tipo' => $imagenData['tipo']
                     ]);

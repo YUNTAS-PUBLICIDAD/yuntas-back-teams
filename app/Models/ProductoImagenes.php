@@ -11,6 +11,7 @@ class ProductoImagenes extends Model
     protected $table = "producto_imagenes";
     protected $fillable = [
         'url_imagen',
+        'title',
         'texto_alt_SEO',
         'tipo'
     ];
