@@ -13,6 +13,7 @@ class BlogImagenes extends Model
     protected $fillable = [
         'ruta_imagen',
         'text_alt',
+        'title',
         'blog_id'
     ];
 
@@ -20,5 +21,5 @@ class BlogImagenes extends Model
     public function blog(): BelongsTo
     {
         return $this->belongsTo(Blog::class, 'blog_id');
-    }   
+    }
 }

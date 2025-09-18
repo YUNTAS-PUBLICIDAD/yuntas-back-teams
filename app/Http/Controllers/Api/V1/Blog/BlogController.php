@@ -128,6 +128,7 @@ class BlogController extends BasicController
                     $alt = $altImagenes[$i] ?? 'Imagen del blog ' . ($blog->producto ? $blog->producto->nombre : '');
                     $blog->imagenes()->create([
                         "ruta_imagen" => $ruta,
+                        "title" => "title en blogs",
                         "text_alt" => $alt,
                     ]);
                     Log::info("✅ Imagen secundaria guardada: {$ruta} (ALT: {$alt})");
