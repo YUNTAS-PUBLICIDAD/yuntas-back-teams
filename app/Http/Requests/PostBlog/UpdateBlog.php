@@ -40,7 +40,9 @@ class UpdateBlog extends FormRequest
             'alt_imagenes.0' => 'nullable|string|max:255',
             'alt_imagenes.1' => 'nullable|string|max:255',
             'alt_imagenes.2' => 'nullable|string|max:255',
-
+            // ✅ Validación mejorada para title images con índices específicos
+            'title_imagenes' => 'sometimes|array',
+            'title_imagenes.*' => 'sometimes|string|max:255',
             'text_alt_principal' => 'sometimes|string|max:255',
 
             'parrafos' => 'nullable|array',

@@ -95,8 +95,8 @@ class BlogController extends BasicController
 
         // Log de datos validados
         Log::info('📥 Datos validados recibidos en el store:', $datosValidados);
-        // Log específico para text_alt_principal
-        Log::info('🖼️ ALT de imagen principal recibido:', ['text_alt_principal' => $datosValidados['text_alt_principal'] ?? 'NO RECIBIDO']);
+        Log::info('🖼️ TITLES de imágenes secundarias:', ['title_imagenes' => $datosValidados['title_imagenes'] ?? 'NO RECIBIDO']);
+
         DB::beginTransaction();
 
         try {
@@ -118,20 +118,25 @@ class BlogController extends BasicController
 
             Log::info("📝 Blog creado con ID: {$blog->id}");
 
-            // Guardar imágenes secundarias si se envían
+            // Guardar imágenes secundarias con títulos dinámicos
             if ($request->hasFile('imagenes')) {
                 $imagenes = $request->file('imagenes');
                 $altImagenes = $datosValidados['alt_imagenes'] ?? [];
+                $titleImagenes = $datosValidados['title_imagenes'] ?? [];
 
                 foreach ($imagenes as $i => $imagen) {
                     $ruta = $this->imageService->guardarImagen($imagen);
                     $alt = $altImagenes[$i] ?? 'Imagen del blog ' . ($blog->producto ? $blog->producto->nombre : '');
+
+                    // Usar título enviado desde frontend o fallback al nombre del archivo
+                    $title = $titleImagenes[$i] ?? pathinfo($imagen->getClientOriginalName(), PATHINFO_FILENAME);
+
                     $blog->imagenes()->create([
                         "ruta_imagen" => $ruta,
-                        "title" => "title en blogs",
+                        "title" => $title,
                         "text_alt" => $alt,
                     ]);
-                    Log::info("✅ Imagen secundaria guardada: {$ruta} (ALT: {$alt})");
+                    Log::info("✅ Imagen secundaria guardada: {$ruta} (ALT: {$alt}, TITLE: {$title})");
                 }
             }
 
@@ -172,7 +177,6 @@ class BlogController extends BasicController
             );
         }
     }
-
     public function update(UpdateBlog $request, $id)
     {
         Log::info('PATCH Blog Request received:', ['request_all' => $request->all(), 'id' => $id]);
@@ -206,11 +210,13 @@ class BlogController extends BasicController
             // ✅ IMÁGENES SECUNDARIAS (0-2)
             $imagenesNuevas = $request->file('imagenes') ?? [];
             $altImagenes = $datosValidados['alt_imagenes'] ?? [];
+            $titleImagenes = $datosValidados['title_imagenes'] ?? [];
             $imagenesExistentes = $blog->imagenes->sortBy('id')->values(); // ordenadas por id
 
             for ($i = 0; $i < 3; $i++) {
                 $nuevaImagen = $imagenesNuevas[$i] ?? null;
                 $nuevoAlt = $altImagenes[$i] ?? null;
+                $nuevoTitle = $titleImagenes[$i] ?? null;
                 $imagenExistente = $imagenesExistentes->get($i);
 
                 if ($nuevaImagen) {
@@ -221,6 +227,7 @@ class BlogController extends BasicController
                     $data = [
                         'ruta_imagen' => $nuevaRuta,
                         'text_alt' => $nuevoAlt ?? 'Imagen del blog ' . ($blog->producto->nombre ?? ''),
+                        'title' => $nuevoTitle ?? '',
                     ];
 
                     if ($imagenExistente) {
@@ -230,9 +237,21 @@ class BlogController extends BasicController
                     }
 
                     Log::info("✅ Imagen secundaria procesada en posición {$i}", $data);
-                } elseif ($nuevoAlt !== null && $imagenExistente) {
-                    $imagenExistente->update(['text_alt' => $nuevoAlt]);
-                    Log::info("✅ ALT actualizado en posición {$i}: {$nuevoAlt}");
+                } elseif ($imagenExistente && ($nuevoAlt !== null || $nuevoTitle !== null)) {
+                    // Actualizar text_alt y/o title aunque no haya nueva imagen
+                    $dataActualizar = [];
+
+                    if ($nuevoAlt !== null) {
+                        $dataActualizar['text_alt'] = $nuevoAlt;
+                    }
+                    if ($nuevoTitle !== null) {
+                        $dataActualizar['title'] = $nuevoTitle;
+                    }
+
+                    if (!empty($dataActualizar)) {
+                        $imagenExistente->update($dataActualizar);
+                        Log::info("✅ Imagen existente actualizada en posición {$i}", $dataActualizar);
+                    }
                 }
             }
 
@@ -297,6 +316,7 @@ class BlogController extends BasicController
             );
         }
     }
+
 
     public function destroy($id)
     {
