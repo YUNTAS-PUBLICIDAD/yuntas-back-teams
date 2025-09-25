@@ -89,6 +89,7 @@ Route::prefix('v1')->group(function () {
 
     Route::controller(EmailController::class)->prefix('email')->group(function () {
         Route::post('/', 'sendEmail');
+        Route::post('/product-link', 'sendEmailByProductLink');
     });
 
     Route::middleware('auth:sanctum')->group(function () {
