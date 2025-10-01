@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
 use App\Http\Controllers\Api\V1\WhatsApp\WhatsAppController;
+use App\Http\Controllers\Api\V1\Productos\InfoProductoController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\PermissionController;
@@ -79,6 +80,9 @@ Route::prefix('v1')->group(function () {
 
     // Cliente (Registro popup público)
     Route::post('/clientes', [ClienteController::class, 'store']);
+    
+    Route::post('/solicitar-info-producto', [InfoProductoController::class, 'enviarInformacion']);
+
     // Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
     //     Route::post('/', 'store');
     // });
