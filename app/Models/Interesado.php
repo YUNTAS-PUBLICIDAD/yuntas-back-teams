@@ -11,6 +11,8 @@ class Interesado extends Model
     use HasFactory;
 
     protected $fillable = [
+        'nombre',
+        'email',
         'cliente_id',
         'producto_id'
     ];
