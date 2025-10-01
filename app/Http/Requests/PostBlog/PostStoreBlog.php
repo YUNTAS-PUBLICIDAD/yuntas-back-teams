@@ -5,7 +5,7 @@ namespace App\Http\Requests\PostBlog;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
-
+use Illuminate\Validation\Rule;
 class PostStoreBlog extends FormRequest
 {
     /**
@@ -23,6 +23,7 @@ class PostStoreBlog extends FormRequest
      */
     public function rules()
     {
+
         return [
             'producto_id' => 'required|integer|exists:productos,id',
             'subtitulo' => 'required|string|max:255',
@@ -41,7 +42,12 @@ class PostStoreBlog extends FormRequest
             'url_video' => ['nullable', 'url', 'max:255'],
 
             // Agregar validación para los campos meta y link (por ahora link)
-            'link' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'link' => [
+                'nullable', 
+                'string', 
+                'max:255', 
+                'regex:/^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/', 
+                Rule::unique('blogs', 'link')],
         ];
     }
 

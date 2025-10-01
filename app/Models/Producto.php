@@ -48,10 +48,7 @@ class Producto extends Model
         return $this->hasMany(Blog::class, 'producto_id', 'id');
     }
 
-    public function especificaciones()
-    {
-        return $this->belongsTo(Producto::class, 'producto_id', 'id');
-    }
+     // La relación 'especificaciones' era incorrecta y ha sido eliminada, el campo 'especificaciones' es un array en la base de datos.
     public function clientes()
     {
         return $this->hasMany(Cliente::class, 'producto_id');
