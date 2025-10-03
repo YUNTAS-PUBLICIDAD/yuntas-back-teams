@@ -9,6 +9,7 @@ use App\Mail\ProductInfoMail;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\ProductEmailService;
 
 /**
  * @OA\Tag(
@@ -80,6 +81,34 @@ class EmailController extends Controller
             return response()->json(['message' => 'Correo enviado exitosamente'], 200);
         } catch (Exception $e) {
             return response()->json(['error' => 'Error al enviar el correo: ' . $e->getMessage()], 500);
+        }
+    }
+    // En tu controlador (por ejemplo ProductEmailController.php)
+    public function sendEmailByProductLink(Request $request, ProductEmailService $emailService)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'name' => 'required|string',
+            'product_link' => 'required|string',
+        ]);
+
+        try {
+            $emailService->sendEmailByProductLink(
+                $request->email,
+                $request->name,
+                $request->product_link
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Correo enviado exitosamente.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo enviar el correo.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Error interno del servidor'
+            ], 500);
         }
     }
 }
