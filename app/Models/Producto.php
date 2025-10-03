@@ -17,6 +17,7 @@ class Producto extends Model
         'seccion',
         'descripcion',
         'imagen_principal',
+        'text_alt_principal',
         'especificaciones',
         'beneficios'
     ];

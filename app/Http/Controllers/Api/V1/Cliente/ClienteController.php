@@ -144,7 +144,7 @@ class ClienteController extends BasicController
             /* Mail::to($request->email)->send(new ClientRegistrationMail(
                 $request->only('name')
             )); */
-            $emailService->sendByProductLink($cliente->email, $cliente->name, $cliente->producto->link);
+            $emailService->sendEmailByProductLink($cliente->email, $cliente->name, $cliente->producto->link);
 
             // Envio de mensaje de WhatsApp temporal
             $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
