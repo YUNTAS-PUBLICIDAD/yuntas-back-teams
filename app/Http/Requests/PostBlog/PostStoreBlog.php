@@ -46,7 +46,7 @@ class PostStoreBlog extends FormRequest
                 'nullable', 
                 'string', 
                 'max:255', 
-                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 
+                'regex:/^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/', 
                 Rule::unique('blogs', 'link')],
         ];
     }
