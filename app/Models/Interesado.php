@@ -11,10 +11,12 @@ class Interesado extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nombre',
-        'email',
-        'cliente_id',
-        'producto_id'
+         'cliente_id',
+        'producto_id',
+        'titulo',
+        'parrafo1',
+        'imagen_prin',
+        'imagenes_sec',
     ];
 
     public function cliente(): BelongsTo
