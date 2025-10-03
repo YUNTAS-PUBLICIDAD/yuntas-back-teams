@@ -17,6 +17,7 @@ class ProductoResource extends JsonResource
             'descripcion' => $this->descripcion,
             'seccion' => $this->seccion,
             'imagen_principal' => asset($this->imagen_principal),
+            'text_alt_principal' => $this->text_alt_principal,
             'especificaciones' => $this->especificaciones ?? [],
             'beneficios' => $this->beneficios ?? [],
             'imagenes' => ProductoImagenResource::collection($this->imagenes),
