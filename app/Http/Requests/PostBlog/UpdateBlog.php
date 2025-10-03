@@ -48,7 +48,7 @@ class UpdateBlog extends FormRequest
 
             'url_video' => ['nullable', 'url', 'max:255'],
 
-            'link' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'link' => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/'],
 
             // ✅ Validación para etiquetas (puede venir como string JSON o array)
             'etiqueta' => 'nullable',
