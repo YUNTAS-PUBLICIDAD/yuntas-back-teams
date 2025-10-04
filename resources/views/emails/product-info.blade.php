@@ -17,7 +17,6 @@
                     </tr>
                     <tr>
                         <td style="background-color: #2a3b4e;">
-                            {{-- asset() genera la URL completa a tu imagen, lo cual es necesario para los correos --}}
                             <img src="{{ asset($data['imagen_principal']) }}" alt="{{ $data['producto_nombre'] }}" width="600" style="display: block; width: 100%; max-width: 600px; height: auto;">
                         </td>
                     </tr>
@@ -38,8 +37,7 @@
                     </tr>
                     <tr>
                         <td style="background-color: #2a3b4e; padding: 30px 20px; text-align: center;">
-                            {{-- ✅ 2. EL LINK DEL BOTÓN AHORA USA UNA VARIABLE --}}
-                            <a href="{{ $data['url_cotizacion'] ?? '#' }}" style="background-color: #ffffff; color: #2a3b4e; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 18px;">
+                            <a href="https://yuntaspublicidad.com/contacto" style="background-color: #ffffff; color: #2a3b4e; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 18px;">
                                 ¡COTIZA HOY!
                             </a>
                         </td>

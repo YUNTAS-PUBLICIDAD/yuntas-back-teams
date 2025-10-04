@@ -195,10 +195,11 @@ class BlogController extends BasicController
                     $request->file('imagen_principal'),
                     $blog->imagen_principal
                 );
+            }
 
-                if (isset($datosValidados['text_alt_principal'])) {
-                    $camposActualizar['text_alt_principal'] = $datosValidados['text_alt_principal'];
-                }
+            // Actualizar el ALT aunque no se cambie la imagen
+            if (isset($datosValidados['text_alt_principal'])) {
+                $camposActualizar['text_alt_principal'] = $datosValidados['text_alt_principal'];
             }
 
             $blog->update($camposActualizar);
