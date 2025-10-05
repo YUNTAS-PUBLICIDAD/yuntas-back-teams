@@ -4,9 +4,10 @@ compose.yaml
 vendor
 node_modules
 
-# Archivos de entorno
+# Archivos de entorno (excepto .env.example)
 .env
-.env.*
 .env.local
 .env.production
 .env.testing
+.env.*.php
+.env.backup
