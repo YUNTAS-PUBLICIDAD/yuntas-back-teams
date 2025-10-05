@@ -12,9 +12,9 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     libpng-dev
 
-# Instalar extensiones de PHP necesarias
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo_mysql
+RUN apk add --no-cache libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd pdo_mysql zip
 
 WORKDIR /app
 
