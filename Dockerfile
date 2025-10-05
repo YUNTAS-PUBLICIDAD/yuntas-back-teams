@@ -35,6 +35,9 @@ RUN composer run-script post-autoload-dump
 RUN chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data /app
 
+# Generar key de Laravel si no existe (será sobrescrita por las env vars de Dokploy)
+RUN php artisan key:generate --no-interaction || true
+
 EXPOSE 8000
 
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
