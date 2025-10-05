@@ -3,3 +3,10 @@ compose.yaml
 
 vendor
 node_modules
+
+# Archivos de entorno
+.env
+.env.*
+.env.local
+.env.production
+.env.testing

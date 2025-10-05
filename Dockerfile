@@ -18,11 +18,18 @@ RUN apk add --no-cache libzip-dev \
 
 WORKDIR /app
 
-# Copiar toda la aplicación primero
-COPY . .
+# Copiar archivos de configuración primero
+COPY composer.json composer.lock ./
+COPY .env.example ./.env
 
 # Instalar dependencias con Composer
-RUN composer install --optimize-autoloader --no-dev
+RUN composer install --optimize-autoloader --no-dev --no-scripts
+
+# Copiar el resto de la aplicación
+COPY . .
+
+# Ejecutar scripts post-install
+RUN composer run-script post-autoload-dump
 
 # Configurar permisos
 RUN chmod -R 775 storage bootstrap/cache \
