@@ -80,8 +80,8 @@ Route::prefix('v1')->group(function () {
 
     // Cliente (Registro popup público)
     Route::post('/clientes', [ClienteController::class, 'store']);
-    
-    Route::post('/solicitar-info-producto', [InfoProductoController::class, 'enviarInformacion']);
+
+    Route::post('/solicitar-info-producto', [InfoProductoController::class, 'sendProductDetails']);
 
     // Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
     //     Route::post('/', 'store');
