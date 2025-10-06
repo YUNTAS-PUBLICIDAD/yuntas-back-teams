@@ -13,8 +13,7 @@ return new class extends Migration
     {
         Schema::create('email_productos', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            
+
             $table->foreignId('producto_id')->constrained('productos')->onDelete('cascade');
 
             $table->string('titulo', 250);
@@ -25,6 +24,7 @@ return new class extends Migration
 
             $table->longText('imagenes_secundarias')->nullable();
 
+            $table->timestamps();
         });
     }
 
