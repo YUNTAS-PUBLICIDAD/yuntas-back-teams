@@ -24,7 +24,8 @@ class ProductoResource extends JsonResource
             'etiqueta' => $this->etiqueta ? [
                 'meta_titulo' => $this->etiqueta->meta_titulo,
                 'meta_descripcion' => $this->etiqueta->meta_descripcion,
-            ] : null,
+                'keywords' => $this->etiqueta->keywords,
+                ] : null,
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
