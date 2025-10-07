@@ -13,7 +13,7 @@ class SendSecondPromotionalEmail extends Command
 {
     protected $signature = 'app:send-second-promotional-email';
 
-    protected $description = 'Envio de segundo email a interesado que consultó al popup.';
+    protected $description = 'Comando para envio de segundo email a interesado que consultó al popup.';
 
     public function handle()
     {
@@ -31,8 +31,11 @@ class SendSecondPromotionalEmail extends Command
                 'producto_nombre' => $interesado->producto->nombre,
                 'producto_titulo' => $emailProducto->titulo,
                 'producto_descripcion' => $emailProducto->parrafo1,
-                'imagen_principal' => $emailProducto->imagen_principal,
-                'imagenes_secundarias' => json_decode($emailProducto->imagenes_secundarias),
+                'imagen_principal' => EmailProducto::buildImageUrl($emailProducto->imagen_principal),
+                'imagenes_secundarias' => array_map(
+                    fn($img) => EmailProducto::buildImageUrl($img),
+                    json_decode($emailProducto->imagenes_secundarias, true) ?? []
+                )
             ];
             if ($view) {
                 SendPromotionalEmailJob::dispatch(
