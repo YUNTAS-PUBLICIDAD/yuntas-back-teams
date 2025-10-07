@@ -16,8 +16,12 @@ class ProductoEtiqueta extends Model
         'producto_id',
         'meta_titulo',
         'meta_descripcion',
+         'keywords',
     ];
 
+    protected $casts = [
+        'keywords' => 'array',
+    ];
     public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class, 'producto_id');

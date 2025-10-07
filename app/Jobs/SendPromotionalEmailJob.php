@@ -14,20 +14,20 @@ class SendPromotionalEmailJob implements ShouldQueue
 
     private $email_destinario;
     private $view;
-    private $name;
+    private $data;
 
-    public function __construct($email_destinario, $view, $name)
+    public function __construct($email_destinario, $view, $data)
     {
         $this->email_destinario = $email_destinario;
         $this->view = $view;
-        $this->name = $name;
+        $this->data = $data;
     }
 
 
     public function handle(): void
     {
         try {
-            $mail = new ProductInfoMail(['name' => $this->name], $this->view);
+            $mail = new ProductInfoMail($this->data, $this->view);
             Mail::to($this->email_destinario)->send($mail);
             Log::info('Correo enviado exitosamente a ' . $this->email_destinario);
         } catch (\Exception $e) {

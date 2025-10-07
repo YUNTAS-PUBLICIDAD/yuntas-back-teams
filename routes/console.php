@@ -1,9 +1,9 @@
 <?php
 
-use App\Console\Commands\SendFirstPromotionalEmail;
 use App\Console\Commands\SendSecondPromotionalEmail;
+use App\Console\Commands\SendThirdPromotionalEmail;
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command(SendFirstPromotionalEmail::class)->timezone('America/Lima')->cron('*/1 * * * *');
-
 Schedule::command(SendSecondPromotionalEmail::class)->timezone('America/Lima')->cron('*/1 * * * *');
+
+Schedule::command(SendThirdPromotionalEmail::class)->timezone('America/Lima')->cron('*/1 * * * *');
