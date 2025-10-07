@@ -2,59 +2,115 @@
 
 namespace App\Http\Controllers\Api\V1\Productos;
 
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\Cliente\StoreClienteRequest;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Producto;
 use App\Models\Interesado;
+use App\Models\Cliente;
 use App\Mail\ProductInfoMail;
+use App\Models\EmailProducto;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class InfoProductoController extends Controller
 {
-    /**
-     * Recibe la solicitud del popup, guarda al interesado y envía el correo.
-     */
 
-public function enviarInformacion(Request $request)
-{
-    // 1. Validar datos (igual que antes)
-    $datosValidados = $request->validate([
-        'email' => 'required|email',
-        'nombre' => 'required|string|max:255',
-        'producto_id' => 'required|integer|exists:productos,id'
-    ]);
+    public function sendProductDetails(StoreClienteRequest $request)
+    {
+        $validated = $request->validated();
 
-    // 2. Encontrar el producto Y CARGAR SUS IMÁGENES RELACIONADAS
-    $producto = Producto::with('imagenes')->findOrFail($datosValidados['producto_id']);
+        $cliente = Cliente::updateOrCreate(
+            [
+                'email'   => $validated['email'],
+                'celular' => $validated['celular'],
+            ],
+            [
+                'name'        => $validated['name'],
+                'producto_id' => $validated['producto_id'],
+            ]
+        );
 
-    // 3. Guardar al interesado (igual que antes)
-    Interesado::create([
-        'email' => $datosValidados['email'],
-        'nombre' => $datosValidados['nombre'],
-        'producto_id' => $producto->id,
-    ]);
+        $interesado = Interesado::create([
+            'cliente_id' => $cliente->id,
+            'producto_id' => $validated['producto_id']
+        ]);
 
-    // 4. Preparamos los datos, AHORA INCLUYENDO LAS IMÁGENES
-    $data = [
-        'name' => $datosValidados['nombre'],
-        'producto_nombre' => $producto->nombre,
-        'producto_titulo' => $producto->titulo, // El subtítulo del diseño
-        'producto_descripcion' => $producto->descripcion,
-        'imagen_principal' => $producto->imagen_principal,
-        // Tomamos las primeras 2 imágenes de la relación.
-        // Asumo que tu modelo ProductoImagenes tiene un campo 'ruta_imagen' o similar.
-        'imagenes_secundarias' => $producto->imagenes->take(2) 
-    ];
+        // 3. Buscar el Producto original para obtener su nombre
+        $producto = Producto::findOrFail($validated['producto_id']);
 
-    // 5. Apuntamos a nuestra nueva vista de correo
-    $viewName = 'emails.product-info';
+        // 4. BUSCAR la plantilla de correo personalizada para este producto
+        $emailProducto = EmailProducto::where('producto_id', $producto->id)->first();
 
-    // 6. Enviamos el correo (igual que antes)
-    Mail::to($datosValidados['email'])->send(new ProductInfoMail($data, $viewName));
+        // Si no se encuentra una plantilla personalizada para ese producto, devolvemos un error.
+        if (!$emailProducto) {
+            return response()->json(['message' => 'No hay información promocional disponible para este producto en este momento.'], 404);
+        }
 
-    // 7. Devolver respuesta (igual que antes)
-    return response()->json([
-        'message' => '¡Correo con la información enviado exitosamente!'
-    ], 200);
-}
+        // 5. Preparar los datos para el email usando la plantilla encontrada
+        $data = [
+            'name' => $cliente->name,
+            'producto_nombre' => $producto->nombre,
+            'producto_titulo' => $emailProducto->titulo,
+            'producto_descripcion' => $emailProducto->parrafo1,
+            'imagen_principal' => EmailProducto::buildImageUrl($emailProducto->imagen_principal),
+            'imagenes_secundarias' => array_map(
+                fn($img) => EmailProducto::buildImageUrl($img),
+                json_decode($emailProducto->imagenes_secundarias, true) ?? []
+            )
+        ];
+
+        // 6. Enviar el correo
+        try {
+            $viewName = 'emails.product-info';
+            Mail::to($cliente->email)->send(new ProductInfoMail($data, $viewName));
+            $resultados['email'] = 'Correo enviado correctamente ✅';
+        } catch (\Throwable $e) {
+            $resultados['email'] = '❌ Error al enviar correo: ' . $e->getMessage();
+            Log::error('Error enviando email de producto: ' . $e->getMessage());
+        }
+
+        // 7. Enviar el WhatsApp
+        try {
+            $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
+
+            Http::post($whatsappServiceUrl . '/send-product-info', [
+                'productName' => $producto->nombre,
+                'description' => $producto->descripcion,
+                'phone'       => "+51" . $cliente->celular,
+                'email'       => $cliente->email,
+                'imageData'   => $this->convertImageToBase64(
+                    EmailProducto::buildImageUrl($emailProducto->imagen_principal)
+                ),
+            ]);
+            $resultados['whatsapp'] = 'Mensaje de WhatsApp enviado correctamente ✅';
+        } catch (\Throwable $e) {
+            $resultados['whatsapp'] = '❌ Error al enviar WhatsApp: ' . $e->getMessage();
+            Log::error('Error enviando WhatsApp de producto: ' . $e->getMessage());
+        }
+
+        // 8. Devolver respuesta con detalles
+        return response()->json([
+            'message'   => 'Proceso finalizado con los siguientes resultados:',
+            'resultados'=> $resultados
+        ], 200);
+    }
+
+    public function convertImageToBase64($url)
+    {
+        $response = Http::get($url);
+
+        if (!$response->successful()) {
+            throw new \Exception('No se pudo descargar la imagen');
+        }
+
+        $mimeType = $response->header('Content-Type');
+
+        $base64 = base64_encode($response->body());
+
+        $imageData = 'data:' . $mimeType . ';base64,' . $base64;
+
+        return $imageData;
+    }
 }

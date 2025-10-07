@@ -29,26 +29,10 @@ class StoreClienteRequest extends FormRequest
                 'required',
                 'email',
                 'max:100',
-                Rule::unique('clientes')
-                    ->where(function ($query) use ($productoId) {
-                        if ($productoId) {
-                            return $query->where('producto_id', $productoId);
-                        } else {
-                            return $query->whereNull('producto_id');
-                        }
-                    }),
             ],
             'celular' => [
                 'required',
                 'regex:/^[0-9]{9}$/',
-                Rule::unique('clientes')
-                    ->where(function ($query) use ($productoId) {
-                        if ($productoId) {
-                            return $query->where('producto_id', $productoId);
-                        } else {
-                            return $query->whereNull('producto_id');
-                        }
-                    }),
             ],
             'producto_id' => [
                 'nullable',
@@ -72,15 +56,9 @@ class StoreClienteRequest extends FormRequest
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'El formato del correo electrónico no es válido.',
             'email.max' => 'El correo electrónico no puede exceder 100 caracteres.',
-            'email.unique' => $productoId
-                ? 'Este correo electrónico ya está registrado para este producto.'
-                : 'Este correo electrónico ya está registrado.',
 
             'celular.required' => 'El número de celular es obligatorio.',
             'celular.regex' => 'El celular debe contener exactamente 9 dígitos.',
-            'celular.unique' => $productoId
-                ? 'Este número de celular ya está registrado para este producto.'
-                : 'Este número de celular ya está registrado.',
 
             'producto_id.integer' => 'El ID del producto debe ser un número válido.',
             'producto_id.exists' => 'El producto seleccionado no existe.',

@@ -9,18 +9,18 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
-class SendSecondPromotionalEmail extends Command
+class SendThirdPromotionalEmail extends Command
 {
-    protected $signature = 'app:send-second-promotional-email';
+    protected $signature = 'app:send-third-promotional-email';
 
-    protected $description = 'Comando para envio de segundo email a interesado que consultó al popup.';
+    protected $description = 'Comando para envio de tercer email a interesado que consultó al popup.';
 
     public function handle()
     {
         $now = Carbon::now('America/Lima');
 
         $interesados = Interesado::with(['producto', 'cliente'])
-            ->whereRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') = ?", [$now->subMinutes(2)->format('Y-m-d H:i')])
+            ->whereRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') = ?", [$now->subMinutes(3)->format('Y-m-d H:i')])
             ->get();
 
         foreach ($interesados as $interesado) {

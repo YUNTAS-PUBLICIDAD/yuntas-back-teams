@@ -286,6 +286,7 @@ class ProductoController extends BasicController
                 $producto->etiqueta()->create([
                     'meta_titulo'      => $request->etiqueta['meta_titulo'] ?? null,
                     'meta_descripcion' => $request->etiqueta['meta_descripcion'] ?? null,
+                    'keywords'         => $request->etiqueta['keywords'] ?? [],
                 ]);
             }
 
@@ -640,7 +641,9 @@ class ProductoController extends BasicController
                     [
                         'meta_titulo' => $request->input('etiqueta.meta_titulo', null),
                         'meta_descripcion' => $request->input('etiqueta.meta_descripcion', null),
-                    ]
+                        'keywords'         => $request->input('etiqueta.keywords', []),
+                   
+                        ]
                 );
             }
 
