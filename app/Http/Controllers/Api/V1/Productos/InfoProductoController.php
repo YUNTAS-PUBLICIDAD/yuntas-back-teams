@@ -12,6 +12,7 @@ use App\Models\Cliente;
 use App\Mail\ProductInfoMail;
 use App\Models\EmailProducto;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class InfoProductoController extends Controller
 {
@@ -53,32 +54,50 @@ class InfoProductoController extends Controller
             'producto_nombre' => $producto->nombre,
             'producto_titulo' => $emailProducto->titulo,
             'producto_descripcion' => $emailProducto->parrafo1,
-            'imagen_principal' => $emailProducto->imagen_principal,
-            'imagenes_secundarias' => json_decode($emailProducto->imagenes_secundarias),
+            'imagen_principal' => EmailProducto::buildImageUrl($emailProducto->imagen_principal),
+            'imagenes_secundarias' => array_map(
+                fn($img) => EmailProducto::buildImageUrl($img),
+                json_decode($emailProducto->imagenes_secundarias, true) ?? []
+            )
         ];
 
         // 6. Enviar el correo
-        $viewName = 'emails.product-info';
-        Mail::to($cliente->email)->send(new ProductInfoMail($data, $viewName));
+        try {
+            $viewName = 'emails.product-info';
+            Mail::to($cliente->email)->send(new ProductInfoMail($data, $viewName));
+            $resultados['email'] = 'Correo enviado correctamente ✅';
+        } catch (\Throwable $e) {
+            $resultados['email'] = '❌ Error al enviar correo: ' . $e->getMessage();
+            Log::error('Error enviando email de producto: ' . $e->getMessage());
+        }
 
         // 7. Enviar el WhatsApp
-        $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
+        try {
+            $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
 
-        Http::post($whatsappServiceUrl . '/send-product-info', [
-            'productName' => $producto->nombre,
-            'description' => $producto->descripcion,
-            'phone' => "+51 " . $cliente->celular,
-            'email' => $cliente->email,
-            'imageData' => $this->convertirImagenABase64('https://apiyuntas.yuntaspublicidad.com'.$emailProducto->imagen_principal),
-        ]);
+            Http::post($whatsappServiceUrl . '/send-product-info', [
+                'productName' => $producto->nombre,
+                'description' => $producto->descripcion,
+                'phone'       => "+51" . $cliente->celular,
+                'email'       => $cliente->email,
+                'imageData'   => $this->convertImageToBase64(
+                    EmailProducto::buildImageUrl($emailProducto->imagen_principal)
+                ),
+            ]);
+            $resultados['whatsapp'] = 'Mensaje de WhatsApp enviado correctamente ✅';
+        } catch (\Throwable $e) {
+            $resultados['whatsapp'] = '❌ Error al enviar WhatsApp: ' . $e->getMessage();
+            Log::error('Error enviando WhatsApp de producto: ' . $e->getMessage());
+        }
 
-        // 8. Devolver respuesta
+        // 8. Devolver respuesta con detalles
         return response()->json([
-            'message' => '¡Correo con la información enviado exitosamente!'
+            'message'   => 'Proceso finalizado con los siguientes resultados:',
+            'resultados'=> $resultados
         ], 200);
     }
 
-    public function convertirImagenABase64($url)
+    public function convertImageToBase64($url)
     {
         $response = Http::get($url);
 
@@ -86,7 +105,7 @@ class InfoProductoController extends Controller
             throw new \Exception('No se pudo descargar la imagen');
         }
 
-        $mimeType = mime_content_type($url);
+        $mimeType = $response->header('Content-Type');
 
         $base64 = base64_encode($response->body());
 
