@@ -30,7 +30,7 @@
                             {{-- Bucle para las imágenes secundarias --}}
                             @if(!empty($data['imagenes_secundarias']))
                                 @foreach($data['imagenes_secundarias'] as $imagen)
-                                    <img src="{{ asset($imagen->ruta_imagen) }}" alt="Imagen secundaria" width="280" style="display: inline-block; width: 100%; max-width: 280px; height: auto; margin: 5px; border-radius: 15px;">
+                                    <img src="{{ $imagen }}" alt="Imagen secundaria" width="280" style="display: inline-block; width: 100%; max-width: 280px; height: auto; margin: 5px; border-radius: 15px;">
                                 @endforeach
                             @endif
                         </td>
