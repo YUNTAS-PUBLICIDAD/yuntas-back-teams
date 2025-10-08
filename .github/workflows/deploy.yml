@@ -1,0 +1,96 @@
+name: Deploy Backend Laravel a Hostinger
+
+on:
+  push:
+    branches:
+      - pre-main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Subir proyecto a Hostinger (/back)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          source: "./"
+          target: "/home/${{ secrets.HOSTINGER_USER }}/back/"
+          rm: true
+
+      - name: Crear archivo .env en el servidor
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.HOSTINGER_USER }}/back
+            cat > .env << 'EOF'
+            APP_NAME=Laravel
+            APP_ENV=production
+            APP_KEY=base64:QbtrMF0I7xOhW8FmCapFt8r0O46Iws/zEDyB/sHcXgw=
+            APP_DEBUG=false
+            APP_TIMEZONE=America/Lima
+            APP_URL=https://yuntaspublicidad.com/back
+
+            LOG_CHANNEL=stack
+            LOG_LEVEL=info
+
+            DB_CONNECTION=mysql
+            DB_HOST=82.197.82.125
+            DB_PORT=3306
+            DB_DATABASE=u268804017_yuntas_back_pu
+            DB_USERNAME=u268804017_yuntas_user_pu
+            DB_PASSWORD=YuntasBackTeams25
+
+            SESSION_DRIVER=database
+            SESSION_LIFETIME=120
+
+            CACHE_STORE=database
+            QUEUE_CONNECTION=database
+            FILESYSTEM_DISK=local
+
+            MAIL_MAILER=smtp
+            MAIL_HOST=smtp.gmail.com
+            MAIL_PORT=587
+            MAIL_USERNAME=yuntasproducciones@gmail.com
+            MAIL_PASSWORD=snjufcghavvazcrf
+            MAIL_ENCRYPTION=tls
+            MAIL_FROM_ADDRESS="yuntasproducciones@gmail.com"
+            MAIL_FROM_NAME="${APP_NAME}"
+
+            L5_SWAGGER_GENERATE_ALWAYS=true
+            L5_SWAGGER_UI_PERSIST_AUTHORIZATION=true
+            L5_SWAGGER_CONST_HOST=${APP_URL}
+            L5_SWAGGER_BASE_PATH=/api
+            L5_SWAGGER_OPERATIONS_SORT=alpha
+            L5_SWAGGER_UI_DOC_EXPANSION=list
+            L5_SWAGGER_UI_FILTERS=true
+            L5_SWAGGER_UI_DARK_MODE=false
+
+            WHATSAPP_SERVICE_URL=https://whatsapi.yuntaspublicidad.com/api
+            EOF
+
+      - name: Instalar dependencias y cachear configuraciÃ³n
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.HOSTINGER_USER }}/back
+            composer install --no-dev --optimize-autoloader
+            chmod -R 755 storage bootstrap/cache
+            php artisan storage:link || true
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
