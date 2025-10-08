@@ -3,7 +3,7 @@ name: Deploy Backend Laravel a Hostinger
 on:
   push:
     branches:
-      - pre-main
+      - main
 
 jobs:
   deploy:
@@ -21,7 +21,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_USER }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           source: "./"
-          target: "/home/${{ secrets.HOSTINGER_USER }}/back/"
+          target: "back/"
           rm: true
 
       - name: Crear archivo .env en el servidor
@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_USER }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           script: |
-            cd /home/${{ secrets.HOSTINGER_USER }}/back
+            cd back
             cat > .env << 'EOF'
             APP_NAME=Laravel
             APP_ENV=production
@@ -87,7 +87,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_USER }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           script: |
-            cd /home/${{ secrets.HOSTINGER_USER }}/back
+            cd back
             composer install --no-dev --optimize-autoloader
             chmod -R 755 storage bootstrap/cache
             php artisan storage:link || true
