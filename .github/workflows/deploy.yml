@@ -3,7 +3,7 @@ name: Deploy Backend Laravel a Hostinger
 on:
   push:
     branches:
-      - main
+      - pre-main
 
 jobs:
   deploy:
