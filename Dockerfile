@@ -12,21 +12,31 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     libpng-dev
 
-# Instalar extensiones de PHP necesarias
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo_mysql
+RUN apk add --no-cache libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd pdo_mysql zip
 
 WORKDIR /app
 
-# Copiar toda la aplicación primero
-COPY . .
+# Copiar archivos de configuración primero
+COPY composer.json composer.lock ./
+COPY .env.example ./.env
 
 # Instalar dependencias con Composer
-RUN composer install --optimize-autoloader --no-dev
+RUN composer install --optimize-autoloader --no-dev --no-scripts
+
+# Copiar el resto de la aplicación
+COPY . .
+
+# Ejecutar scripts post-install
+RUN composer run-script post-autoload-dump
 
 # Configurar permisos
 RUN chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data /app
+
+# Generar key de Laravel si no existe (será sobrescrita por las env vars de Dokploy)
+RUN php artisan key:generate --no-interaction || true
 
 EXPOSE 8000
 
