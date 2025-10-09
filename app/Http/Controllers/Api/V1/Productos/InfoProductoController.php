@@ -20,6 +20,7 @@ class InfoProductoController extends Controller
     public function sendProductDetails(StoreClienteRequest $request)
     {
         $validated = $request->validated();
+        $resultados = [];
 
         $cliente = Cliente::updateOrCreate(
             [
@@ -40,30 +41,32 @@ class InfoProductoController extends Controller
         // 3. Buscar el Producto original para obtener su nombre
         $producto = Producto::findOrFail($validated['producto_id']);
 
-        // 4. BUSCAR la plantilla de correo personalizada para este producto
-        $emailProducto = EmailProducto::where('producto_id', $producto->id)->first();
+        // 4. BUSCAR SOLO LA PRIMERA SECCIÓN (primera plantilla de correo para este producto)
+        $primeraSeccion = EmailProducto::where('producto_id', $producto->id)
+            ->orderBy('id', 'asc')
+            ->first();
 
         // Si no se encuentra una plantilla personalizada para ese producto, devolvemos un error.
-        if (!$emailProducto) {
+        if (!$primeraSeccion) {
             return response()->json(['message' => 'No hay información promocional disponible para este producto en este momento.'], 404);
         }
 
-        // 5. Preparar los datos para el email usando la plantilla encontrada
+        // 5. Preparar los datos para el email usando SOLO la primera sección
         $data = [
             'name' => $cliente->name,
             'producto_nombre' => $producto->nombre,
-            'producto_titulo' => $emailProducto->titulo,
-            'producto_descripcion' => $emailProducto->parrafo1,
-            'imagen_principal' => EmailProducto::buildImageUrl($emailProducto->imagen_principal),
+            'producto_titulo' => $primeraSeccion->titulo,
+            'producto_descripcion' => $primeraSeccion->parrafo1,
+            'imagen_principal' => EmailProducto::buildImageUrl($primeraSeccion->imagen_principal),
             'imagenes_secundarias' => array_map(
                 fn($img) => EmailProducto::buildImageUrl($img),
-                json_decode($emailProducto->imagenes_secundarias, true) ?? []
+                json_decode($primeraSeccion->imagenes_secundarias, true) ?? []
             )
         ];
 
         // 6. Enviar el correo
         try {
-            $viewName = 'emails.product-info';
+            $viewName = 'emails.firtstemail.producto-generico';
             Mail::to($cliente->email)->send(new ProductInfoMail($data, $viewName));
             $resultados['email'] = 'Correo enviado correctamente ✅';
         } catch (\Throwable $e) {
@@ -77,11 +80,11 @@ class InfoProductoController extends Controller
 
             Http::post($whatsappServiceUrl . '/send-product-info', [
                 'productName' => $producto->nombre,
-                'description' => $producto->descripcion,
+                'description' => $primeraSeccion->parrafo1, // Usar descripción de la primera sección
                 'phone'       => "+51" . $cliente->celular,
                 'email'       => $cliente->email,
                 'imageData'   => $this->convertImageToBase64(
-                    EmailProducto::buildImageUrl($emailProducto->imagen_principal)
+                    EmailProducto::buildImageUrl($primeraSeccion->imagen_principal)
                 ),
             ]);
             $resultados['whatsapp'] = 'Mensaje de WhatsApp enviado correctamente ✅';
@@ -93,7 +96,7 @@ class InfoProductoController extends Controller
         // 8. Devolver respuesta con detalles
         return response()->json([
             'message'   => 'Proceso finalizado con los siguientes resultados:',
-            'resultados'=> $resultados
+            'resultados' => $resultados
         ], 200);
     }
 
