@@ -28,7 +28,7 @@ Route::prefix('v1')->group(function () {
 });
 
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     Route::middleware('permission:crear-blogs')->post('/blogs', [BlogController::class, "store"]);
     Route::middleware('permission:editar-blogs')->put('/blogs/{id}', [BlogController::class, "update"]);
