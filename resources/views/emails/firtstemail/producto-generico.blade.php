@@ -3,54 +3,87 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Producto</title>
+    <title>{{ $data['producto_titulo'] }}</title>
 </head>
 
-<body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; box-sizing: border-box;">
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
 
-    <div style="max-width: 1200px; margin: 0 auto; background-color: white; box-sizing: border-box;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; width: 100%; max-width: 600px;">
 
-        {{-- Header dinámico --}}
-        <div style="background-color: #1e3a5f; color: white; text-align: center; padding: 20px; font-size: 24px; font-weight: bold; font-style: italic; letter-spacing: 1px;">
-            {{ $data['producto_titulo'] }}
-        </div>
+                    {{-- Header dinámico --}}
+                    <tr>
+                        <td align="center" style="background-color: #1e3a5f; color: white; padding: 20px; font-size: 24px; font-weight: bold; font-style: italic; letter-spacing: 1px;">
+                            {{ $data['producto_titulo'] }}
+                        </td>
+                    </tr>
 
-        {{-- Imagen principal dinámica (sin asset()) --}}
-        <div style="width: 100%; overflow: hidden;">
-            <img src="{{ $data['imagen_principal'] }}" alt="Producto" style="width: 100%; height: auto; display: block;">
-        </div>
+                    {{-- Imagen principal dinámica --}}
+                    <tr>
+                        <td style="padding: 0;">
+                            <img src="{{ $data['imagen_principal'] }}" alt="Producto" width="600" style="width: 100%; height: auto; display: block;">
+                        </td>
+                    </tr>
 
-        <div style="padding: 30px 20px; text-align: center; box-sizing: border-box;">
-            {{-- Tagline dinámico --}}
-            <div style="color: #333; font-size: 20px; font-weight: bold; margin-bottom: 25px;">
-                {{ $data['producto_descripcion'] }}
-            </div>
+                    {{-- Descripción / Tagline --}}
+                    <tr>
+                        <td align="center" style="padding: 30px 20px 20px 20px; color: #333333; font-size: 20px; font-weight: bold;">
+                            {{ $data['producto_descripcion'] }}
+                        </td>
+                    </tr>
 
-            {{-- Grid de imágenes secundarias dinámicas --}}
-            @if(isset($data['imagenes_secundarias']) && count($data['imagenes_secundarias']) > 0)
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px;">
-                @foreach($data['imagenes_secundarias'] as $imagen)
-                <div style="background-color: transparent; border-radius: 10px; aspect-ratio: 4 / 5; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                    <img src="{{ $imagen }}" alt="Imagen {{ $loop->iteration }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
-                </div>
-                @endforeach
-            </div>
-            @endif
+                    {{-- Imágenes secundarias (2 columnas) --}}
+                    @if(isset($data['imagenes_secundarias']) && count($data['imagenes_secundarias']) > 0)
+                    <tr>
+                        <td align="center" style="padding: 10px 20px 30px 20px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    @foreach($data['imagenes_secundarias'] as $index => $imagen)
+                                    @if($index % 2 === 0 && $index !== 0)
+                                </tr>
+                                <tr>
+                                    @endif
+                                    <td align="center" width="50%" style="padding: 5px;">
+                                        <img src="{{ $imagen }}" alt="Imagen {{ $loop->iteration }}" style="width: 100%; max-width: 260px; height: auto; border-radius: 10px; display: block;">
+                                    </td>
+                                    @endforeach
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    @endif
 
-            <div style="height: 2px; background-color: black; width: 100%; margin: 0 auto 20px auto;"></div>
+                    {{-- Separador --}}
+                    <tr>
+                        <td style="padding: 0 20px;">
+                            <div style="height: 2px; background-color: black; width: 100%; margin: 0 auto 20px auto;"></div>
+                        </td>
+                    </tr>
 
-            {{-- Sección estática --}}
-            <div style="background-color: white; padding: 15px; margin-bottom: 20px;">
-                <div style="color: #1e3a5f; font-size: 22px; font-weight: bold; margin-bottom: 3px;">ENVÍO GRATIS</div>
-                <div style="color: #666; font-size: 14px;">A TODO LIMA</div>
-            </div>
-        </div>
+                    {{-- Sección estática: Envío gratis --}}
+                    <tr>
+                        <td align="center" style="background-color: white; padding: 15px 20px 20px 20px;">
+                            <div style="color: #1e3a5f; font-size: 22px; font-weight: bold; margin-bottom: 5px;">ENVÍO GRATIS</div>
+                            <div style="color: #666666; font-size: 14px;">A TODO LIMA</div>
+                        </td>
+                    </tr>
 
-        <div style="background-color: #1e3a5f; padding: 20px; text-align: center;">
-            <a href="#" style="background-color: white; color: #1e3a5f; border: 3px solid #1e3a5f; border-radius: 25px; padding: 12px 40px; font-size: 16px; font-weight: bold; text-transform: uppercase; text-decoration: none; display: inline-block;">¡COTIZA HOY!</a>
-        </div>
-    </div>
+                    {{-- Botón final --}}
+                    <tr>
+                        <td align="center" style="background-color: #1e3a5f; padding: 20px;">
+                            <a href="https://yuntaspublicidad.com/contacto" style="background-color: white; color: #1e3a5f; border: 3px solid #1e3a5f; border-radius: 25px; padding: 12px 40px; font-size: 16px; font-weight: bold; text-transform: uppercase; text-decoration: none; display: inline-block;">
+                                ¡COTIZA HOY!
+                            </a>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+
 </body>
 
 </html>
