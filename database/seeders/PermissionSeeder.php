@@ -2,6 +2,7 @@
 
 // database/seeders/PermissionSeeder.php
 namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
@@ -49,6 +50,11 @@ class PermissionSeeder extends Seeder
             'crear-tarjetas',
             'editar-tarjetas',
             'eliminar-tarjetas',
+
+            // Plantillas de Email
+            'crear-plantillas-email-producto',
+            'editar-plantillas-email-producto',
+            'ver-plantillas-email-producto',
         ];
 
         foreach ($permissions as $perm) {

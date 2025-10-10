@@ -164,30 +164,31 @@
     <div class="container">
         {{-- Header dinámico --}}
         <div class="header">
-            {{ $data['header'] }}
+            {{ $data['producto_titulo'] }}
         </div>
 
-        {{-- Imagen principal dinámica --}}
+        {{-- Imagen principal dinámica (sin asset()) --}}
         <div class="main-image">
-            <img src="{{ asset($data['imagen_principal']) }}" alt="Producto">
+            <img src="{{ $data['imagen_principal'] }}" alt="Producto">
         </div>
 
         <div class="content">
             {{-- Tagline dinámico --}}
             <div class="tagline">
-                {{ $data['tagline'] }}
+                {{ $data['producto_descripcion'] }}
             </div>
 
             {{-- Grid de imágenes secundarias dinámicas --}}
-            @if(isset($data['imagenes_secundarias']) && $data['imagenes_secundarias']->count() > 0)
+            @if(isset($data['imagenes_secundarias']) && count($data['imagenes_secundarias']) > 0)
             <div class="products-grid">
                 @foreach($data['imagenes_secundarias'] as $imagen)
                 <div class="product-card">
-                    <img src="{{ asset($imagen->ruta_imagen) }}" alt="Imagen {{ $loop->iteration }}" class="product-logo">
+                    <img src="{{ $imagen }}" alt="Imagen {{ $loop->iteration }}" class="product-logo">
                 </div>
                 @endforeach
             </div>
             @endif
+
 
             <div class="separator"></div>
 
@@ -203,5 +204,6 @@
         </div>
     </div>
 </body>
+
 
 </html>

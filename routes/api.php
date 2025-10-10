@@ -116,7 +116,12 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', 'destroy')->middleware('permission:eliminar-usuarios');
             Route::post('/{id}/role', 'assignRoleToUser')->middleware('permission:asignar-roles-usuarios');
         });
-
+        //Plantillas email producto
+        Route::prefix('email-producto')->controller(EmailController::class)->group(function () {
+            Route::post('/plantilla', 'store')->middleware('permission:crear-plantillas-email-producto');
+            Route::put('/plantilla/{id}', 'update')->middleware('permission:editar-plantillas-email-producto');
+            Route::get('/plantilla/{productoId}', 'showByProducto')->middleware('permission:ver-plantillas-email-producto');
+        });
 
         // CLIENTES
         Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
