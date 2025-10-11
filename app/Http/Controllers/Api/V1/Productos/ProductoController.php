@@ -83,12 +83,9 @@ class ProductoController extends BasicController
             $page = request('page', 1);
 
             $totalCount = Producto::count();
-            Log::info('Total productos en BD: ' . $totalCount);
 
             $productos = Producto::with(['imagenes', 'etiqueta'])
                 ->paginate($perPage, ['*'], 'page', $page);
-            Log::info('Productos obtenidos en la página ' . $page . ': ' . $productos->count());
-            Log::info('Parámetros recibidos -> page: ' . $page . ', perPage: ' . $perPage);
             return response()->json([
                 'data' => ProductoResource::collection($productos->items()),
                 'current_page' => $productos->currentPage(),
@@ -106,7 +103,7 @@ class ProductoController extends BasicController
     public function listAll()
     {
         try {
-            $productos = Producto::all(); // Trae todos
+            $productos = Producto::all();
             return response()->json([
                 'success' => true,
                 'data' => $productos
@@ -119,25 +116,6 @@ class ProductoController extends BasicController
             ], 500);
         }
     }
-
-
-    // public function index(Request $request)
-    // {
-    //     $perPage = $request->query('per_page', 6);
-    //     $page = $request->query('page', 1);
-
-    //     $productos = Producto::with(['imagenes', 'etiqueta'])
-    //         ->paginate((int) $perPage, ['*'], 'page', $page);
-
-    //     return response()->json([
-    //         'data' => ProductoResource::collection($productos->items()),
-    //         'current_page' => $productos->currentPage(),
-    //         'last_page' => $productos->lastPage(),
-    //         'per_page' => $productos->perPage(),
-    //         'total' => $productos->total(),
-    //     ]);
-    // }
-
 
     /**
      * Crear un nuevo producto
@@ -192,14 +170,9 @@ class ProductoController extends BasicController
     {
         DB::beginTransaction();
         try {
-            Log::info('=== INICIANDO CREACIÓN DE PRODUCTO ===');
-            Log::info('Request all data:', $request->all());
-            Log::info('Request files:', $request->allFiles());
 
-            // Preparar datos del producto (excluyendo especificaciones, beneficios, imagenes y etiquetas)
             $data = $request->except(['especificaciones', 'beneficios', 'imagenes', 'imagen_principal', 'etiqueta', 'imagen_tipos', 'imagen_alt_*', 'imagen_title_*']);
 
-            // Manejar imagen_principal
             if ($request->hasFile('imagen_principal')) {
                 $imagenPrincipal = $request->file('imagen_principal');
                 $nombreArchivo = time() . '_principal_' . $imagenPrincipal->getClientOriginalName();
@@ -208,20 +181,14 @@ class ProductoController extends BasicController
                 $data['text_alt_principal'] = $request->input('text_alt_principal', 'Imagen principal del producto ' . $data['nombre']);
             }
 
-            // Agregar especificaciones y beneficios como JSON
             $data['especificaciones'] = $request->especificaciones ?? [];
             $data['beneficios'] = $request->beneficios ?? [];
 
-            // Crear el producto
             $producto = Producto::create($data);
 
-            // Procesar imágenes adicionales con orden específico
             if ($request->has('imagenes')) {
-                // Obtener los tipos de imagen enviados
                 $tiposImagen = $request->get('imagen_tipos', []);
-                Log::info('Tipos de imagen recibidos:', $tiposImagen);
 
-                // Mapeo de tipos a índices esperados para mantener orden
                 $tipoAIndice = [
                     'imagen_hero' => 0,
                     'imagen_especificaciones' => 1,
@@ -229,7 +196,6 @@ class ProductoController extends BasicController
                     'imagen_popups' => 3
                 ];
 
-                // Crear array ordenado de imágenes
                 $imagenesOrdenadas = [];
 
                 foreach ($request->imagenes as $index => $imagen) {
@@ -237,13 +203,11 @@ class ProductoController extends BasicController
                         if ($request->hasFile("imagenes.$index")) {
                             $archivo = $request->file("imagenes.$index");
 
-                            // Validar archivo
                             if (!$archivo->isValid() || $archivo->getSize() == 0) {
                                 Log::info("Saltando archivo inválido en índice {$index}");
                                 continue;
                             }
 
-                            // Determinar el tipo de imagen y su posición final
                             $tipoImagen = $tiposImagen[$index] ?? 'adicional';
                             $posicionFinal = $tipoAIndice[$tipoImagen] ?? $index;
 
@@ -251,7 +215,6 @@ class ProductoController extends BasicController
                             $rutaImagen = $archivo->storeAs('productos/adicionales', $nombreArchivo, 'public');
 
                             if ($rutaImagen) {
-                                // Obtener ALT y TITLE específicos para este índice
                                 $altText = $request->input("imagen_alt_{$index}") ?: 'Imagen ' . $tipoImagen . ' del producto ' . $producto->nombre;
                                 $titleText = $request->input("imagen_title_{$index}") ?: $archivo->getClientOriginalName();
 
@@ -268,8 +231,7 @@ class ProductoController extends BasicController
                     }
                 }
 
-                // Crear imágenes en el orden correcto
-                ksort($imagenesOrdenadas); // Ordenar por índice
+                ksort($imagenesOrdenadas);
                 foreach ($imagenesOrdenadas as $imagenData) {
                     $producto->imagenes()->create([
                         'url_imagen' => $imagenData['url_imagen'],
@@ -281,7 +243,6 @@ class ProductoController extends BasicController
                 }
             }
 
-            // Procesar etiquetas
             if ($request->has('etiqueta')) {
                 $producto->etiqueta()->create([
                     'meta_titulo'      => $request->etiqueta['meta_titulo'] ?? null,
@@ -291,9 +252,7 @@ class ProductoController extends BasicController
             }
 
             DB::commit();
-            Log::info('=== PRODUCTO CREADO EXITOSAMENTE ===');
 
-            // Cargar relaciones para la respuesta
             $producto->load(['imagenes', 'etiqueta']);
 
             return $this->successResponse($producto, 'Producto creado exitosamente', HttpStatusCode::CREATED);
@@ -360,33 +319,7 @@ class ProductoController extends BasicController
         try {
             $producto = Producto::with(['imagenes', 'etiqueta'])->findOrFail($id);
 
-            /* $showProducto = [
-                'id' => $producto->id,
-                'link' => $producto->link,
-                'nombre' => $producto->nombre,
-                'titulo' => $producto->titulo,
-                'descripcion' => $producto->descripcion,
-                'seccion' => $producto->seccion,
-                'imagen_principal' => asset($producto->imagen_principal),
-                'especificaciones' => $producto->especificaciones ?? [],
-                'beneficios' => $producto->beneficios ?? [],
-                'imagenes' => $producto->imagenes->map(function ($imagen) {
-                    return [
-                        'id' => $imagen->id,
-                        'url_imagen' => asset($imagen->url_imagen),
-                        'texto_alt_SEO' => $imagen->texto_alt_SEO,
-                    ];
-                }),
-                'etiqueta' => $producto->etiqueta ? [
-                    'meta_titulo' => $producto->etiqueta->meta_titulo,
-                    'meta_descripcion' => $producto->etiqueta->meta_descripcion,
-                ] : null,
-                'created_at' => $producto->created_at,
-                'updated_at' => $producto->updated_at,
-            ]; */
-
             return $this->apiResponse->successResponse(
-                //$showProducto,
                 new ProductoResource($producto),
                 'Producto obtenido exitosamente',
                 HttpStatusCode::OK
@@ -404,33 +337,7 @@ class ProductoController extends BasicController
         try {
             $producto = Producto::with(['imagenes', 'etiqueta'])->where('link', $link)->firstOrFail();
 
-            /* $showProducto = [
-                'id' => $producto->id,
-                'link' => $producto->link,
-                'nombre' => $producto->nombre,
-                'titulo' => $producto->titulo,
-                'descripcion' => $producto->descripcion,
-                'seccion' => $producto->seccion,
-                'imagen_principal' => asset($producto->imagen_principal),
-                'especificaciones' => $producto->especificaciones ?? [],
-                'beneficios' => $producto->beneficios ?? [],
-                'imagenes' => $producto->imagenes->map(function ($imagen) {
-                    return [
-                        'id' => $imagen->id,
-                        'url_imagen' => asset($imagen->url_imagen),
-                        'texto_alt_SEO' => $imagen->texto_alt_SEO,
-                    ];
-                }),
-                'etiqueta' => $producto->etiqueta ? [
-                    'meta_titulo' => $producto->etiqueta->meta_titulo,
-                    'meta_descripcion' => $producto->etiqueta->meta_descripcion,
-                ] : null,
-                'created_at' => $producto->created_at,
-                'updated_at' => $producto->updated_at,
-            ]; */
-
             return $this->apiResponse->successResponse(
-                //$showProducto,
                 new ProductoResource($producto),
                 'Producto obtenido exitosamente',
                 HttpStatusCode::OK
@@ -514,7 +421,6 @@ class ProductoController extends BasicController
         DB::beginTransaction();
 
         try {
-            // Campos básicos que no manejamos aquí
             $data = $request->except([
                 'especificaciones',
                 'beneficios',
@@ -642,8 +548,7 @@ class ProductoController extends BasicController
                         'meta_titulo' => $request->input('etiqueta.meta_titulo', null),
                         'meta_descripcion' => $request->input('etiqueta.meta_descripcion', null),
                         'keywords'         => $request->input('etiqueta.keywords', []),
-                   
-                        ]
+                    ]
                 );
             }
 
@@ -701,24 +606,18 @@ class ProductoController extends BasicController
         try {
             DB::beginTransaction();
 
-            // Buscar el producto
             $producto = Producto::findOrFail($id);
 
-            // Eliminar las imágenes asociadas
             $producto->imagenes()->delete();
 
-            // Manejar los blogs asociados sin eliminarlos
-            // Solo desvincular la relación estableciendo producto_id a null
             $blogs = $producto->blogs;
             foreach ($blogs as $blog) {
                 $blog->producto_id = null;
                 $blog->save();
             }
 
-            // Eliminar las etiquetas asociadas
             $producto->etiqueta()->delete();
 
-            // Finalmente eliminar el producto
             $producto->delete();
 
             DB::commit();
