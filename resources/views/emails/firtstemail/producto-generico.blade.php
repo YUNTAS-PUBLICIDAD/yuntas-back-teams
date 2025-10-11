@@ -3,207 +3,87 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Producto</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-        }
-
-        .header {
-            background-color: #1e3a5f;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            font-style: italic;
-            letter-spacing: 1px;
-        }
-
-        .main-image {
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .main-image img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .content {
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .tagline {
-            color: #333;
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 25px;
-        }
-
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .product-card {
-            background-color: transparent;
-            border-radius: 10px;
-            aspect-ratio: 4 / 5;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .product-logo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .separator {
-            height: 2px;
-            background-color: black;
-            width: 100%;
-            margin: 0 auto 20px auto;
-        }
-
-        .shipping {
-            background-color: white;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .shipping-title {
-            color: #1e3a5f;
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-
-        .shipping-subtitle {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .cta-button {
-            background-color: white;
-            color: #1e3a5f;
-            border: 3px solid #1e3a5f;
-            border-radius: 25px;
-            padding: 12px 40px;
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .footer-section {
-            background-color: #1e3a5f;
-            padding: 20px;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .products-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .tagline {
-                font-size: 18px;
-            }
-
-            .cta-button {
-                padding: 10px 30px;
-                font-size: 14px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .content {
-                padding: 20px 15px;
-            }
-
-            .tagline {
-                font-size: 16px;
-            }
-
-            .shipping-title {
-                font-size: 18px;
-            }
-
-            .shipping-subtitle {
-                font-size: 13px;
-            }
-        }
-    </style>
+    <title>{{ $data['producto_titulo'] }}</title>
 </head>
 
-<body>
-    <div class="container">
-        {{-- Header dinámico --}}
-        <div class="header">
-            {{ $data['producto_titulo'] }}
-        </div>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
 
-        {{-- Imagen principal dinámica (sin asset()) --}}
-        <div class="main-image">
-            <img src="{{ $data['imagen_principal'] }}" alt="Producto">
-        </div>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; width: 100%; max-width: 600px;">
 
-        <div class="content">
-            {{-- Tagline dinámico --}}
-            <div class="tagline">
-                {{ $data['producto_descripcion'] }}
-            </div>
+                    {{-- Header dinámico --}}
+                    <tr>
+                        <td align="center" style="background-color: #1e3a5f; color: white; padding: 20px; font-size: 24px; font-weight: bold; font-style: italic; letter-spacing: 1px;">
+                            {{ $data['producto_titulo'] }}
+                        </td>
+                    </tr>
 
-            {{-- Grid de imágenes secundarias dinámicas --}}
-            @if(isset($data['imagenes_secundarias']) && count($data['imagenes_secundarias']) > 0)
-            <div class="products-grid">
-                @foreach($data['imagenes_secundarias'] as $imagen)
-                <div class="product-card">
-                    <img src="{{ $imagen }}" alt="Imagen {{ $loop->iteration }}" class="product-logo">
-                </div>
-                @endforeach
-            </div>
-            @endif
+                    {{-- Imagen principal dinámica --}}
+                    <tr>
+                        <td style="padding: 0;">
+                            <img src="{{ $data['imagen_principal'] }}" alt="Producto" width="600" style="width: 100%; height: auto; display: block;">
+                        </td>
+                    </tr>
 
+                    {{-- Descripción / Tagline --}}
+                    <tr>
+                        <td align="center" style="padding: 30px 20px 20px 20px; color: #333333; font-size: 20px; font-weight: bold;">
+                            {{ $data['producto_descripcion'] }}
+                        </td>
+                    </tr>
 
-            <div class="separator"></div>
+                    {{-- Imágenes secundarias (2 columnas) --}}
+                    @if(isset($data['imagenes_secundarias']) && count($data['imagenes_secundarias']) > 0)
+                    <tr>
+                        <td align="center" style="padding: 10px 20px 30px 20px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    @foreach($data['imagenes_secundarias'] as $index => $imagen)
+                                    @if($index % 2 === 0 && $index !== 0)
+                                </tr>
+                                <tr>
+                                    @endif
+                                    <td align="center" width="50%" style="padding: 5px;">
+                                        <img src="{{ $imagen }}" alt="Imagen {{ $loop->iteration }}" style="width: 100%; max-width: 260px; height: auto; border-radius: 10px; display: block;">
+                                    </td>
+                                    @endforeach
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    @endif
 
-            {{-- Sección estática --}}
-            <div class="shipping">
-                <div class="shipping-title">ENVÍO GRATIS</div>
-                <div class="shipping-subtitle">A TODO LIMA</div>
-            </div>
-        </div>
+                    {{-- Separador --}}
+                    <tr>
+                        <td style="padding: 0 20px;">
+                            <div style="height: 2px; background-color: black; width: 100%; margin: 0 auto 20px auto;"></div>
+                        </td>
+                    </tr>
 
-        <div class="footer-section">
-            <a href="#" class="cta-button">¡COTIZA HOY!</a>
-        </div>
-    </div>
+                    {{-- Sección estática: Envío gratis --}}
+                    <tr>
+                        <td align="center" style="background-color: white; padding: 15px 20px 20px 20px;">
+                            <div style="color: #1e3a5f; font-size: 22px; font-weight: bold; margin-bottom: 5px;">ENVÍO GRATIS</div>
+                            <div style="color: #666666; font-size: 14px;">A TODO LIMA</div>
+                        </td>
+                    </tr>
+
+                    {{-- Botón final --}}
+                    <tr>
+                        <td align="center" style="background-color: #1e3a5f; padding: 20px;">
+                            <a href="https://yuntaspublicidad.com/contacto" style="background-color: white; color: #1e3a5f; border: 3px solid #1e3a5f; border-radius: 25px; padding: 12px 40px; font-size: 16px; font-weight: bold; text-transform: uppercase; text-decoration: none; display: inline-block;">
+                                ¡COTIZA HOY!
+                            </a>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+
 </body>
-
 
 </html>
