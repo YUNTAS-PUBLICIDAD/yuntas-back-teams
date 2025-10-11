@@ -12,7 +12,6 @@ use App\Models\Blog;
 use App\Http\Contains\HttpStatusCode;
 use App\Http\Resources\BlogResource;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class BlogController extends BasicController
 {
@@ -93,10 +92,6 @@ class BlogController extends BasicController
     {
         $datosValidados = $request->validated();
 
-        // Log de datos validados
-        Log::info('📥 Datos validados recibidos en el store:', $datosValidados);
-        // Log específico para text_alt_principal
-        Log::info('🖼️ ALT de imagen principal recibido:', ['text_alt_principal' => $datosValidados['text_alt_principal'] ?? 'NO RECIBIDO']);
         DB::beginTransaction();
 
         try {
@@ -116,9 +111,6 @@ class BlogController extends BasicController
                 "url_video" => $datosValidados["url_video"] ?? null,
             ]);
 
-            Log::info("📝 Blog creado con ID: {$blog->id}");
-
-            // Guardar imágenes secundarias si se envían
             if ($request->hasFile('imagenes')) {
                 $imagenes = $request->file('imagenes');
                 $altImagenes = $datosValidados['alt_imagenes'] ?? [];
@@ -131,19 +123,15 @@ class BlogController extends BasicController
                         "title" => "title en blogs",
                         "text_alt" => $alt,
                     ]);
-                    Log::info("✅ Imagen secundaria guardada: {$ruta} (ALT: {$alt})");
                 }
             }
 
-            // Guardar párrafos
             foreach ($datosValidados["parrafos"] as $item) {
                 $blog->parrafos()->create([
                     "parrafo" => $item
                 ]);
-                Log::info("✅ Párrafo guardado: {$item}");
             }
 
-            // Guardar etiquetas
             if ($request->has('etiqueta')) {
                 $etiqueta = json_decode($request->get('etiqueta'), true);
 
@@ -157,7 +145,6 @@ class BlogController extends BasicController
 
             DB::commit();
 
-            Log::info('🎉 Blog creado exitosamente');
             return $this->apiResponse->successResponse(
                 $blog->fresh(),
                 'Blog creado con éxito.',
@@ -165,7 +152,6 @@ class BlogController extends BasicController
             );
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('❌ Error al crear blog: ' . $e->getMessage());
             return $this->apiResponse->errorResponse(
                 'Error al crear el blog: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
@@ -175,21 +161,17 @@ class BlogController extends BasicController
 
     public function update(UpdateBlog $request, $id)
     {
-        Log::info('PATCH Blog Request received:', ['request_all' => $request->all(), 'id' => $id]);
         $datosValidados = $request->validated();
-        Log::info('Validated data:', ['datos_validados' => $datosValidados]);
 
         DB::beginTransaction();
         $blog = Blog::with('imagenes')->findOrFail($id);
 
         try {
-            // Campos principales
             $camposActualizar = collect(["producto_id", "subtitulo", "link", "url_video"])
                 ->filter(fn($campo) => array_key_exists($campo, $datosValidados))
                 ->mapWithKeys(fn($campo) => [$campo => $datosValidados[$campo]])
                 ->toArray();
 
-            // Imagen principal
             if ($request->hasFile('imagen_principal')) {
                 $camposActualizar['imagen_principal'] = $this->imageService->actualizarImagen(
                     $request->file('imagen_principal'),
@@ -197,17 +179,15 @@ class BlogController extends BasicController
                 );
             }
 
-            // Actualizar el ALT aunque no se cambie la imagen
             if (isset($datosValidados['text_alt_principal'])) {
                 $camposActualizar['text_alt_principal'] = $datosValidados['text_alt_principal'];
             }
 
             $blog->update($camposActualizar);
 
-            // ✅ IMÁGENES SECUNDARIAS (0-2)
             $imagenesNuevas = $request->file('imagenes') ?? [];
             $altImagenes = $datosValidados['alt_imagenes'] ?? [];
-            $imagenesExistentes = $blog->imagenes->sortBy('id')->values(); // ordenadas por id
+            $imagenesExistentes = $blog->imagenes->sortBy('id')->values();
 
             for ($i = 0; $i < 3; $i++) {
                 $nuevaImagen = $imagenesNuevas[$i] ?? null;
@@ -229,15 +209,11 @@ class BlogController extends BasicController
                     } else {
                         $blog->imagenes()->create($data);
                     }
-
-                    Log::info("✅ Imagen secundaria procesada en posición {$i}", $data);
                 } elseif ($nuevoAlt !== null && $imagenExistente) {
                     $imagenExistente->update(['text_alt' => $nuevoAlt]);
-                    Log::info("✅ ALT actualizado en posición {$i}: {$nuevoAlt}");
                 }
             }
 
-            // 🧹 Eliminar imágenes sobrantes
             if ($imagenesExistentes->count() > 3) {
                 $excedentes = $imagenesExistentes->slice(3);
                 foreach ($excedentes as $imagen) {
@@ -246,7 +222,6 @@ class BlogController extends BasicController
                 }
             }
 
-            // ✅ PÁRRAFOS
             if (isset($datosValidados['parrafos'])) {
                 $blog->parrafos()->delete();
                 foreach ($datosValidados['parrafos'] as $parrafo) {
@@ -254,7 +229,6 @@ class BlogController extends BasicController
                 }
             }
 
-            // ✅ ETIQUETAS
             if (isset($datosValidados['etiqueta'])) {
                 $blog->etiqueta()->delete();
 
@@ -281,7 +255,6 @@ class BlogController extends BasicController
             DB::commit();
 
             $blogActualizado = Blog::with(['imagenes', 'parrafos', 'producto', 'etiqueta'])->findOrFail($id);
-            Log::info('✅ Blog actualizado correctamente', ['blog_id' => $id]);
 
             return $this->apiResponse->successResponse(
                 new BlogResource($blogActualizado),
@@ -290,8 +263,6 @@ class BlogController extends BasicController
             );
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('❌ Error actualizando blog', ['error' => $e->getMessage(), 'blog_id' => $id]);
-
             return $this->apiResponse->errorResponse(
                 'Error al actualizar el blog: ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
@@ -316,7 +287,7 @@ class BlogController extends BasicController
             if (!empty($rutasImagenes)) {
                 $this->imageService->eliminarImagenes($rutasImagenes);
             }
-            $blog->etiqueta()->delete(); // Eliminar etiquetas asociadas
+            $blog->etiqueta()->delete();
             $blog->delete();
 
             DB::commit();

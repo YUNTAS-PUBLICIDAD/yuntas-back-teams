@@ -10,8 +10,6 @@ use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
 use App\Http\Resources\ClienteResource;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-// use Illuminate\Container\Attributes\Log;
-use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -58,7 +56,6 @@ class ClienteController extends BasicController
             $page = request()->get('page', 1);
             $perPage = 6;
 
-            // Obtener clientes con relación cargada
             $clientes = Cliente::with('producto')->paginate($perPage, ['*'], 'page', $page);
 
             $message = $clientes->isEmpty() ? 'No hay clientes para listar.' : 'Clientes listados correctamente.';
@@ -73,9 +70,6 @@ class ClienteController extends BasicController
 
             return $this->successResponse($response, $message, HttpStatusCode::OK);
         } catch (\Exception $e) {
-            Log::error('Error en índice de clientes: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-
             return $this->errorResponse(
                 'Ocurrió un problema al listar los clientes. ' . $e->getMessage(),
                 HttpStatusCode::INTERNAL_SERVER_ERROR
@@ -132,66 +126,21 @@ class ClienteController extends BasicController
     public function store(StoreClienteRequest $request)
     {
         try {
-            // Crear el cliente
-            $cliente = Cliente::create($request->all());
+            $validated = $request->validated();
+
+            $cliente = Cliente::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'celular' => $validated['celular'],
+                'producto_id' => $validated['producto_id']
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Cliente registrado exitosamente.',
                 'data' => $cliente
             ], 201);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Capturar errores de base de datos
-            $errorCode = $e->errorInfo[1];
-
-            if ($errorCode === 1062) {
-                $errorMessage = $e->getMessage();
-
-                // Detectar email duplicado
-                if (strpos($errorMessage, 'clientes_email_unique') !== false) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Los datos proporcionados no son válidos.',
-                        'errors' => [
-                            'email' => ['El correo ya está registrado.']
-                        ]
-                    ], 422);
-                }
-
-                // Detectar celular duplicado
-                if (strpos($errorMessage, 'clientes_celular_unique') !== false) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Los datos proporcionados no son válidos.',
-                        'errors' => [
-                            'celular' => ['El número de celular ya está registrado.']
-                        ]
-                    ], 422);
-                }
-
-                // Otros errores de duplicado
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Ya existe un registro con estos datos.',
-                ], 422);
-            }
-
-            // Otros errores de base de datos
-            Log::error('Database error in cliente creation: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-                'error_code' => $errorCode,
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error en la base de datos. Por favor intenta nuevamente.',
-            ], 500);
         } catch (\Exception $e) {
-            Log::error('Error creating cliente: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-                'trace' => $e->getTraceAsString()
-            ]);
 
             return response()->json([
                 'success' => false,
