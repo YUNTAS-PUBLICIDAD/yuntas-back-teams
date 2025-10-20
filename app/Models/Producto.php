@@ -19,7 +19,9 @@ class Producto extends Model
         'imagen_principal',
         'text_alt_principal',
         'especificaciones',
-        'beneficios'
+        'beneficios',
+        'whatsapp_caption',
+        'whatsapp_image'
     ];
     // Campos que deben ser tratados como JSON
     protected $casts = [
