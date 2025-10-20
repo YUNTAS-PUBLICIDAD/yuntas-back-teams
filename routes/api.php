@@ -149,13 +149,6 @@ Route::prefix('v1')->group(function () {
         });
         */
     });
-
-    Route::prefix('whatsapp')->group(function () {
-        Route::post('/send', [WhatsAppController::class, 'sendMessage']);
-        Route::post('/loginWhatsApp', [WhatsAppController::class, 'loginWhatsApp']);
-        Route::post('/requestNewQr', [WhatsAppController::class, 'requestNewQr']);
-        Route::post('/sendMessageAccept', [WhatsAppController::class, 'sendMessageAccept']);
-    });
 });
 
 Route::get('/exportProducto', [ExportController::class, 'exportProducto']);
