@@ -78,13 +78,11 @@ class InfoProductoController extends Controller
         try {
             $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
 
-            Http::post($whatsappServiceUrl . '/send-product-info', [
-                'productName' => $producto->nombre,
-                'description' => $primeraSeccion->parrafo1, // Usar descripción de la primera sección
+            Http::post($whatsappServiceUrl . '/send-image', [
+                'caption' => $producto->whatsapp_caption,
                 'phone'       => "+51" . $cliente->celular,
-                'email'       => $cliente->email,
                 'imageData'   => $this->convertImageToBase64(
-                    EmailProducto::buildImageUrl($primeraSeccion->imagen_principal)
+                    EmailProducto::buildImageUrl($producto->whatsapp_image)
                 ),
             ]);
             $resultados['whatsapp'] = 'Mensaje de WhatsApp enviado correctamente ✅';
