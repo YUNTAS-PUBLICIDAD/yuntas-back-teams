@@ -13,7 +13,9 @@ use App\Services\ProductEmailService;
 use App\Services\ImageService;
 use App\Models\EmailProducto;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * @OA\Tag(
@@ -140,6 +142,19 @@ class EmailController extends Controller
 
     public function store(Request $request)
     {
+        $log = function (string $level, string $msg, array $ctx = []) {
+            Log::channel('errorlog')->{$level}($msg, $ctx);
+        };
+
+        $traceId = (string) Str::uuid();
+        $t0 = microtime(true);
+
+        $log('info', 'EmailController@store: inicio', [
+            'trace_id' => $traceId,
+            'producto_id' => $request->input('producto_id'),
+            'secciones_cnt' => is_array($request->input('secciones')) ? count($request->input('secciones')) : null,
+        ]);
+
         $validator = Validator::make($request->all(), [
             'producto_id' => 'required|exists:productos,id',
             'secciones' => 'required|array|min:1',
@@ -150,84 +165,162 @@ class EmailController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            $log('warning', 'Validación fallida', [
+                'trace_id' => $traceId,
+                'errors' => $validator->errors()->toArray(),
+            ]);
+            return response()->json(['trace_id'=>$traceId,'errors'=>$validator->errors()], 422);
         }
 
         $productoId = $request->producto_id;
-
-        // Opcional: Verificar si ya existen emails para ese producto
         $existe = EmailProducto::where('producto_id', $productoId)->exists();
-        if ($existe) {
+
+        error_log('DBG_QUERY='.json_encode($request->query->all()));
+        error_log('DBG_BODY='.json_encode($request->request->all()));
+
+        $quiereReemplazar =
+            $request->isMethod('put') ||
+            $request->input('_method') === 'PUT' ||
+            $request->request->has('replace') ||
+            $request->query->has('replace');
+
+        error_log('DBG_REPLACE_EVAL='.var_export($quiereReemplazar, true).' _method='.var_export($request->input('_method'), true));
+
+        $log('info', 'Estado inicial', [
+            'trace_id'        => $traceId,
+            'existe'          => $existe,
+            'reemplazar_eval' => $quiereReemplazar,
+        ]);
+
+        if ($existe && !$quiereReemplazar) {
+            $log('notice', 'Conflicto: existen registros y no se solicitó replace', [
+                'trace_id'    => $traceId,
+                'producto_id' => $productoId,
+            ]);
+
             return response()->json([
-                'error' => 'Ya existen emails para este producto. Use el método PUT para actualizar.'
+                'trace_id' => $traceId,
+                'error'    => 'Ya existen emails para este producto. Se requiere reemplazo (replace=1).',
             ], 409);
         }
 
         $emailProductos = [];
 
         try {
-            foreach ($request->secciones as $index => $seccion) {
-                $data = [
-                    'producto_id' => $productoId,
-                    'titulo' => $seccion['titulo'],
-                    'parrafo1' => $seccion['parrafo1'],
-                ];
+            $resp = DB::transaction(function () use ($request, $productoId, $existe, $quiereReemplazar, &$emailProductos, $traceId, $log) {
 
-                // Procesar imagen principal usando ImageService
-                if ($request->hasFile("secciones.$index.imagen_principal")) {
-                    $imagenPrincipal = $request->file("secciones.$index.imagen_principal");
+                if ($existe && $quiereReemplazar) {
+                    $existentes = EmailProducto::where('producto_id', $productoId)->get();
+                    $log('info', 'Borrando existentes', ['trace_id'=>$traceId,'count'=>$existentes->count()]);
 
-                    if ($this->imageService->esImagenValida($imagenPrincipal)) {
-                        $data['imagen_principal'] = $this->imageService->guardarImagen(
-                            $imagenPrincipal,
-                            'email_productos'
-                        );
+                    foreach ($existentes as $ep) {
+                        if ($ep->imagen_principal) {
+                            $log('debug', 'Eliminar imagen_principal', ['trace_id'=>$traceId,'path'=>$ep->imagen_principal]);
+                            $this->imageService->eliminarImagen($ep->imagen_principal);
+                        }
+                        if ($ep->imagenes_secundarias) {
+                            $imgs = json_decode($ep->imagenes_secundarias, true);
+                            if (is_array($imgs) && !empty($imgs)) {
+                                $log('debug', 'Eliminar imágenes secundarias', ['trace_id'=>$traceId,'count'=>count($imgs)]);
+                                $this->imageService->eliminarImagenes($imgs);
+                            }
+                        }
+                        $ep->delete();
                     }
                 }
 
-                // Procesar imágenes secundarias usando ImageService
-                $imagenesSecundarias = [];
-                if ($request->hasFile("secciones.$index.imagenes_secundarias")) {
-                    foreach ($request->file("secciones.$index.imagenes_secundarias") as $imagen) {
-                        if ($this->imageService->esImagenValida($imagen)) {
-                            $imagenesSecundarias[] = $this->imageService->guardarImagen(
-                                $imagen,
-                                'email_productos'
-                            );
+                foreach ($request->secciones as $index => $seccion) {
+                    $log('info', 'Procesando sección', [
+                        'trace_id'=>$traceId, 'index'=>$index,
+                        'has_img_principal'=>$request->hasFile("secciones.$index.imagen_principal"),
+                        'has_imgs_sec'=>$request->hasFile("secciones.$index.imagenes_secundarias"),
+                    ]);
+
+                    $data = [
+                        'producto_id' => $productoId,
+                        'titulo'      => $seccion['titulo'],
+                        'parrafo1'    => $seccion['parrafo1'],
+                    ];
+
+                    if ($request->hasFile("secciones.$index.imagen_principal")) {
+                        $img = $request->file("secciones.$index.imagen_principal");
+                        $log('debug', 'Validando img principal', [
+                            'trace_id'=>$traceId, 'name'=>$img->getClientOriginalName(),
+                            'size'=>$img->getSize(), 'mime'=>$img->getClientMimeType(),
+                        ]);
+                        if ($this->imageService->esImagenValida($img)) {
+                            $ruta = $this->imageService->guardarImagen($img, 'email_productos');
+                            $data['imagen_principal'] = $ruta;
+                            $log('info', 'Imagen principal guardada', ['trace_id'=>$traceId,'ruta'=>$ruta]);
+                        } else {
+                            $log('warning', 'Imagen principal no válida', ['trace_id'=>$traceId]);
                         }
                     }
-                }
 
-                $data['imagenes_secundarias'] = json_encode($imagenesSecundarias);
-
-                $emailProducto = EmailProducto::create($data);
-                $emailProductos[] = $emailProducto;
-            }
-
-            return response()->json([
-                'message' => 'Emails Producto creados exitosamente',
-                'data' => $emailProductos
-            ], 201);
-        } catch (Exception $e) {
-            // Si hay error, limpiar las imágenes creadas
-            foreach ($emailProductos as $emailProducto) {
-                if ($emailProducto->imagen_principal) {
-                    $this->imageService->eliminarImagen($emailProducto->imagen_principal);
-                }
-                if ($emailProducto->imagenes_secundarias) {
-                    $imagenesSecundarias = json_decode($emailProducto->imagenes_secundarias, true);
-                    if (is_array($imagenesSecundarias)) {
-                        $this->imageService->eliminarImagenes($imagenesSecundarias);
+                    $secundarias = [];
+                    if ($request->hasFile("secciones.$index.imagenes_secundarias")) {
+                        foreach ($request->file("secciones.$index.imagenes_secundarias") as $k => $img2) {
+                            $log('debug', 'Validando img secundaria', [
+                                'trace_id'=>$traceId, 'idx'=>$k,
+                                'name'=>$img2->getClientOriginalName(),
+                                'size'=>$img2->getSize(), 'mime'=>$img2->getClientMimeType(),
+                            ]);
+                            if ($this->imageService->esImagenValida($img2)) {
+                                $secundarias[] = $this->imageService->guardarImagen($img2, 'email_productos');
+                            } else {
+                                $log('warning', 'Imagen secundaria no válida', ['trace_id'=>$traceId,'idx'=>$k]);
+                            }
+                        }
                     }
+                    $data['imagenes_secundarias'] = json_encode($secundarias);
+
+                    $created = EmailProducto::create($data);
+                    $emailProductos[] = $created;
+
+                    $log('info', 'Sección creada', ['trace_id'=>$traceId,'seccion_id'=>$created->id]);
                 }
-                $emailProducto->delete();
+
+                $msg = $quiereReemplazar ? 'Reemplazo OK' : 'Creación OK';
+                $log('info', 'Éxito', ['trace_id'=>$traceId,'creados'=>count($emailProductos),'msg'=>$msg]);
+
+                return response()->json([
+                    'trace_id'=>$traceId,'message'=>$msg,'data'=>$emailProductos
+                ], $quiereReemplazar ? 200 : 201);
+            });
+
+            $log('debug', 'Fin OK', ['trace_id'=>$traceId,'ms'=>round((microtime(true)-$t0)*1000)]);
+            return $resp;
+
+        } catch (Throwable $e) {
+            // limpieza defensiva
+            foreach ($emailProductos as $ep) {
+                try {
+                    if ($ep->imagen_principal) $this->imageService->eliminarImagen($ep->imagen_principal);
+                    if ($ep->imagenes_secundarias) {
+                        $arr = json_decode($ep->imagenes_secundarias, true) ?: [];
+                        $this->imageService->eliminarImagenes($arr);
+                    }
+                    $ep->delete();
+                } catch (Throwable $e2) {
+                    $log('error', 'Error limpiando', ['trace_id'=>$traceId,'cleanup_error'=>$e2->getMessage()]);
+                }
             }
 
+            $log('error', 'EXCEPCIÓN', [
+                'trace_id'=>$traceId,
+                'message'=>$e->getMessage(),
+                'file'=>$e->getFile(),
+                'line'=>$e->getLine(),
+                'code'=>$e->getCode(),
+            ]);
+
             return response()->json([
-                'error' => 'Error al crear los emails: ' . $e->getMessage()
+                'trace_id'=>$traceId,
+                'error'=>'Error interno al guardar la plantilla.',
             ], 500);
         }
     }
+
 
     //Actualizar plantilla email producto
 
