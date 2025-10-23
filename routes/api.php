@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Controllers\Api\V1\Productos\ProductoController;
 use App\Http\Controllers\Api\V1\Cliente\ClienteController;
 use App\Http\Controllers\Api\V1\Blog\BlogController;
+use App\Http\Controllers\Api\V1\InformationController;
 use App\Http\Controllers\Api\V1\WhatsApp\WhatsAppController;
 use App\Http\Controllers\Api\V1\Productos\InfoProductoController;
 use App\Http\Controllers\ExportController;
@@ -87,7 +88,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/clientes', [ClienteController::class, 'store']);
 
     Route::post('/solicitar-info-producto', [InfoProductoController::class, 'sendProductDetails']);
-
+    Route::post('/send-info', [InformationController::class, 'sendProductDetails']);
     // Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
     //     Route::post('/', 'store');
     // });
