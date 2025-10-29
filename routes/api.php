@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\v1\Productos\ProductoWhatsappTemplateController;
 use App\Http\Controllers\Api\V1\Reclamos\ReclamosController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -123,6 +124,18 @@ Route::prefix('v1')->group(function () {
             Route::put('/plantilla/{id}', 'update')->middleware('permission:editar-plantillas-email-producto');
             Route::get('/plantilla/{productoId}', 'showByProducto')->middleware('permission:ver-plantillas-email-producto');
         });
+
+        Route::prefix('whatsapp-producto')
+            ->controller(ProductoWhatsappTemplateController::class)
+            ->group(function () {
+                // GET: leer lo guardado (devuelve 404 si no hay nada)
+                Route::get('productos/{productoId}/whatsapp-template-basic', 'showBasic')
+                    ->name('productos.whatsapp-template.basic.show');
+
+                // POST: crear/actualizar en productos.whatsapp_image / whatsapp_caption
+                Route::post('productos/{productoId}/whatsapp-template-basic', 'upsertBasic')
+                    ->name('productos.whatsapp-template.basic.upsert');
+            });
 
         // CLIENTES
         Route::prefix('clientes')->controller(ClienteController::class)->group(function () {
