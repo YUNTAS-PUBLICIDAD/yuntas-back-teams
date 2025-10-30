@@ -42,6 +42,11 @@ class Blog extends Model
 
     public function parrafos(): HasMany
     {
-        return $this->hasMany(BlogParrafos::class, 'blog_id');
+        return $this->hasMany(BlogParrafo::class, 'blog_id');
+    }
+
+    public function beneficios(): HasMany
+    {
+        return $this->hasMany(BlogBeneficio::class, 'blog_id');
     }
 }
