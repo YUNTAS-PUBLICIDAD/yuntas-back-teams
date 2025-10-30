@@ -8,16 +8,21 @@ use App\Models\Blog;
 
 class BlogParrafos extends Model
 {
-    //
     protected $table = 'blogs_parrafos';
     protected $fillable = [
         'parrafo',
-        'blog_id'
+        'blog_id',
+        'beneficios',
+    ];
+
+    protected $casts = [
+        'parrafo' => 'array',
+        'beneficios' => 'array',
     ];
 
     public $timestamps = true;
     public function blog(): BelongsTo
     {
         return $this->belongsTo(Blog::class, 'blog_id');
-    }   
+    }
 }

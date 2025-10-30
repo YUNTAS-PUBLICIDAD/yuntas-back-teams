@@ -5,13 +5,12 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class BlogParrafoResource extends JsonResource
+class BlogBeneficioResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         return [
-            'parrafo' => $this->parrafo,
-            'beneficios' => $this->beneficios,
+            'beneficio' => $this->beneficio,
         ];
     }
 }
