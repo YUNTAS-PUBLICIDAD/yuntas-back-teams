@@ -18,7 +18,6 @@ class BlogResource extends JsonResource
             'link' => $this->link,
             'imagenes' => BlogImagenResource::collection($this->imagenes),
             'parrafos' => BlogParrafoResource::collection($this->parrafos),
-            'beneficios' => BlogBeneficioResource::collection($this->beneficios),
             'etiqueta' => $this->etiqueta ? [
                 'meta_titulo' => $this->etiqueta->meta_titulo,
                 'meta_descripcion' => $this->etiqueta->meta_descripcion,

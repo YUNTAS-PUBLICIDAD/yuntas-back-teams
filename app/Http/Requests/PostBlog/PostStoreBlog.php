@@ -24,7 +24,7 @@ class PostStoreBlog extends FormRequest
     public function rules()
     {
 
-    return [
+        return [
             'producto_id' => 'required|integer|exists:productos,id',
             'subtitulo' => 'required|string|max:255',
 
@@ -40,10 +40,6 @@ class PostStoreBlog extends FormRequest
             'parrafos.*' => 'required|string|max:2047',
 
             'url_video' => ['nullable', 'url', 'max:255'],
-
-            // Validación para beneficios
-            'beneficios' => 'nullable|array',
-            'beneficios.*' => 'nullable|string|max:100',
 
             // Agregar validación para los campos meta y link (por ahora link)
             'link' => [

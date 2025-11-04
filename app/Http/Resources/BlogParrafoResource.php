@@ -11,7 +11,6 @@ class BlogParrafoResource extends JsonResource
     {
         return [
             'parrafo' => $this->parrafo,
-            'beneficios' => $this->beneficios,
         ];
     }
 }

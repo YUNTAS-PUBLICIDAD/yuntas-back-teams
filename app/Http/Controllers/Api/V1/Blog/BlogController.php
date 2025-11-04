@@ -126,22 +126,10 @@ class BlogController extends BasicController
                 }
             }
 
-            // Guardar cada párrafo como registro individual
-            if (isset($datosValidados['parrafos']) && is_array($datosValidados['parrafos'])) {
-                foreach ($datosValidados['parrafos'] as $parrafo) {
-                    $blog->parrafos()->create([
-                        'parrafo' => $parrafo
-                    ]);
-                }
-            }
-
-            // Guardar cada beneficio como registro individual
-            if (isset($datosValidados['beneficios']) && is_array($datosValidados['beneficios'])) {
-                foreach ($datosValidados['beneficios'] as $beneficio) {
-                    $blog->beneficios()->create([
-                        'beneficio' => $beneficio
-                    ]);
-                }
+            foreach ($datosValidados["parrafos"] as $item) {
+                $blog->parrafos()->create([
+                    "parrafo" => $item
+                ]);
             }
 
             if ($request->has('etiqueta')) {
@@ -234,23 +222,10 @@ class BlogController extends BasicController
                 }
             }
 
-            // Actualizar párrafos: eliminar los existentes y crear los nuevos
-            if (isset($datosValidados['parrafos']) && is_array($datosValidados['parrafos'])) {
+            if (isset($datosValidados['parrafos'])) {
                 $blog->parrafos()->delete();
                 foreach ($datosValidados['parrafos'] as $parrafo) {
-                    $blog->parrafos()->create([
-                        'parrafo' => $parrafo
-                    ]);
-                }
-            }
-
-            // Actualizar beneficios: eliminar los existentes y crear los nuevos
-            if (isset($datosValidados['beneficios']) && is_array($datosValidados['beneficios'])) {
-                $blog->beneficios()->delete();
-                foreach ($datosValidados['beneficios'] as $beneficio) {
-                    $blog->beneficios()->create([
-                        'beneficio' => $beneficio
-                    ]);
+                    $blog->parrafos()->create(['parrafo' => $parrafo]);
                 }
             }
 

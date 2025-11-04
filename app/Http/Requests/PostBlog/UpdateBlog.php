@@ -23,7 +23,7 @@ class UpdateBlog extends FormRequest
      */
     public function rules()
     {
-    return [
+        return [
             'producto_id' => 'sometimes|integer|exists:productos,id',
             'subtitulo' => 'sometimes|string|max:255',
 
@@ -52,10 +52,6 @@ class UpdateBlog extends FormRequest
 
             // ✅ Validación para etiquetas (puede venir como string JSON o array)
             'etiqueta' => 'nullable',
-
-            // Validación para beneficios
-            'beneficios' => 'nullable|array',
-            'beneficios.*' => 'nullable|string|max:100',
         ];
     }
 

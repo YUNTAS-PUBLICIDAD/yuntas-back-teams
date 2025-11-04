@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Mail\ProductInfoMail;
+use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Models\Cliente;
 use App\Models\EmailProducto;
 use App\Models\WhatsappGeneral;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class InformationController extends Controller
 {
@@ -34,28 +33,6 @@ class InformationController extends Controller
                 'name'        => $validated['name'],
             ]
         );
-
-        try {
-            $viewName = 'emails.information';
-            
-            $imagenes = collect([
-                'https://res.cloudinary.com/dshi5w2wt/image/upload/v1759791593/Copia_de_Imagen_de_Beneficios_2_1_u7a7tk.png',
-                'https://res.cloudinary.com/dshi5w2wt/image/upload/v1759791593/Group_1_fe611y.png',
-                'https://res.cloudinary.com/dshi5w2wt/image/upload/v1759791593/Mask_group_wl5bwk.png',
-                'https://res.cloudinary.com/dshi5w2wt/image/upload/v1761192083/el-desarrollo-web_oapcly.webp',
-                'https://res.cloudinary.com/dshi5w2wt/image/upload/v1761192364/React_Vs_Vue_3fa266b582_ufpj2r.jpg'
-            ]);
-
-            $data = [
-                'name' => $cliente->name,
-                'imagen_principal' => $imagenes->random(),
-            ];
-            Mail::to($cliente->email)->send(new ProductInfoMail($data, $viewName));
-            $resultados['email'] = 'Correo enviado correctamente ✅';
-        } catch (\Throwable $e) {
-            $resultados['email'] = '❌ Error al enviar correo: ' . $e->getMessage();
-            Log::error('Error enviando email de producto: ' . $e->getMessage());
-        }
 
         $currentPage = $validated['current_page'] ?? 'raiz';
         $whatsapp = WhatsappGeneral::where('current_page', $currentPage)->first();
