@@ -19,6 +19,7 @@ use App\Http\Controllers\RolePermissionController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
+
 // blogs públicos
 Route::prefix('v1')->group(function () {
     // Blogs públicos
