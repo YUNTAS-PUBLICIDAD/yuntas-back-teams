@@ -20,17 +20,15 @@ class InfoProductoController extends Controller
     public function sendProductDetails(StoreClienteRequest $request)
     {
         $validated = $request->validated();
-        $resultados = [];
+        $resultados = [
+            'email' => 'No se intentó enviar.',
+            'whatsapp' => 'No se intentó enviar.'
+        ];
 
         $cliente = Cliente::updateOrCreate(
             [
-                'email'   => $validated['email'],
-                'celular' => $validated['celular'],
-            ],
-            [
-                'name'        => $validated['name'],
-                'producto_id' => $validated['producto_id'],
-            ]
+              'email' => $validated['email'], 'celular' => $validated['celular']],
+            ['name' => $validated['name'], 'producto_id' => $validated['producto_id']]
         );
 
         $interesado = Interesado::create([
@@ -42,14 +40,14 @@ class InfoProductoController extends Controller
         $producto = Producto::findOrFail($validated['producto_id']);
 
         // 4. BUSCAR SOLO LA PRIMERA SECCIÓN (primera plantilla de correo para este producto)
+       try {
         $primeraSeccion = EmailProducto::where('producto_id', $producto->id)
             ->orderBy('id', 'asc')
             ->first();
 
         // Si no se encuentra una plantilla personalizada para ese producto, devolvemos un error.
-        if (!$primeraSeccion) {
-            return response()->json(['message' => 'No hay información promocional disponible para este producto en este momento.'], 404);
-        }
+        if ($primeraSeccion) {
+        
 
         // 5. Preparar los datos para el email usando SOLO la primera sección
         $data = [
@@ -63,44 +61,64 @@ class InfoProductoController extends Controller
                 json_decode($primeraSeccion->imagenes_secundarias, true) ?? []
             )
         ];
-
         // 6. Enviar el correo
-        try {
             $viewName = 'emails.firtstemail.producto-generico';
             Mail::to($cliente->email)->send(new ProductInfoMail($data, $viewName));
             $resultados['email'] = 'Correo enviado correctamente ✅';
-        } catch (\Throwable $e) {
+
+        }  else {
+                // Si NO encontramos plantilla, NO detenemos el proceso. Solo lo registramos.
+                $resultados['email'] = 'No se envió correo (No se encontró plantilla de email).';
+                Log::warning('No se encontró plantilla de email para producto_id: ' . $producto->id);
+               } 
+            }catch (\Throwable $e) {
             $resultados['email'] = '❌ Error al enviar correo: ' . $e->getMessage();
             Log::error('Error enviando email de producto: ' . $e->getMessage());
         }
 
         // 7. Enviar el WhatsApp
-        try {
-            $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
+       try {
+            // Revisamos si el producto tiene datos de WhatsApp guardados
+            if ($producto->whatsapp_caption || $producto->whatsapp_image) {
+                
+                $whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:5111/api');
+                
+                $payload = [
+                    'caption' => $producto->whatsapp_caption ?? '',
+                    'phone'   => "+51" . $cliente->celular,
+                ];
 
-            Http::post($whatsappServiceUrl . '/send-image', [
-                'caption' => $producto->whatsapp_caption,
-                'phone'       => "+51" . $cliente->celular,
-                'imageData'   => $this->convertImageToBase64(
-                    EmailProducto::buildImageUrl($producto->whatsapp_image)
-                ),
-            ]);
-            $resultados['whatsapp'] = 'Mensaje de WhatsApp enviado correctamente ✅';
+                // Solo añadimos la imagen si existe
+                if ($producto->whatsapp_image) {
+                    $payload['imageData'] = $this->convertImageToBase64(
+                        EmailProducto::buildImageUrl($producto->whatsapp_image)
+                    );
+                }
+
+                Http::post($whatsappServiceUrl . '/send-image', $payload);
+                $resultados['whatsapp'] = 'Mensaje de WhatsApp enviado correctamente ✅';
+
+            } else {
+                // Si no hay plantilla de WhatsApp, solo lo registramos.
+                $resultados['whatsapp'] = 'No se envió WhatsApp (No se encontró plantilla de WhatsApp).';
+                Log::warning('No se encontró plantilla de WhatsApp para producto_id: ' . $producto->id);
+            }
         } catch (\Throwable $e) {
             $resultados['whatsapp'] = '❌ Error al enviar WhatsApp: ' . $e->getMessage();
             Log::error('Error enviando WhatsApp de producto: ' . $e->getMessage());
         }
 
-        // 8. Devolver respuesta con detalles
+        // 5. Devolver respuesta final
         return response()->json([
-            'message'   => 'Proceso finalizado con los siguientes resultados:',
+            'message'    => 'Proceso finalizado con los siguientes resultados:',
             'resultados' => $resultados
         ], 200);
+        
     }
 
     public function convertImageToBase64($url)
     {
-        $response = Http::get($url);
+        $response = Http::withoutVerifying()->get($url);
 
         if (!$response->successful()) {
             throw new \Exception('No se pudo descargar la imagen');
